@@ -1,0 +1,9 @@
+# 生成的二进制文件
+bin/
+obj/
+
+# 开发模式配置文件
+*Development*.json
+
+# idea
+.idea/
