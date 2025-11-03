@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StudyRoomSystem.Server", "StudyRoomSystem.Server\StudyRoomSystem.Server.csproj", "{AC766863-9620-44D9-AA89-C5B9AAC965AE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StudyRoomSystem.Core", "StudyRoomSystem.Core\StudyRoomSystem.Core.csproj", "{8C28D3D5-BFC8-413C-99F7-C6ECDC3C727D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{AC766863-9620-44D9-AA89-C5B9AAC965AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AC766863-9620-44D9-AA89-C5B9AAC965AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AC766863-9620-44D9-AA89-C5B9AAC965AE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8C28D3D5-BFC8-413C-99F7-C6ECDC3C727D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8C28D3D5-BFC8-413C-99F7-C6ECDC3C727D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8C28D3D5-BFC8-413C-99F7-C6ECDC3C727D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8C28D3D5-BFC8-413C-99F7-C6ECDC3C727D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

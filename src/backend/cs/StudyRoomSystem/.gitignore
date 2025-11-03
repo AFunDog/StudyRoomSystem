@@ -7,3 +7,5 @@ obj/
 
 # idea
 .idea/
+
+dist/

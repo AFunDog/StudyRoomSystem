@@ -1,0 +1,97 @@
+<script setup lang="ts">
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
+} from '@/components/ui/form'
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+
+import { toTypedSchema } from '@vee-validate/zod';
+import z from 'zod';
+import type { GenericObject } from 'vee-validate';
+import { http } from '@/lib/utils';
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import type { User } from '@/lib/types/user';
+
+const router = useRouter();
+const schema = z.object({
+  userName: z.string({ required_error: '请输入用户名' }).min(4, '请输入用户名'),
+  password: z.string({ required_error: '请输入密码' }).min(6, '请输入密码'),
+});
+const formSchema = toTypedSchema(schema)
+const loginMessage = ref('');
+
+async function onSubmit(values: GenericObject) {
+  try {
+    console.log(values);
+    var res = await http.post('/api/v1/auth/login', {
+      userName: values.userName,
+      password: values.password
+    })
+
+    const token = res.data.token;
+    const user = res.data.user as User;
+
+    if (!token || !user) {
+      loginMessage.value = '登录失败，用户名或密码错误';
+      return;
+    }
+
+    localStorage.setItem('token', token);
+    localStorage.setItem('user',JSON.stringify(user));
+    http.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    router.push('/');
+
+  }
+  catch (error) {
+    loginMessage.value = '登录失败，请检查用户名或密码';
+    console.log(error);
+  }
+}
+
+</script>
+<template>
+  <div class="flex flex-col items-center justify-center h-screen">
+    <div class="w-5/6 max-w-xl">
+      <Card class="">
+        <CardHeader>
+          <div class="text-2xl tracking-widest">登录</div>
+          <div class="text-sm text-muted-foreground">欢迎来到智慧自习室预约管理系统</div>
+        </CardHeader>
+        <CardContent>
+          <Form class="flex flex-col gap-y-4" :validation-schema="formSchema" @submit="onSubmit">
+            <FormField v-slot="{ componentField }" name="userName">
+              <FormItem>
+                <FormLabel>用户名</FormLabel>
+                <FormControl>
+                  <Input v-bind="componentField" placeholder="请输入用户名" />
+                </FormControl>
+                <!-- <FormDescription>用户注册时的名称</FormDescription> -->
+                <FormMessage />
+              </FormItem>
+            </FormField>
+            <FormField v-slot="{ componentField }" name="password">
+              <FormItem>
+                <FormLabel>密码</FormLabel>
+                <FormControl>
+                  <Input v-bind="componentField" placeholder="请输入密码" />
+                </FormControl>
+                <!-- <FormDescription>登录密码</FormDescription> -->
+                <FormMessage />
+              </FormItem>
+            </FormField>
+            <div>{{ loginMessage }}</div>
+            <Button class="hover:cursor-pointer" type="submit">登录</Button>
+          </Form>
+        </CardContent>
+      </Card>
+    </div>
+  </div>
+</template>
