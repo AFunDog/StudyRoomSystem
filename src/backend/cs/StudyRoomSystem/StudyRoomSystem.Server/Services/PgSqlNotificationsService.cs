@@ -1,31 +1,120 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http.Json;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
+using Npgsql;
+using Serilog;
 using StudyRoomSystem.Server.Database;
+using StudyRoomSystem.Server.Hubs;
+using Zeng.CoreLibrary.Toolkit.Logging;
 
 namespace StudyRoomSystem.Server.Services;
 
 public class PgSqlNotificationsService : IHostedService
 {
-    private AppDbContext AppDbContext { get; }
-    
-    
-    public PgSqlNotificationsService(AppDbContext appDbContext)
+    private IConfiguration Configuration { get; }
+    private IHubContext<DataHub> DataHub { get; }
+    private IOptions<JsonOptions> JsonOptions { get; }
+    private NpgsqlConnection? Connection { get; set; }
+    private CancellationTokenSource BackgroundTaskCts { get; } = new();
+    private Task? BackgroundTask { get; set; }
+
+    public PgSqlNotificationsService(
+        IConfiguration configuration,
+        IHubContext<DataHub> dataHub,
+        IOptions<JsonOptions> jsonOptions)
     {
-        AppDbContext = appDbContext;
+        Configuration = configuration;
+        DataHub = dataHub;
+        JsonOptions = jsonOptions;
     }
-    
-    
-    public async Task StartAsync(CancellationToken cancellationToken) 
+
+
+    public async Task StartAsync(CancellationToken cancellationToken)
     {
-        try { }
+        try
+        {
+            Connection = new NpgsqlConnection(Configuration.GetConnectionString("DefaultConnection"));
+            await Connection.OpenAsync(cancellationToken);
+
+            Connection.Notification += OnNotification;
+
+            await using var cmd = Connection.CreateCommand();
+            cmd.CommandText = "LISTEN data_change";
+            await cmd.ExecuteNonQueryAsync(cancellationToken);
+
+            BackgroundTask = Task.Run(
+                async () =>
+                {
+                    try
+                    {
+                        while (!BackgroundTaskCts.IsCancellationRequested)
+                        {
+                            await Connection.WaitAsync(BackgroundTaskCts.Token);
+                        }
+                    }
+                    catch (OperationCanceledException e)
+                    {
+                        Log.Logger.Trace().Information(e, "任务取消");
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Logger.Trace().Error(e, "");
+                    }
+                },
+                cancellationToken
+            );
+
+            Log.Logger.Trace().Information("启动");
+        }
         catch (Exception e)
         {
-            Console.WriteLine(e);
-            throw;
+            Log.Logger.Trace().Error(e, "启动");
         }
     }
 
-    public async Task StopAsync(CancellationToken cancellationToken) 
+    class PayloadData
     {
-        
+        public string Table { get; set; } = string.Empty;
+        public string Operation { get; set; } = string.Empty;
+        public Guid DataId { get; set; }
+    }
+
+    private void OnNotification(object sender, NpgsqlNotificationEventArgs e)
+    {
+        Log.Logger.Trace().Information("NOTIFY {@Args}", e);
+        var payloadData = JsonSerializer.Deserialize<PayloadData>(
+            e.Payload,
+            options: JsonOptions.Value.SerializerOptions
+        );
+        if (payloadData is null)
+            return;
+        if (payloadData.Table == "bookings")
+        {
+            // TODO 根据表名通知前台数据更新
+            // DataHub.Clients.All.SendAsync("bookings-update", payloadData.DataId);
+        }
+    }
+
+    public async Task StopAsync(CancellationToken cancellationToken)
+    {
+        await BackgroundTaskCts.CancelAsync();
+        BackgroundTaskCts.Dispose();
+        if (BackgroundTask is not null)
+            await BackgroundTask;
+
+        if (Connection is not null)
+        {
+            Connection.Notification -= OnNotification;
+            await Connection.CloseAsync();
+        }
+
+        Log.Logger.Trace().Information("停止");
     }
 }

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System;
+using Microsoft.AspNetCore.Mvc;
 using StudyRoomSystem.Core.Structs;
 
 namespace StudyRoomSystem.Server.Helpers;

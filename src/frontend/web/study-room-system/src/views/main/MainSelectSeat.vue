@@ -82,11 +82,11 @@ function onSeatClick(seat: Seat) {
 async function onSubmit(values: GenericObject) {
   try {
     if (values.date instanceof CalendarDate)
-    console.log({
-      seatId: selectSeat.value?.id,
-      startTime: dayjs(values.date.toString()).add(values.startHour, 'h').add(values.startMin, 'm').toISOString(),
-      endTime: dayjs(values.date.toString()).add(values.endHour, 'h').add(values.endMin, 'm').toISOString(),
-    });
+      console.log({
+        seatId: selectSeat.value?.id,
+        startTime: dayjs(values.date.toString()).add(values.startHour, 'h').add(values.startMin, 'm').toISOString(),
+        endTime: dayjs(values.date.toString()).add(values.endHour, 'h').add(values.endMin, 'm').toISOString(),
+      });
     const res = await http.post('/api/v1/booking', {
       seatId: selectSeat.value?.id,
       startTime: dayjs(values.date.toString()).add(values.startHour, 'h').add(values.startMin, 'm').toISOString(),
@@ -104,7 +104,7 @@ async function onSubmit(values: GenericObject) {
 
 </script>
 <template>
-  <div class="bg-accent p-4 rounded-xl h-full w-full grid-rows-[auto_1fr]">
+  <div class="bg-accent p-4 rounded-xl h-full w-full grid-rows-[auto_1fr] ">
     <div class="flex items-center justify-center gap-x-2">
       <div>
         <div class="rounded-full w-3 h-3 bg-green-400"></div>
@@ -147,87 +147,87 @@ async function onSubmit(values: GenericObject) {
                 <FormMessage />
               </FormItem>
             </FormField>
-            <div class="flex flex-row gap-x-4">
-              <div class="flex flex-row gap-x-2 items-end">
-                <FormField v-slot="{ componentField }" name="startHour">
-                  <FormItem>
-                    <FormLabel>开始时间</FormLabel>
-                    <FormControl>
-                      <Select v-bind="componentField">
-                        <SelectTrigger>
-                          <SelectValue placeholder="小时" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectGroup>
-                            <SelectLabel>小时</SelectLabel>
-                            <SelectItem v-for="v in Array(24).fill(0).map((_, i) => i + 1)" :value="v">{{ v }}
-                            </SelectItem>
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                  </FormItem>
-                </FormField>
-                <FormField v-slot="{ componentField }" name="startMin">
-                  <FormItem>
-                    <FormControl>
-                      <Select v-bind="componentField">
-                        <SelectTrigger>
-                          <SelectValue placeholder="分钟" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectGroup>
-                            <SelectLabel>分钟</SelectLabel>
-                            <SelectItem v-for="v in Array(12).fill(0).map((_, i) => i * 5)" :value="v">{{
-                              v.toString().padStart(2,'0') }}</SelectItem>
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                  </FormItem>
-                </FormField>
-              </div>
-              <div class="flex flex-row gap-x-2 items-end">
+            <!-- <div class="flex flex-row gap-x-4"> -->
+            <div class="flex flex-row gap-x-2 items-end">
+              <FormField v-slot="{ componentField }" name="startHour">
+                <FormItem>
+                  <FormLabel>开始时间</FormLabel>
+                  <FormControl>
+                    <Select v-bind="componentField">
+                      <SelectTrigger>
+                        <SelectValue placeholder="时" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectLabel>时</SelectLabel>
+                          <SelectItem v-for="v in Array(24).fill(0).map((_, i) => i + 1)" :value="v">{{ v }}
+                          </SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                </FormItem>
+              </FormField>
+              <FormField v-slot="{ componentField }" name="startMin">
+                <FormItem>
+                  <FormControl>
+                    <Select v-bind="componentField">
+                      <SelectTrigger>
+                        <SelectValue placeholder="钟" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectLabel>钟</SelectLabel>
+                          <SelectItem v-for="v in Array(12).fill(0).map((_, i) => i * 5)" :value="v">{{
+                            v.toString().padStart(2, '0') }}</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                </FormItem>
+              </FormField>
+            </div>
+            <!-- </div> -->
+            <div class="flex flex-row gap-x-2 items-end">
 
 
-                <FormField v-slot="{ componentField }" name="endHour">
-                  <FormItem>
-                    <FormLabel>结束时间</FormLabel>
-                    <FormControl>
-                      <Select v-bind="componentField">
-                        <SelectTrigger>
-                          <SelectValue placeholder="小时" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectGroup>
-                            <SelectLabel>小时</SelectLabel>
-                            <SelectItem v-for="v in Array(24).fill(0).map((_, i) => i + 1)" :value="v">{{ v }}
-                            </SelectItem>
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                  </FormItem>
-                </FormField>
-                <FormField v-slot="{ componentField }" name="endMin">
-                  <FormItem>
-                    <FormControl>
-                      <Select v-bind="componentField">
-                        <SelectTrigger>
-                          <SelectValue placeholder="分钟" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectGroup>
-                            <SelectLabel>分钟</SelectLabel>
-                            <SelectItem v-for="v in Array(12).fill(0).map((_, i) => i * 5)" :value="v">{{
-                              v.toString().padStart(2,'0') }}</SelectItem>
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                  </FormItem>
-                </FormField>
-              </div>
+              <FormField v-slot="{ componentField }" name="endHour">
+                <FormItem>
+                  <FormLabel>结束时间</FormLabel>
+                  <FormControl>
+                    <Select v-bind="componentField">
+                      <SelectTrigger>
+                        <SelectValue placeholder="时" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectLabel>时</SelectLabel>
+                          <SelectItem v-for="v in Array(24).fill(0).map((_, i) => i + 1)" :value="v">{{ v }}
+                          </SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                </FormItem>
+              </FormField>
+              <FormField v-slot="{ componentField }" name="endMin">
+                <FormItem>
+                  <FormControl>
+                    <Select v-bind="componentField">
+                      <SelectTrigger>
+                        <SelectValue placeholder="钟" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectLabel>钟</SelectLabel>
+                          <SelectItem v-for="v in Array(12).fill(0).map((_, i) => i * 5)" :value="v">{{
+                            v.toString().padStart(2, '0') }}</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                </FormItem>
+              </FormField>
             </div>
           </Form>
         </div>
@@ -239,7 +239,7 @@ async function onSubmit(values: GenericObject) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-    <div class="flex flex-col items-center justify-center  h-full w-full">
+    <div class="flex flex-col items-center justify-center h-full w-full max-h-48 overflow-clip">
 
       <div v-if="selectRoom != null" :class="cn('grid border-gray-500 border-4 rounded-md')" v-show="selectRoom != null"
         :style="{

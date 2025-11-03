@@ -8,6 +8,7 @@ import MainView from './views/main/MainView.vue'
 import { getHubConnection, http } from './lib/utils'
 import utc from 'dayjs/plugin/utc'
 import dayjs from 'dayjs'
+import RegisterView from './views/register/RegisterView.vue'
 
 dayjs.extend(utc)
 
@@ -20,6 +21,7 @@ const router = createRouter({
     history: createWebHistory(), routes: [
         { path: '/', component: MainView },
         { path: '/login', component: LoginView },
+        { path: '/register', component: RegisterView },
     ]
 })
 

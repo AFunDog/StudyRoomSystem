@@ -1,10 +1,16 @@
+using System;
+using System.IO;
 using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using Serilog;
@@ -14,6 +20,7 @@ using StudyRoomSystem.Server.Database;
 using StudyRoomSystem.Server.Helpers;
 using StudyRoomSystem.Server.Hubs;
 using StudyRoomSystem.Server.OpenApi;
+using StudyRoomSystem.Server.Services;
 using Zeng.CoreLibrary.Toolkit.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,6 +34,8 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 builder.Host.UseSerilog();
 
+// 配置 Service
+builder.Services.AddHostedService<PgSqlNotificationsService>();
 
 // 配置 OpenApi
 builder.Services.AddOpenApi("v1", options => { options.AddDocumentTransformer<BearerSecuritySchemeTransformer>(); });

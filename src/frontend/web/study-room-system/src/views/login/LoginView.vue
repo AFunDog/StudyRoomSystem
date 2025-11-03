@@ -19,6 +19,7 @@ import { http } from '@/lib/utils';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import type { User } from '@/lib/types/user';
+import { LockKeyhole, Eye, EyeOff } from 'lucide-vue-next';
 
 const router = useRouter();
 const schema = z.object({
@@ -27,6 +28,7 @@ const schema = z.object({
 });
 const formSchema = toTypedSchema(schema)
 const loginMessage = ref('');
+const isShowPassword = ref(false);
 
 async function onSubmit(values: GenericObject) {
   try {
@@ -45,7 +47,7 @@ async function onSubmit(values: GenericObject) {
     }
 
     localStorage.setItem('token', token);
-    localStorage.setItem('user',JSON.stringify(user));
+    localStorage.setItem('user', JSON.stringify(user));
     http.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     router.push('/');
 
@@ -60,7 +62,7 @@ async function onSubmit(values: GenericObject) {
 <template>
   <div class="flex flex-col items-center justify-center h-screen">
     <div class="w-5/6 max-w-xl">
-      <Card class="">
+      <Card>
         <CardHeader>
           <div class="text-2xl tracking-widest">登录</div>
           <div class="text-sm text-muted-foreground">欢迎来到智慧自习室预约管理系统</div>
@@ -81,14 +83,28 @@ async function onSubmit(values: GenericObject) {
               <FormItem>
                 <FormLabel>密码</FormLabel>
                 <FormControl>
-                  <Input v-bind="componentField" placeholder="请输入密码" />
+                  <div class="flex flex-row items-center relative">
+                    <div class="absolute flex flex-row justify-center items-center w-10">
+                      <LockKeyhole class="size-4"></LockKeyhole>
+                    </div>
+                    <Input v-bind="componentField" type="password" autocomplete="current-password" placeholder="请输入密码" class="pl-10">
+                    </Input>
+                    
+                    <!-- <div class="absolute flex flex-row justify-center items-center w-10 right-0">
+                      <component :is="isShowPassword ? EyeOff : Eye" @click="isShowPassword = !isShowPassword"
+                        class="size-4"></component>
+                    </div> -->
+                  </div>
                 </FormControl>
                 <!-- <FormDescription>登录密码</FormDescription> -->
                 <FormMessage />
               </FormItem>
             </FormField>
             <div>{{ loginMessage }}</div>
-            <Button class="hover:cursor-pointer" type="submit">登录</Button>
+            <div class="flex flex-row justify-center items-center gap-x-4">
+              <Button class="hover:cursor-pointer" type="submit">登录</Button>
+              <Button class="hover:cursor-pointer" type="button" variant="secondary" @click="router.push('/register')">注册</Button>
+            </div>
           </Form>
         </CardContent>
       </Card>
