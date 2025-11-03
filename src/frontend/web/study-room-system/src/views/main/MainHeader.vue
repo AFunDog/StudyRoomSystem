@@ -18,7 +18,7 @@ var user = JSON.parse(localStorage.getItem('user')!) as User | null;
 
 </script>
 <template>
-  <div class="flex flex-row p-4 items-center bg-accent text-xl w-full">
+  <div class="flex flex-row p-4 items-center bg-accent text-lg w-full">
     <Menu class="size-6 mr-2 hover:cursor-pointer"></Menu>
     <div>智慧自习室预约管理系统</div>
     <div class="ml-auto flex flex-row items-center gap-x-2 text-base">
