@@ -1,5 +1,10 @@
 ﻿namespace StudyRoomSystem.Core.Structs;
 
+public enum BookingStateEnum
+{
+    Booking,CheckIn,Checkout,Canceled
+}
+
 public class Booking
 {
     public required Guid Id { get; set; }
@@ -10,6 +15,8 @@ public class Booking
     public required DateTime EndTime { get; set; }
     public DateTime? CheckInTime { get; set; }
     public DateTime? CheckOutTime { get; set; }
+    public required BookingStateEnum State { get; set; } 
+    
     
     public virtual User User { get; set; } = null!;
     public virtual Seat Seat { get; set; } = null!;

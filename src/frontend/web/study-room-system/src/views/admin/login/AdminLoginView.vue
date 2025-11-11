@@ -14,16 +14,13 @@ import { Button } from '@/components/ui/button';
 
 import { toTypedSchema } from '@vee-validate/zod';
 import z from 'zod';
-import { useForm, type GenericObject } from 'vee-validate';
+import type { GenericObject } from 'vee-validate';
 import { http } from '@/lib/utils';
-import { onMounted, onUnmounted, ref } from 'vue';
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import type { User } from '@/lib/types/user';
-import { LockKeyhole, Eye, EyeOff } from 'lucide-vue-next';
+import { LockKeyhole, Eye, EyeOff, UserStar } from 'lucide-vue-next';
 import { restartHubConnection } from '@/lib/api/hubConnection';
-import { useConfig } from '@/lib/config';
-import { toast } from 'vue-sonner';
-import { AxiosError } from 'axios';
 import { authRequest } from '@/lib/api/authRequest';
 
 const router = useRouter();
@@ -32,9 +29,10 @@ const schema = z.object({
   password: z.string({ required_error: '请输入密码' }).min(6, '请输入密码'),
 });
 const formSchema = toTypedSchema(schema)
+const loginMessage = ref('');
 const isShowPassword = ref(false);
-const form = useForm({ validationSchema: formSchema });
-const onSubmit = form.handleSubmit(async (values) => {
+
+async function onSubmit(values: GenericObject) {
   try {
     console.log(values);
     var res = await authRequest.login({ username: values.userName, password: values.password });
@@ -43,11 +41,11 @@ const onSubmit = form.handleSubmit(async (values) => {
     //   password: values.password
     // })
 
-    const token = res.token;
-    const user = res.user as User;
+    const token = res.data.token;
+    const user = res.data.user as User;
 
     if (!token || !user) {
-      toast.error('登录失败，用户名或密码错误');
+      loginMessage.value = '登录失败，用户名或密码错误';
       return;
     }
 
@@ -59,39 +57,30 @@ const onSubmit = form.handleSubmit(async (values) => {
 
   }
   catch (error) {
-    if (error instanceof AxiosError)
-      toast.error('登录失败', { description: error.response?.data.message });
+    loginMessage.value = '登录失败，请检查用户名或密码';
     console.log(error);
   }
-});
-
-onMounted(() => {
-  // 登录页面不显示底部标签
-  const config = useConfig();
-  config.isBottomTagShow = false;
-});
-
-onUnmounted(() => {
-  const config = useConfig();
-  config.isBottomTagShow = true;
-});
+}
 
 </script>
 <template>
-  <div class="flex flex-col items-center justify-center h-full">
+  <div class="flex flex-col items-center justify-center h-screen">
     <div class="w-5/6 max-w-xl">
       <Card>
         <CardHeader>
-          <div class="text-2xl tracking-widest">登录</div>
+          <div class="flex flex-row items-center">
+            <UserStar class="size-8 mr-1"></UserStar>
+            <div class="text-2xl tracking-widest">管理员登录</div>
+          </div>
           <div class="text-sm text-muted-foreground">欢迎来到智慧自习室预约管理系统</div>
         </CardHeader>
         <CardContent>
-          <form class="flex flex-col gap-y-4" :validation-schema="formSchema" @submit="onSubmit">
+          <Form class="flex flex-col gap-y-4" :validation-schema="formSchema" @submit="onSubmit">
             <FormField v-slot="{ componentField }" name="userName">
               <FormItem>
                 <FormLabel>用户名</FormLabel>
                 <FormControl>
-                  <Input v-bind="componentField" autocomplete="username" placeholder="请输入用户名" />
+                  <Input v-bind="componentField" placeholder="请输入用户名" />
                 </FormControl>
                 <!-- <FormDescription>用户注册时的名称</FormDescription> -->
                 <FormMessage />
@@ -119,13 +108,13 @@ onUnmounted(() => {
                 <FormMessage />
               </FormItem>
             </FormField>
-            <!-- <div>{{ loginMessage }}</div> -->
+            <div>{{ loginMessage }}</div>
             <div class="flex flex-row justify-center items-center gap-x-4">
               <Button class="hover:cursor-pointer" type="submit">登录</Button>
               <Button class="hover:cursor-pointer" type="button" variant="secondary"
                 @click="router.push('/register')">注册</Button>
             </div>
-          </form>
+          </Form>
         </CardContent>
       </Card>
     </div>

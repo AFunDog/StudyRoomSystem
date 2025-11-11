@@ -11,21 +11,27 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { toast } from 'vue-sonner';
 
 import { toTypedSchema } from '@vee-validate/zod';
 import z from 'zod';
-import type { GenericObject } from 'vee-validate';
+import { useField, useForm, type GenericObject } from 'vee-validate';
 import { http } from '@/lib/utils';
-import { ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import type { User } from '@/lib/types/user';
 import { LockKeyhole, Eye, EyeOff } from 'lucide-vue-next';
+import { email } from 'zod/v4';
+import { AxiosError } from 'axios';
+import { authRequest } from '@/lib/api/authRequest';
 
 const router = useRouter();
 const schema = z.object({
   userName: z.string({ required_error: '请输入用户名' }).min(4, '请输入用户名'),
   campusId: z.string({ required_error: '请输入学号/工号' }),
+  // displayName: z.string().min(4,'请输入昵称').nullable(),
   phone: z.string({ required_error: '请输入手机号' }).regex(/^1[3-9]\d{9}$/, '请输入有效的手机号'),
+  // email : z.string({ }).email('请输入有效的邮箱').nullable(),
   password: z.string({ required_error: '请输入密码' }).min(6, '请输入密码'),
   confirmPassword: z.string({ required_error: '请输入确认密码' }).min(6, '请输入确认密码')
 }).refine((data) => data.password === data.confirmPassword, {
@@ -33,13 +39,22 @@ const schema = z.object({
   message: '确认密码与密码不一致'
 });
 const formSchema = toTypedSchema(schema)
-const registerMessage = ref('');
+const form = useForm({ validationSchema: formSchema });
+
+// const displayNamePlaceholder = ref('请输入昵称');
+// const registerMessage = ref('');
 const isShowPassword = ref(false);
 
-async function onSubmit(values: GenericObject) {
+
+// watch(() => form.values.userName,v => {
+//   displayNamePlaceholder.value = v ?? '请输入昵称';
+//   console.log(v);
+// })
+
+const onSubmit = form.handleSubmit(async (values) => {
   try {
     console.log(values);
-    var res = await http.post('/api/v1/auth/register', {
+    var res = await authRequest.register({
       userName: values.userName,
       password: values.password,
       campusId: values.campusId,
@@ -49,8 +64,9 @@ async function onSubmit(values: GenericObject) {
     const token = res.data.token;
     const user = res.data.user as User;
 
-    if (!res.data.data) {
-      registerMessage.value = '注册失败';
+    if (!token || !user) {
+      // registerMessage.value = '注册失败';
+      toast.error('注册失败');
       return;
     }
 
@@ -58,10 +74,14 @@ async function onSubmit(values: GenericObject) {
 
   }
   catch (error) {
-    registerMessage.value = '注册失败';
+    // registerMessage.value = '注册失败';
+    if (error instanceof AxiosError)
+      toast.error('注册失败', {
+        description: error.response?.data.message,
+      });
     console.log(error);
   }
-}
+});
 
 </script>
 <template>
@@ -73,12 +93,12 @@ async function onSubmit(values: GenericObject) {
           <div class="text-sm text-muted-foreground">欢迎来到智慧自习室预约管理系统</div>
         </CardHeader>
         <CardContent>
-          <Form class="flex flex-col gap-y-4" :validation-schema="formSchema" @submit="onSubmit">
+          <form class="flex flex-col gap-y-4" :validation-schema="formSchema" @submit="onSubmit">
             <FormField v-slot="{ componentField }" name="userName">
               <FormItem>
                 <FormLabel>用户名</FormLabel>
                 <FormControl>
-                  <Input v-bind="componentField" placeholder="请输入用户名" />
+                  <Input v-bind="componentField" autocomplete="username" placeholder="请输入用户名" />
                 </FormControl>
                 <!-- <FormDescription>用户注册时的名称</FormDescription> -->
                 <FormMessage />
@@ -94,16 +114,34 @@ async function onSubmit(values: GenericObject) {
                 <FormMessage />
               </FormItem>
             </FormField>
+            <!-- <FormField v-slot="{ componentField }" name="displayName">
+              <FormItem>
+                <FormLabel>昵称</FormLabel>
+                <FormControl>
+                  <Input v-bind="componentField" autocomplete="nickname" :placeholder="displayNamePlaceholder" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            </FormField> -->
             <FormField v-slot="{ componentField }" name="phone">
               <FormItem>
                 <FormLabel>手机号</FormLabel>
                 <FormControl>
-                  <Input v-bind="componentField" placeholder="请输入手机号" />
+                  <Input v-bind="componentField" autocomplete="cc-number" placeholder="请输入手机号" />
                 </FormControl>
                 <!-- <FormDescription>用户注册时的名称</FormDescription> -->
                 <FormMessage />
               </FormItem>
             </FormField>
+            <!-- <FormField v-slot="{ componentField }" name="email">
+              <FormItem>
+                <FormLabel>邮箱</FormLabel>
+                <FormControl>
+                  <Input v-bind="componentField" placeholder="请输入邮箱" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            </FormField> -->
             <FormField v-slot="{ componentField }" name="password">
               <FormItem>
                 <FormLabel>密码</FormLabel>
@@ -126,7 +164,7 @@ async function onSubmit(values: GenericObject) {
                 <FormMessage />
               </FormItem>
             </FormField>
-            <FormField v-slot="{ componentField }" name="confirmPassword"> 
+            <FormField v-slot="{ componentField }" name="confirmPassword">
               <FormItem>
                 <FormLabel>确认密码</FormLabel>
                 <FormControl>
@@ -148,12 +186,12 @@ async function onSubmit(values: GenericObject) {
                 <FormMessage />
               </FormItem>
             </FormField>
-            <div>{{ registerMessage }}</div>
+            <!-- <div>{{ registerMessage }}</div> -->
             <div class="flex flex-row justify-center items-center gap-x-4">
               <Button class="hover:cursor-pointer" type="button" variant="secondary" @click="router.back()">返回</Button>
               <Button class="hover:cursor-pointer" type="submit">注册</Button>
             </div>
-          </Form>
+          </form>
         </CardContent>
       </Card>
     </div>

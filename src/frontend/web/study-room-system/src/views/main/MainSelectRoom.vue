@@ -11,7 +11,7 @@ const rooms = ref<Room[]>([]);
 const selectRoom = inject(SELECT_ROOM);
 
 async function getRooms() {
-    rooms.value = await http.get('/api/v1/room').then(res => res.data);
+    rooms.value = await http.get('/room').then(res => res.data);
 }
 
 getRooms();

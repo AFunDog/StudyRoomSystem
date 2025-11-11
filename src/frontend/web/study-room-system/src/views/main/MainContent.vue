@@ -7,6 +7,7 @@ import { SELECT_ROOM } from './define';
 import { isValid } from 'zod';
 import MainSelectSeat from './MainSelectSeat.vue';
 import MainMyBooking from './MainMyBooking.vue';
+import MainSelectDate from './MainSelectDate.vue';
 
 // const count = ref(10);
 const selectRoom = inject(SELECT_ROOM);
@@ -15,6 +16,7 @@ const selectRoom = inject(SELECT_ROOM);
 </script>
 <template>
   <div class="px-4 flex flex-col gap-y-4 items-center justify-center h-full  max-w-full">
+    <MainSelectDate />
     <MainSelectRoom />
     <MainSelectSeat class="flex-5"/>
     <MainMyBooking class="flex-1"/>

@@ -10,6 +10,7 @@ export interface Booking {
     endTime: string;
     checkInTime: string | null;
     checkOutTime: string | null;
+    state : "Booking" | "CheckIn" | "Checkout" | "Canceled";
     user : User | null;
     seat : Seat | null;
 }

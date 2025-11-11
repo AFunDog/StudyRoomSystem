@@ -10,6 +10,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Npgsql;
 using Serilog;
+using StudyRoomSystem.Core.Structs;
 using StudyRoomSystem.Server.Database;
 using StudyRoomSystem.Server.Hubs;
 using Zeng.CoreLibrary.Toolkit.Logging;
@@ -20,6 +21,7 @@ public class PgSqlNotificationsService : IHostedService
 {
     private IConfiguration Configuration { get; }
     private IHubContext<DataHub> DataHub { get; }
+    private IServiceScopeFactory ServiceScopeFactory { get; }
     private IOptions<JsonOptions> JsonOptions { get; }
     private NpgsqlConnection? Connection { get; set; }
     private CancellationTokenSource BackgroundTaskCts { get; } = new();
@@ -28,10 +30,12 @@ public class PgSqlNotificationsService : IHostedService
     public PgSqlNotificationsService(
         IConfiguration configuration,
         IHubContext<DataHub> dataHub,
+        IServiceScopeFactory serviceScopeFactory,
         IOptions<JsonOptions> jsonOptions)
     {
         Configuration = configuration;
         DataHub = dataHub;
+        ServiceScopeFactory = serviceScopeFactory;
         JsonOptions = jsonOptions;
     }
 
@@ -89,16 +93,32 @@ public class PgSqlNotificationsService : IHostedService
     private void OnNotification(object sender, NpgsqlNotificationEventArgs e)
     {
         Log.Logger.Trace().Information("NOTIFY {@Args}", e);
+        using var scope = ServiceScopeFactory.CreateAsyncScope();
+        var appDbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var payloadData = JsonSerializer.Deserialize<PayloadData>(
             e.Payload,
             options: JsonOptions.Value.SerializerOptions
         );
         if (payloadData is null)
             return;
+        // TODO 消息队列处理任务 Channel
         if (payloadData.Table == "bookings")
         {
             // TODO 根据表名通知前台数据更新
             // DataHub.Clients.All.SendAsync("bookings-update", payloadData.DataId);
+            var booking = appDbContext.Bookings.Find(payloadData.DataId);
+            if (booking is null)
+                return;
+            DataHub
+                .Clients.User(booking.UserId.ToString())
+                .SendAsync(
+                    "bookings-my-update",
+                    appDbContext
+                        .Bookings.Include(x => x.Seat)
+                        .Include(x => x.Seat.Room)
+                        .Where(x => x.UserId == booking.UserId)
+                        .ToList()
+                );
         }
     }
 

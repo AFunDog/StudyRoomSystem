@@ -15,44 +15,46 @@ import { http } from '@/lib/utils';
 import dayjs from 'dayjs';
 import { Trash2 } from 'lucide-vue-next';
 import { onMounted, onUnmounted, ref } from 'vue';
-import { getHubConnection } from '@/lib/utils';
+import { getHubConnection } from '@/lib/api/hubConnection';
+import { bookingRequest } from '@/lib/api/bookingRequest';
 
-const hubConnection = getHubConnection();
+// const hubConnection = getHubConnection();
 const bookings = ref<Booking[]>([]);
 const isDialogOpen = ref(false);
 const selectBooking = ref<Booking | null>(null);
 
-async function getMyBookings() {
-  try {
-    var res = await http.get('/api/v1/booking/my').then(res => res.data);
-    bookings.value = res;
-    console.log(res);
-  }
-  catch (err) {
-    console.log(err);
-  }
-}
+// async function getMyBookings() {
+//   try {
+//     var res = await http.get('/api/v1/booking/my').then(res => res.data);
+//     bookings.value = res;
+//     console.log(res);
+//   }
+//   catch (err) {
+//     console.log(err);
+//   }
+// }
 
-async function cancelBooking(id: string) {
-  try {
-    var res = await http.delete(`/api/v1/booking/${id}`).then(res => res.data);
-    getMyBookings();
-    console.log(res);
-  }
-  catch (err) {
-    console.log(err);
-  }
-}
+// async function cancelBooking(id: string) {
+//   try {
+//     var res = await http.delete(`/api/v1/booking/${id}`).then(res => res.data);
+//     getMyBookings();
+//     console.log(res);
+//   }
+//   catch (err) {
+//     console.log(err);
+//   }
+// }
 
-onMounted(() =>{
-  getMyBookings();
-  hubConnection.on('bookings-my-update',(data) =>{
-    bookings.value = data;
+onMounted(async () => {
+  bookings.value = await bookingRequest.getMyBookings();
+  getHubConnection().on('bookings-my-update', (data : Booking[]) => {
+    console.log('bookings-my-update',data);
+    bookings.value = data.filter(x => x.state == "Booking" || x.state == "CheckIn");
   });
 })
 
 onUnmounted(() => {
-  hubConnection.off('bookings-my-update');
+  getHubConnection().off('bookings-my-update');
 });
 
 
@@ -89,7 +91,8 @@ onUnmounted(() => {
         <DialogFooter>
           <div class="flex flex-row items-center justify-center">
             <Button variant="destructive" @click="if (selectBooking != null) {
-              cancelBooking(selectBooking.id);
+              const res = bookingRequest.cancelBooking(selectBooking.id, true);
+              console.log(res);
               isDialogOpen = false;
             }">
               取消预约
@@ -99,7 +102,8 @@ onUnmounted(() => {
       </DialogContent>
     </Dialog>
     <div class="bg-accent h-full w-full rounded-xl overflow-hidden p-2">
-      <div class="flex flex-col px-4 min-w-0 min-h-30 max-h-50 gap-y-2 max-w-full flex-nowrap gap-x-2 overflow-x-hidden overflow-y-auto [&>.bookings-enter-active,.bookings-leave-active]:transition-all [&>.bookings-enter-from,.bookings-leave-to]:opacity-0 [&>.bookings-enter-from,.bookings-leave-to]:transform-[translateX(30px)]">
+      <div
+        class="flex flex-col px-4 min-w-0 min-h-10 max-h-20 gap-y-2 max-w-full flex-nowrap gap-x-2 overflow-x-hidden overflow-y-auto [&>.bookings-enter-active,.bookings-leave-active]:transition-all [&>.bookings-enter-from,.bookings-leave-to]:opacity-0 [&>.bookings-enter-from,.bookings-leave-to]:transform-[translateX(30px)]">
         <TransitionGroup name="bookings">
           <div v-for="b in bookings" :key="b.id">
             <Card class=" py-2" @click="isDialogOpen = true; selectBooking = b">
@@ -114,11 +118,14 @@ onUnmounted(() => {
                   <div>
                     {{ (b.seat?.row ?? 0) * (b.seat?.room?.cols ?? 0) + (b.seat?.col ?? 0) }}
                   </div>
-                  <Trash2 class="text-red-500 ml-auto"></Trash2>
+                  <div class="flex flex-row items-center justify-center ml-auto">
+                    <div>{{ b.state }}</div>
+                    <Trash2 class="text-red-500"></Trash2>
+                  </div>
                 </div>
                 <CardDescription>
                   <div>
-                    预约时间: {{ dayjs(b.startTime).local().format("YYYY/MM/DD") }} {{
+                    {{ dayjs(b.startTime).local().format("YYYY/MM/DD") }} {{
                       dayjs(b.startTime).local().format("HH:mm:ss") }} - {{
                       dayjs(b.endTime).local().format("HH:mm:ss") }}
                   </div>

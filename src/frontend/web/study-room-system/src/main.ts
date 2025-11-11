@@ -5,10 +5,14 @@ import { useColorMode } from '@vueuse/core'
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from './views/login/LoginView.vue'
 import MainView from './views/main/MainView.vue'
-import { getHubConnection, http } from './lib/utils'
+import { http } from './lib/utils'
 import utc from 'dayjs/plugin/utc'
 import dayjs from 'dayjs'
 import RegisterView from './views/register/RegisterView.vue'
+import { restartHubConnection } from './lib/api/hubConnection'
+import AdminLoginView from './views/admin/login/AdminLoginView.vue'
+import CalendarView from './views/calendar/CalendarView.vue'
+import SettingView from './views/setting/SettingView.vue'
 
 dayjs.extend(utc)
 
@@ -22,6 +26,9 @@ const router = createRouter({
         { path: '/', component: MainView },
         { path: '/login', component: LoginView },
         { path: '/register', component: RegisterView },
+        { path: '/admin/login', component: AdminLoginView },
+        { path: '/calendar', component: CalendarView },
+        { path: '/setting', component: SettingView },
     ]
 })
 
@@ -30,12 +37,7 @@ const router = createRouter({
 
 // });
 
-
-getHubConnection().start().catch(err => {
-    console.log('Error while starting Hub connection: ' + err);
-}).then(() => {
-    console.log('Hub connection started');
-})
+restartHubConnection();
 
 
 // 加载配置，并挂载

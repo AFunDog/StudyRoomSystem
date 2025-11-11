@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -90,10 +91,12 @@ builder
             // options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
         }
     );
-// 日期时间转换
 builder.Services.Configure<JsonOptions>(options =>
-    {
+    { 
+        // 日期时间转换
         options.JsonSerializerOptions.Converters.Add(new FlexibleDateTimeOffsetConverter());
+        // Json枚举字符串转换
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     }
 );
 
@@ -123,6 +126,21 @@ builder
                 ValidAudience = builder.Configuration["Jwt:Audience"],
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
             };
+            options.Events = new JwtBearerEvents()
+            {
+                OnMessageReceived = context =>
+                {
+                    var accessToken = context.Request.Query["access_token"];
+                    var path = context.HttpContext.Request.Path;
+                    if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hub"))
+                    {
+                        context.Token = accessToken;
+                        Log.Logger.Trace().Debug("Hub Token {Token}", accessToken.ToString());
+                    }
+
+                    return Task.CompletedTask;
+                }
+            };
         }
     );
 
@@ -136,19 +154,23 @@ builder
     .AddPolicy(AuthorizationHelper.Policy.Admin, policy => policy.RequireRole(AuthorizationHelper.Role.Admin));
 
 // SignalR
-builder.Services.AddSignalR();
+builder.Services.AddSignalR().AddJsonProtocol(options =>
+{
+    // 日期时间转换
+    options.PayloadSerializerOptions.Converters.Add(new FlexibleDateTimeOffsetConverter());
+    // Json枚举字符串转换
+    options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    // 忽略循环引用
+    options.PayloadSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+});
+// SignalR Hub UserIdProvider
+builder.Services.AddSingleton<IUserIdProvider, UserIdProvider>();
 
 await using var app = builder.Build();
 
 // 在 HTTP 请求流水线中加入 Serilog 请求日志
 app.UseSerilogRequestLogging();
 
-app.UseAuthentication();
-app.UseAuthorization();
-
-// SignalR Hub
-var hub = app.MapGroup("/hub");
-hub.MapHub<DataHub>("/data");
 
 // 承载网页和静态资源
 app.UseDefaultFiles(
@@ -169,6 +191,10 @@ app.UseStaticFiles(
         RequestPath = ""
     }
 );
+app.UseRouting();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 // 开发模式下添加 OpenApi 和 Scalar
 if (app.Environment.IsDevelopment())
@@ -179,9 +205,21 @@ if (app.Environment.IsDevelopment())
     app.UseCors("AllowFrontend");
 }
 
+app.UseWebSockets(new WebSocketOptions(){});
 
 app.MapControllers();
 
+// SignalR Hub
+var hub = app.MapGroup("/hub");
+hub.MapHub<DataHub>("/data")
+    // .RequireCors(p => p
+    //     .WithOrigins("http://localhost:5173") // 前端地址
+    //     .AllowAnyHeader()
+    //     .AllowAnyMethod()
+    //     .AllowCredentials()
+    // )
+    ;
+// .RequireCors(t => t.WithOrigins("http://localhost:5173").AllowAnyMethod().AllowAnyHeader().AllowCredentials());
 
 // warn: Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware[3]
 // Failed to determine the https port for redirect.

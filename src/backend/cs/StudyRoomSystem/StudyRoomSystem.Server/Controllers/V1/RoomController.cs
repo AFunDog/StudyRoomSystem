@@ -51,6 +51,11 @@ public class RoomController : ControllerBase
         public required int Cols { get; set; }
     }
 
+    /// <summary>
+    /// 管理员创建房间
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
     [HttpPost]
     [Authorize(AuthorizationHelper.Policy.Admin)]
     public async Task<IActionResult> CreateRoom([FromBody] CreateRoomRequest request)
@@ -74,13 +79,18 @@ public class RoomController : ControllerBase
         return BadRequest(new { message = "数据添加失败" });
     }
 
+    /// <summary>
+    /// 管理员删除房间
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     [HttpDelete("{id:guid}")]
     [Authorize(AuthorizationHelper.Policy.Admin)]
     public async Task<IActionResult> DeleteRoom(Guid id)
     {
         var room = await AppDbContext.Rooms.SingleOrDefaultAsync(x => x.Id == id);
         if (room is null)
-            return NotFound();
+            return NotFound(new{ message = "管理员找不到房间" });
         
         AppDbContext.Rooms.Remove(room);
         var res = await AppDbContext.SaveChangesAsync();

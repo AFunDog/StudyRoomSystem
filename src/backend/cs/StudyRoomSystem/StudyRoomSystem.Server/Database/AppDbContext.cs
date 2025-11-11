@@ -10,13 +10,11 @@ public class AppDbContext : DbContext
     public DbSet<Room> Rooms { get; set; }
     public DbSet<Booking> Bookings { get; set; }
 
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
-    {
-        
-    }
+    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // Seat 关联 Room
         modelBuilder
             .Entity<Seat>()
             .HasOne(s => s.Room)
@@ -24,6 +22,7 @@ public class AppDbContext : DbContext
             .HasForeignKey(s => s.RoomId)
             .HasPrincipalKey(r => r.Id)
             .IsRequired();
+        // Booking 关联 User
         modelBuilder
             .Entity<Booking>()
             .HasOne(b => b.User)
@@ -31,6 +30,7 @@ public class AppDbContext : DbContext
             .HasForeignKey(b => b.UserId)
             .HasPrincipalKey(u => u.Id)
             .IsRequired();
+        // Booking 关联 Seat
         modelBuilder
             .Entity<Booking>()
             .HasOne(b => b.Seat)
@@ -38,5 +38,7 @@ public class AppDbContext : DbContext
             .HasForeignKey(b => b.SeatId)
             .HasPrincipalKey(s => s.Id)
             .IsRequired();
+        // Booking State 枚举转换
+        modelBuilder.Entity<Booking>().Property(b => b.State).HasConversion<string>();
     }
 }

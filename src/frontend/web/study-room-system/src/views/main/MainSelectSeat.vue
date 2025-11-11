@@ -45,6 +45,7 @@ import type { DateValue } from 'reka-ui';
 import { parseDate, CalendarDate } from '@internationalized/date';
 import dayjs from 'dayjs';
 import ViewBox from '@/components/ui/view-box/ViewBox.vue';
+import { bookingRequest } from '@/lib/api/bookingRequest';
 
 const isSelectDialogOpen = ref(false);
 const selectRoom = inject(SELECT_ROOM)!;
@@ -88,11 +89,16 @@ async function onSubmit(values: GenericObject) {
         startTime: dayjs(values.date.toString()).add(values.startHour, 'h').add(values.startMin, 'm').toISOString(),
         endTime: dayjs(values.date.toString()).add(values.endHour, 'h').add(values.endMin, 'm').toISOString(),
       });
-    const res = await http.post('/api/v1/booking', {
-      seatId: selectSeat.value?.id,
+    // const res = await http.post('/api/v1/booking', {
+    //   seatId: selectSeat.value?.id,
+    //   startTime: dayjs(values.date.toString()).add(values.startHour, 'h').add(values.startMin, 'm').toISOString(),
+    //   endTime: dayjs(values.date.toString()).add(values.endHour, 'h').add(values.endMin, 'm').toISOString(),
+    // })
+    const res = bookingRequest.createBooking({
+      seatId: selectSeat.value?.id!,
       startTime: dayjs(values.date.toString()).add(values.startHour, 'h').add(values.startMin, 'm').toISOString(),
       endTime: dayjs(values.date.toString()).add(values.endHour, 'h').add(values.endMin, 'm').toISOString(),
-    })
+    });
     console.log(res);
     isSelectDialogOpen.value = false;
   }
@@ -193,11 +199,11 @@ async function onSubmit(values: GenericObject) {
                     <FormControl>
                       <Select v-bind="componentField">
                         <SelectTrigger>
-                          <SelectValue placeholder="钟" />
+                          <SelectValue placeholder="分" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectGroup>
-                            <SelectLabel>钟</SelectLabel>
+                            <SelectLabel>分</SelectLabel>
                             <SelectItem v-for="v in Array(12).fill(0).map((_, i) => i * 5)" :value="v">{{
                               v.toString().padStart(2, '0') }}</SelectItem>
                           </SelectGroup>
@@ -235,11 +241,11 @@ async function onSubmit(values: GenericObject) {
                     <FormControl>
                       <Select v-bind="componentField">
                         <SelectTrigger>
-                          <SelectValue placeholder="钟" />
+                          <SelectValue placeholder="分" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectGroup>
-                            <SelectLabel>钟</SelectLabel>
+                            <SelectLabel>分</SelectLabel>
                             <SelectItem v-for="v in Array(12).fill(0).map((_, i) => i * 5)" :value="v">{{
                               v.toString().padStart(2, '0') }}</SelectItem>
                           </SelectGroup>
