@@ -6,22 +6,27 @@ import type { Booking } from '@/lib/types/booking';
 import { http } from '@/lib/utils';
 import { onMounted, ref } from 'vue';
 import dayjs from 'dayjs';
-</script>
+import type { User } from '@/lib/types/user';
 
+const user = JSON.parse(localStorage.getItem('user')!) as User;
+
+
+</script>
 <template>
     <div class="flex flex-col items-stretch justify-between h-full">
     <div class="flex-1 p-4">
       <Card class="h-full bg-muted">
-        <CardHeader>
-          <CardTitle>
-            设置
-          </CardTitle>
-        </CardHeader>
         <CardContent class="px-2">
-
+          <div class="flex flex-col">
+            <div class="flex flex-row">
+              <div>
+                {{ user.displayName }}
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
     <BottomTag />
   </div>
-</template>
+</template> 

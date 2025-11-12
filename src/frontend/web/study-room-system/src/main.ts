@@ -13,6 +13,7 @@ import { restartHubConnection } from './lib/api/hubConnection'
 import AdminLoginView from './views/admin/login/AdminLoginView.vue'
 import CalendarView from './views/calendar/CalendarView.vue'
 import SettingView from './views/setting/SettingView.vue'
+import MyUserView from './views/user/MyUserView.vue'
 
 dayjs.extend(utc)
 
@@ -29,6 +30,8 @@ const router = createRouter({
         { path: '/admin/login', component: AdminLoginView },
         { path: '/calendar', component: CalendarView },
         { path: '/setting', component: SettingView },
+        { path: '/user', component: MyUserView },
+        
     ]
 })
 

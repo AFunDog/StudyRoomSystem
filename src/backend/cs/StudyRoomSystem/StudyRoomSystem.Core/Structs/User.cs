@@ -30,4 +30,7 @@ public class User
     
     [MaxLength(64)]
     public required string Role { get; set; }
+    
+    [Url]
+    public string? Avatar { get; set; }
 }

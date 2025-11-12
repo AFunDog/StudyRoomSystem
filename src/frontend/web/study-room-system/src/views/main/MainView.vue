@@ -5,7 +5,7 @@ import MainBottom from './MainBottom.vue'
 import { provide, ref, watch } from 'vue';
 import type { Room } from '@/lib/types/room';
 import { SELECT_ROOM } from './define';
-import BottomTag from '@/components/bottomTag/BottomTag.vue';
+import BottomTag from '@/components/ui/bottomTag/BottomTag.vue';
 
 const selectRoom = ref<Room | null>(null);
 

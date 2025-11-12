@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import BottomTag from '@/components/bottomTag/BottomTag.vue';
+import BottomTag from '@/components/ui/bottomTag/BottomTag.vue';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { bookingRequest } from '@/lib/api/bookingRequest';
 import type { Booking } from '@/lib/types/booking';

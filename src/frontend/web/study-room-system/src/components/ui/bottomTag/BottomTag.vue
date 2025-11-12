@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { useConfig } from '@/lib/config';
 import { cn } from '@/lib/utils';
-import { CalendarClock, House, Plus, Settings } from 'lucide-vue-next';
+import { CalendarClock, CircleUserRound, House, Plus, Settings } from 'lucide-vue-next';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
 const config = useConfig();
-const bottomTag = [{ route: '/calendar', icon: CalendarClock }, { route: '/', icon: House },{ route : '/setting',icon : Settings }];
+const bottomTag = [{ route: '/calendar', icon: CalendarClock }, { route: '/', icon: House },{ route : '/user',icon : CircleUserRound }];
 const currentRoute = ref('');
 
 onMounted(() =>{

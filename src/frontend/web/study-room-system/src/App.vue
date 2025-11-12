@@ -2,7 +2,6 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { http } from './lib/utils';
-import BottomTag from './components/bottomTag/BottomTag.vue';
 import { Toaster } from '@/components/ui/sonner';
 import 'vue-sonner/style.css'
 import { useColorMode } from '@vueuse/core';
