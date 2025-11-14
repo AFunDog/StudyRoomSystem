@@ -1,0 +1,686 @@
+%!TEX program = xelatex
+\documentclass[a4paper,11pt]{ctexart}
+
+% 中文与字体
+\usepackage{xeCJK}
+\setCJKmainfont{宋体}
+\setCJKsansfont{黑体}
+\setCJKmonofont{仿宋}
+\punctstyle{kaiming}
+\setCJKmainfont[BoldFont={SimHei}]{SimSun} %加粗字体
+
+
+% 页面设置
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{需求分析报告}
+\lhead{智慧自习室系统}
+\rfoot{\thepage}
+
+% 图表与代码
+\usepackage{graphicx}
+\graphicspath{{./}{./imgs}}
+\usepackage{caption}
+\usepackage{booktabs}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{float}
+
+% 其他常用包
+\usepackage{amsmath, amssymb}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{tikz}
+\usetikzlibrary{positioning, shapes.geometric}
+
+% 标题格式
+\title{\heiti 智慧自习室预约管理系统\\需求分析报告}
+\author{作者：赵宇翔、曾昆、刘文凯、赵翰韬、鞠俊材}
+\date{\today}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+% 一、引言
+\section{项目背景}
+客户希望在高校场景中实现一套面向学生和运营管理的智慧自习室预约管理系统，目标是提高座位利用率、规范使用行为、降低人工值守成本并提供可视化运营数据。系统不包含 AI 功能，重点实现预约、签到、座位管理、违规处理、用户投诉与统计分析。
+
+\section{概要需求}
+\begin{itemize}
+  \item \textbf{目标用户}：学生、匿名访客、运营、管理员。  
+  \item \textbf{主要功能域}：资源管理、预约与排队、签到签退、违规与黑名单、管理员实时干预、投诉与评价、数据统计与可视化、第三方集成与运维。
+  \item \textbf{约束}： 
+    \begin{itemize}
+      \item 每日 22:00 自动释放座位并记录违规；
+      \item 管理员可手动登记违约并释放座位；
+      \item 违规规则可配置；
+      \item 页面与接口响应要低延迟并支持并发访问。 
+    \end{itemize}
+\end{itemize}
+
+% 二、功能需求
+\section{功能需求}
+\begin{itemize}
+  \item \textbf{用户功能}：
+    \begin{itemize}
+      \item 浏览座位状态与属性（学生/匿名访客）
+      \item 创建与取消预约（学生）
+      \item 签到与签退（学生）
+      \item 查询违规记录与提交投诉（学生）
+    \end{itemize}
+  \item \textbf{管理员功能}：
+    \begin{itemize}
+      \item 实时座位管理与违约登记
+      \item 用户信息与黑名单管理
+      \item 投诉结果处理与反馈
+      \item 数据统计与报表导出
+    \end{itemize}
+\end{itemize}
+
+% 三、用例分析
+\section{用例分析}
+以下每个用例包含：参与者、前置条件、主流程、备选流程、后置条件、业务规则。
+\subsection{用例 UC01：预约查询与座位浏览}
+\begin{itemize}
+  \item \textbf{参与者}：学生、匿名访客、管理员
+  \item \textbf{前置条件}：用户访问客户端或 Web
+  \item \textbf{主流程}：
+    \begin{enumerate}
+      \item 用户选择自习室或区域
+      \item 查看该区域座位空闲情况与时间段
+      \item 查看座位属性与历史预约率
+    \end{enumerate}
+  \item \textbf{备选流程}：若网络超时则提示重试
+  \item \textbf{后置条件}：展示实时座位与时间段可用性
+  \item \textbf{业务规则}：展示数据每 10 秒刷新一次
+\end{itemize}
+
+\subsection{用例 UC02：注册}
+\begin{itemize} 
+  \item \textbf{参与者}：匿名访客 
+  \item \textbf{前置条件}：用户访问客户端或 Web 
+  \item \textbf{主流程}： 
+  \begin{enumerate} 
+    \item 用户填写基本信息（姓名、学号、联系方式等） 
+    \item 系统校验信息合法性 
+    \item 注册成功并提示登录 
+  \end{enumerate} 
+  \item \textbf{备选流程}：信息不合法或重复注册提示错误 
+  \item \textbf{后置条件}：用户信息入库，账号状态为“待激活”或“正常” 
+  \item \textbf{业务规则}：每个学号仅允许注册一次 
+\end{itemize}
+
+\subsection{用例 UC03：登录}
+\begin{itemize} 
+  \item \textbf{参与者}：学生、管理员、运营 
+  \item \textbf{前置条件}：用户已注册 
+  \item \textbf{主流程}： 
+  \begin{enumerate} 
+    \item 用户输入账号密码或使用统一身份认证 
+    \item 系统校验身份 
+    \item 登录成功并进入主页面 
+  \end{enumerate} 
+  \item \textbf{备选流程}：密码错误或账号异常提示登录失败 
+  \item \textbf{后置条件}：用户进入系统，获取权限范围 
+  \item \textbf{业务规则}：连续三次失败需验证码或锁定 
+\end{itemize}
+
+\subsection{用例 UC04：创建预约}
+\begin{itemize}
+  \item \textbf{参与者}：学生、管理员
+  \item \textbf{前置条件}：用户已登录并实名认证
+  \item \textbf{主流程}：
+    \begin{enumerate}
+      \item 用户选择时间段、自习室与座位
+      \item 系统校验冲突与规则
+      \item 成功创建预约并返回凭证（二维码或编号）
+    \end{enumerate}
+  \item \textbf{备选流程}：
+    \begin{enumerate}
+      \item 座位被同时抢占则提示进入候补队列
+      \item 支付场景按学校策略决定是否支持付费
+    \end{enumerate}
+  \item \textbf{后置条件}：生成预约记录，座位状态更新为“已预约”
+  \item \textbf{业务规则}：
+    \begin{itemize}
+      \item 单用户同一时段只能保留一个座位
+      \item 不可重复占用
+      \item 预约最多开放七天以内的预约
+      \item 用户单次预约上限四个小时，以0.5h作为一个最小预约单位
+    \end{itemize}
+\end{itemize}
+
+\subsection{用例 UC05：取消预约}
+\begin{itemize}
+  \item \textbf{参与者}：学生、管理员
+  \item \textbf{前置条件}：存在未到期预约记录
+  \item \textbf{主流程}：
+    \begin{enumerate}
+      \item 用户在预约到期前取消（预约时间的三小时前）
+      \item 系统释放座位并通知候补用户
+    \end{enumerate}
+  \item \textbf{备选流程}：超时取消记录为违约，计入违规统计
+  \item \textbf{后置条件}：预约状态更新为已取消，座位回到空闲或候补分配状态
+  \item \textbf{业务规则}：
+    \begin{itemize}
+      \item 取消须在规则允许时间内操作，否则会记为违规
+      \item 不论用户是否违规取消预约，都将通知候补用户
+    \end{itemize}
+\end{itemize}
+
+\subsection{用例 UC06：修改预约}
+\begin{itemize} 
+  \item \textbf{参与者}：学生、管理员 
+  \item \textbf{前置条件}：用户已登录，存在有效预约记录 
+  \item \textbf{主流程}： 
+  \begin{enumerate} 
+    \item 用户选择需修改的预约记录 
+    \item 重新选择时间段或座位 
+    \item 系统校验冲突并更新预约信息 
+  \end{enumerate} 
+    \item \textbf{备选流程}：修改失败触发违约处理或进入候补队列 
+    \item \textbf{后置条件}：原预约记录更新，座位状态同步 
+    \item \textbf{业务规则}：修改需在预约开始前至少 X 分钟完成 
+\end{itemize}
+
+\subsection{用例 UC07：查看预约记录}
+\begin{itemize} 
+  \item \textbf{参与者}：学生、管理员 
+  \item \textbf{前置条件}：用户已登录 
+  \item \textbf{主流程}： 
+  \begin{enumerate} 
+    \item 用户进入“我的预约”页面 
+    \item 系统展示历史与当前预约记录 \end{enumerate} 
+    \item \textbf{备选流程}：无记录则提示“暂无预约” 
+    \item \textbf{后置条件}：用户可查看、取消或修改预约 
+    \item \textbf{业务规则}：记录保留周期为 90 天 
+  \end{itemize}
+
+\subsection{用例 UC08：签到与签退}
+\begin{itemize}
+  \item \textbf{参与者}：学生、管理员
+  \item \textbf{前置条件}：用户持预约到场或进行现场申请
+  \item \textbf{主流程}：
+    \begin{enumerate}
+      \item 用户扫码或刷校园卡签到
+      \item 系统验证预约并绑定座位
+      \item 开始计时
+      \item 用户离开时主动签退或通过门禁退出自动签退
+    \end{enumerate}
+  \item \textbf{备选流程}：
+    \begin{enumerate}
+      \item 签到失败触发人工核验
+      \item 未签到、超时以及触发违约释放
+    \end{enumerate}
+  \item \textbf{后置条件}：生成出入记录并更新使用时长统计
+  \item \textbf{业务规则}：签到有效窗口从预约时间开始前 X 分钟到预约时间后 Y 分钟
+\end{itemize}
+
+\subsection{用例 UC09：超时自动释放}
+\begin{itemize}
+  \item \textbf{参与者}：系统
+  \item \textbf{前置条件}：用户未在签到窗口内签到或到达预约结束后未签退
+  \item \textbf{主流程}：
+    \begin{enumerate}
+      \item 系统定时任务检测超时情形
+      \item 自动释放座位
+      \item 生成违约记录并发送通知
+    \end{enumerate}
+  \item \textbf{备选流程}：管理员巡查发现违规可手动登记违约并强制释放座位
+  \item \textbf{后置条件}：更新用户违规计数并按规则触发黑名单或限制
+  \item \textbf{业务规则}：
+    \begin{enumerate}
+      \item 签到窗口期未签到视为未签到违约一次
+      \item 每日 22:00 强制释放所有座位并视为未签退违约一次
+    \end{enumerate}
+\end{itemize}
+
+\subsection{用例 UC010：违约处理}
+\begin{itemize}
+  \item \textbf{参与者}：系统、管理员
+  \item \textbf{前置条件}：用户触发超时自动释放、规定时间之外取消、修改预约或者管理员处罚
+  \item \textbf{主流程}：
+    \begin{enumerate}
+      \item 系统定时检测用户是否存在违约行为
+      \item 系统生成违约记录并通知用户
+      \item 管理员审核违约情况并确认或修正
+    \end{enumerate}
+  \item \textbf{备选流程}：用户提出申诉，管理员人工复核并修改违约记录
+  \item \textbf{后置条件}：用户违约计数更新，若达到阈值则触发黑名单或限制
+  \item \textbf{业务规则}：
+    \begin{enumerate}
+      \item 连续 N 次违约触发黑名单
+      \item 黑名单用户在 M 天内禁止预约
+    \end{enumerate}
+\end{itemize}
+
+\subsection{用例 UC011：查看违约记录}
+\begin{itemize}
+  \item \textbf{参与者}：学生、管理员
+  \item \textbf{前置条件}：用户进入“违约记录”页面 
+  \item \textbf{主流程}：
+    \begin{enumerate}
+      \item 用户请求查看违约记录
+      \item 系统展示违约详情（时间、原因、处理结果）
+    \end{enumerate}
+  \item \textbf{备选流程}：若无违约记录，系统提示“暂无记录”
+  \item \textbf{后置条件}：用户可知晓自身信用状态，管理员可用于后续处理
+  \item \textbf{业务规则}：
+    \begin{enumerate}
+      \item 违约记录不可删除，仅可申诉
+      \item 违约记录保存周期为 12 个月
+    \end{enumerate}
+\end{itemize}
+
+\subsection{用例 UC012：管理员实时座位管理}
+\begin{itemize}
+  \item \textbf{参与者}：管理员
+  \item \textbf{前置条件}：管理员已登录并拥有实时监控权限
+  \item \textbf{主流程}：
+    \begin{enumerate}
+      \item 管理员查看实时座位热力图与占用详情
+      \item 对异常座位执行操作（登记违约、强制释放、备注并通知用户）
+      \item 导出座位使用记录或生成报表
+    \end{enumerate}
+  \item \textbf{备选流程}：管理员可调整规则或对单个用户追加处理
+  \item \textbf{后置条件}：所有操作记录入审计日志，用户接收处理通知
+  \item \textbf{业务规则}：
+    \begin{enumerate}
+      \item 管理员操作需二次确认
+      \item 系统记录操作者 ID 与时间戳
+    \end{enumerate}
+\end{itemize}
+
+\subsection{用例 UC013：投诉与评价}
+\begin{itemize}
+  \item \textbf{参与者}：学生
+  \item \textbf{前置条件}：用户已登录并有预约或使用经历
+  \item \textbf{主流程}：
+    \begin{enumerate}
+      \item 用户提交投诉或评价
+      \item 系统生成工单号并存档
+    \end{enumerate}
+  \item \textbf{备选流程}：若内容不合规，系统提示修改
+  \item \textbf{后置条件}：投诉或评价记录入库，等待处理
+  \item \textbf{业务规则}：
+    \begin{enumerate}
+      \item 每次预约仅可提交一次投诉或评价
+    \end{enumerate}
+\end{itemize}
+
+\subsection{用例 UC014：投诉与评价处理}
+\begin{itemize}
+  \item \textbf{参与者}：管理员、运营
+  \item \textbf{前置条件}：系统已收到投诉或评价工单
+  \item \textbf{主流程}：
+    \begin{enumerate}
+      \item 管理员或运营查看工单内容
+      \item 分派处理人员并跟进
+      \item 反馈处理结果并归档
+    \end{enumerate}
+  \item \textbf{备选流程}：投诉升级为运营策略调整或用户黑名单处理
+  \item \textbf{后置条件}：工单关闭，用户收到反馈
+  \item \textbf{业务规则}：
+    \begin{enumerate}
+      \item 投诉处理需在 48 小时内完成初步反馈
+    \end{enumerate}
+\end{itemize}
+
+\subsection{用例 UC015：数据统计与可视化}
+\begin{itemize}
+  \item \textbf{参与者}：管理员、运营
+  \item \textbf{前置条件}：系统持续采集使用与预约数据
+  \item \textbf{主流程}：
+    \begin{enumerate}
+      \item 系统生成柱状图、折线图、热力图与表格统计
+      \item 管理员筛选时间段并导出报表
+    \end{enumerate}
+  \item \textbf{备选流程}：管理员可自定义统计维度或导出格式
+  \item \textbf{后置条件}：报表保存、导出并支持按区域与时间分组
+  \item \textbf{业务规则}：
+    \begin{enumerate}
+      \item 数据刷新周期为 10 秒
+      \item 报表导出需记录操作者 ID
+    \end{enumerate}
+\end{itemize}
+
+\subsection{用例图示例}
+\textbf{总用例图}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=1\textwidth]{用例图（总）.pdf}
+  \caption{用例图（总）}
+\end{figure}
+
+\textbf{用例图A（学生、匿名访客）}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=1\textwidth]{用例图（A）.pdf}
+  \caption{用例图A}
+\end{figure}
+
+\textbf{用例图B（管理员、运营）}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=1\textwidth]{用例图（B）.pdf}
+  \caption{用例图B}
+\end{figure}
+
+% 四、类分析
+\section{类分析}
+列出核心类、关键属性与主要方法，描述类间关系
+\subsection{核心类结构}
+\subsubsection{User（用户类）}
+(1)表示系统中的用户，包括学生、管理员、运营人员等
+
+(2)管理用户的基本信息、账号状态、违规记录、黑名单标记
+
+(3)支持登录认证、更新个人资料、查看预约、提交投诉等操作
+
+\textbf{在系统中：是所有行为的发起者，关联预约、投诉、违规等模块}
+\begin{itemize}
+  \item \textbf{属性}：
+  \begin{itemize}
+    \item 编号
+    \item 用户名
+    \item 昵称
+    \item 角色
+    \item 工号
+    \item 电话
+    \item 邮箱
+    \item 状态
+  \end{itemize}
+  \item \textbf{方法}：
+    \begin{itemize}
+    \item login()
+    \item authenticate()
+    \item updateProfile()
+    \item getBookings()
+    \item submitComplaint()
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{Seat（座位类）}
+(1)表示自习室中的一个具体座位
+
+(2)包含座位编号、所属房间、区域、属性（如是否靠窗、有电源）、状态（空闲、已预约、占用等）
+
+(3)支持预约、释放、锁定、解锁等操作
+
+\textbf{在系统中：是用户预约的核心资源，状态变化驱动整个流程}
+\begin{itemize}
+  \item \textbf{属性}：
+  \begin{itemize}
+    \item 编号
+    \item 所属房间编号
+    \item 位置（行、列）
+    
+  \end{itemize}
+  \item \textbf{方法}：
+    \begin{itemize}
+    \item reserve()
+    \item release()
+    \item lock()
+    \item unlock()
+    \item getStatus()
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{Room（自习室类）}
+(1)表示一个自习室空间，包含名称、容量、开放时间、使用规则、管理员信息
+
+(2)管理该房间下的所有座位，支持规则配置与统计分析
+
+\textbf{在系统中：是座位的容器，用于分区管理和运营分析}
+\begin{itemize}
+  \item \textbf{属性}：
+  \begin{itemize}
+    \item 房间编号
+    \item 名称
+    \item 尺寸
+  \end{itemize}
+  \item \textbf{方法}：
+    \begin{itemize}
+    \item getAvailableSeats()
+    \item setRules()
+    \item getUsageStats()
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{Booking（预约类）}
+(1)表示一次预约记录，关联用户、座位、自习室、时间段、状态（已预约、已签到、已签退等）
+
+(2)支持创建、取消、签到、签退、延长等操作
+
+\textbf{在系统中：是用户与座位之间的桥梁，驱动签到与违约逻辑}
+\begin{itemize}
+  \item \textbf{属性}：
+  \begin{itemize}
+    \item 编号
+    \item 用户编号
+    \item 座位编号
+    \item 起始时间
+    \item 终止时间
+    \item 状态
+    \item 创建时间
+    \item 签到时间
+    \item 签退时间
+  \end{itemize}
+  \item \textbf{方法}：
+    \begin{itemize}
+    \item create()
+    \item cancel()
+    \item checkIn()
+    \item checkOut()
+    \item extend()
+  \end{itemize}
+\end{itemize}
+
+% \subsubsection{Device（设备类）}
+% (1)表示与座位或房间绑定的硬件设备，如门禁、传感器、摄像头等
+
+% (2)包含设备类型、位置、状态、心跳时间、固件版本
+
+% (3)支持注册、发送指令、更新固件等操作
+
+% \textbf{在系统中：用于辅助签到、自动释放、违规检测等功能}
+% \begin{itemize}
+%   \item \textbf{属性}：
+%   \begin{itemize}
+%     \item deviceId
+%     \item deviceType
+%     \item location
+%     \item status
+%     \item lastHeartbeat
+%     \item firmwareVersion
+%   \end{itemize}
+%   \item \textbf{方法}：
+%     \begin{itemize}
+%     \item register()
+%     \item heartbeat()
+%     \item sendCommand()
+%     \item updateFirmware()
+%   \end{itemize}
+% \end{itemize}
+
+\subsubsection{ViolationRecord（违规记录类）}
+(1)表示一次违规行为的记录，关联用户与预约，记录违规类型、描述、时间、处理人
+
+(2)支持登记、升级处理、结案等操作
+
+\textbf{在系统中：用于统计用户行为、触发黑名单、反馈给管理员}
+\begin{itemize}
+  \item \textbf{属性}：
+  \begin{itemize}
+    \item 编号
+    \item 用户编号
+    \item 状态
+    \item 类型（预约、签到、签退、实时）
+    \item 内容
+  \end{itemize}
+  \item \textbf{方法}：
+    \begin{itemize}
+    \item record()
+    \item escalate()
+    \item resolve()
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{Complaint（投诉类）}
+(1)表示用户发起的投诉或评价，记录标题、内容、状态、处理时间、处理人
+
+(2)支持提交、分配处理、反馈满意度等操作
+
+\textbf{在系统中：用于用户维权、服务改进、管理员响应机制}
+\begin{itemize}
+  \item \textbf{属性}：
+  \begin{itemize}
+    \item 编号
+    \item 发起用户编号
+    \item 被举报用户编号
+    \item 类型
+    \item 内容
+    \item 状态
+    \item 创建时间
+    \item 处理时间
+    \item 处理人编号
+  \end{itemize}
+  \item \textbf{方法}：
+    \begin{itemize}
+    \item submit()
+    \item assign()
+    \item resolve()
+    \item feedback()
+  \end{itemize}
+\end{itemize}
+
+% \subsubsection{Report（报表类）}
+% (1)表示系统生成的数据分析报表，包含类型（如使用率、违约率）、时间范围、指标、数据内容
+
+% (2)支持生成、导出 CSV、刷新数据等操作
+
+% \textbf{在系统中：用于运营分析、决策支持、展示可视化图表}
+% \begin{itemize}
+%   \item \textbf{属性}：
+%   \begin{itemize}
+%     \item reportId
+%     \item type
+%     \item timeRange
+%     \item metrics
+%     \item dataPayload
+%   \end{itemize}
+%   \item \textbf{方法}：
+%     \begin{itemize}
+%     \item generate()
+%     \item exportCSV()
+%     \item refresh()
+%   \end{itemize}
+% \end{itemize}
+
+\subsection{类图示意}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=1\textwidth]{类图.jpg}
+  \caption{类图}
+\end{figure}
+
+% 五、其他行为图
+\section{其他行为图}
+
+\subsection{状态图}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=1\textwidth]{状态图1.png}
+  \caption{用户类状态图}
+\end{figure}
+
+\subsection{状态图}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=1\textwidth]{状态图2.png}
+  \caption{座位类状态图}
+\end{figure}
+
+\subsection{状态图}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=1\textwidth]{状态图3.png}
+  \caption{预约类状态图}
+\end{figure}
+
+\subsection{状态图}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=1\textwidth]{状态图4.png}
+  \caption{违规记录类状态图}
+\end{figure}
+
+\subsection{活动图（泳道图）}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=1\textwidth]{泳道图（创建预约）.pdf}
+  \caption{创建预约泳道图}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=1\textwidth]{泳道图（违约处理）.pdf}
+  \caption{违约处理泳道图}
+\end{figure}
+
+
+% 六、非功能需求
+\section{非功能需求}
+\begin{itemize}
+  \item 系统支持并发访问，响应时间 < 300ms
+  \item 每日 22:00 自动释放所有座位并记录违约
+  \item 管理员可手动登记违约并释放座位
+  \item 页面数据每 10 秒自动刷新
+\end{itemize}
+
+% % 七、数据模型
+% \section{数据模型}
+% \begin{table}[H]
+% \centering
+% \caption{Booking 表结构}
+% \begin{tabular}{ll}
+% \toprule
+% 字段名 & 描述 \\
+% \midrule
+% bookingId & 预约编号 \\
+% userId & 用户编号 \\
+% seatId & 座位编号 \\
+% startTime & 开始时间 \\
+% endTime & 结束时间 \\
+% status & 状态（已预约/已签到/已签退） \\
+% \bottomrule
+% \end{tabular}
+% \end{table}
+
+% % 八、接口设计
+% \section{接口设计}
+% \begin{itemize}
+%   \item \textbf{GET /api/seats}：获取座位状态
+%   \item \textbf{POST /api/bookings}：创建预约
+%   \item \textbf{POST /api/bookings/{id}/checkin}：签到
+%   \item \textbf{POST /api/bookings/{id}/checkout}：签退
+%   \item \textbf{GET /api/violations}：查询违规记录
+% \end{itemize}
+
+\textbf{任务分工}
+
+赵宇翔：进行总体功能需求概述，打好用例基本框架并绘制用例图
+
+曾昆：在代码实现以及实际开发的角度进行对用例评估并稍作修改，完成类分析框架的构建
+
+刘文凯：基于目前搭建好的类分析框架进行绘制类图
+
+赵翰韬：负责行为图中状态图的绘制
+
+鞠俊材：负责活动图（泳道图）的绘制
+
+\end{document}
