@@ -20,12 +20,12 @@ public class SeatController : ControllerBase
         AppDbContext = appDbContext;
     }
 
-    [HttpGet]
-    [AllowAnonymous]
-    public async Task<IActionResult> GetAll()
-    {
-        return Ok(await AppDbContext.Seats.AsNoTracking().Include(x => x.Room).ToListAsync());
-    }
+    // [HttpGet]
+    // [AllowAnonymous]
+    // public async Task<IActionResult> GetAll()
+    // {
+    //     return Ok(await AppDbContext.Seats.AsNoTracking().Include(x => x.Room).ToListAsync());
+    // }
 
     [HttpGet("{id:guid}")]
     [AllowAnonymous]

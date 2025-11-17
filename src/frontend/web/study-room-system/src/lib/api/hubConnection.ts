@@ -1,12 +1,13 @@
 import { HubConnection, HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
-import { baseUrl } from "../utils";
 
+const baseUrl = import.meta.env.DEV ? 'http://localhost:5106' : '';
 let connection: HubConnection | null = null;
 
 function getHubConnection() {
     if (!connection) {
         connection = new HubConnectionBuilder()
             .withUrl(`${baseUrl}/hub/data`, { accessTokenFactory: () => `${localStorage.getItem("token")}` })
+            // .withUrl(`/hub/data`, { accessTokenFactory: () => `${localStorage.getItem("token")}` })
             .withAutomaticReconnect()
             .configureLogging(LogLevel.Information)
             .build();

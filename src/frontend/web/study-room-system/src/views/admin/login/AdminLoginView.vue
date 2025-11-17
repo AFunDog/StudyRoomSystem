@@ -15,13 +15,13 @@ import { Button } from '@/components/ui/button';
 import { toTypedSchema } from '@vee-validate/zod';
 import z from 'zod';
 import type { GenericObject } from 'vee-validate';
-import { http } from '@/lib/utils';
+import { http } from '@/lib/Utils';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import type { User } from '@/lib/types/user';
+import type { User } from '@/lib/types/User';
 import { LockKeyhole, Eye, EyeOff, UserStar } from 'lucide-vue-next';
-import { restartHubConnection } from '@/lib/api/hubConnection';
-import { authRequest } from '@/lib/api/authRequest';
+import { restartHubConnection } from '@/lib/api/HubConnection';
+import { authRequest } from '@/lib/api/AuthRequest';
 
 const router = useRouter();
 const schema = z.object({
@@ -41,8 +41,8 @@ async function onSubmit(values: GenericObject) {
     //   password: values.password
     // })
 
-    const token = res.data.token;
-    const user = res.data.user as User;
+    const token = res.token;
+    const user = res.user as User;
 
     if (!token || !user) {
       loginMessage.value = '登录失败，用户名或密码错误';
@@ -53,7 +53,7 @@ async function onSubmit(values: GenericObject) {
     localStorage.setItem('user', JSON.stringify(user));
     http.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     restartHubConnection();
-    router.push('/');
+    router.push('/admin');
 
   }
   catch (error) {

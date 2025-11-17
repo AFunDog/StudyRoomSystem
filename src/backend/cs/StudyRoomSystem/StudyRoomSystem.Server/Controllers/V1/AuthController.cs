@@ -14,6 +14,7 @@ using StudyRoomSystem.Core.Structs;
 using StudyRoomSystem.Server.Controllers.Filters;
 using StudyRoomSystem.Server.Database;
 using StudyRoomSystem.Server.Helpers;
+using StudyRoomSystem.Server.Structs;
 
 namespace StudyRoomSystem.Server.Controllers.V1;
 
@@ -31,33 +32,44 @@ public class AuthController : ControllerBase
         AppDbContext = appDbContext;
     }
 
+    #region Login
+
     public class LoginRequest
     {
         public required string UserName { get; set; }
         public required string Password { get; set; }
     }
 
+    public class LoginResponseOk
+    {
+        public required string Token { get; set; }
+        public required DateTime Expiration { get; set; }
+        public required User User { get; set; }
+    }
+
+    
+    /// <summary>
+    /// 用户登录
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
     [HttpPost("login")]
     [AllowAnonymous]
+    [ProducesResponseType<LoginResponseOk>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ResponseError>(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         var user = await AppDbContext.Users.SingleOrDefaultAsync(x => x.UserName == request.UserName);
-
         if (user is null)
             return Unauthorized(
-                new
+                new ResponseError
                 {
-                    message = "用户不存在"
+                    Message = "用户不存在"
                 }
             );
 
         if (PasswordHelper.CheckPassword(request.Password, user.Password) is false)
-            return Unauthorized(
-                new
-                {
-                    message = "密码错误"
-                }
-            );
+            return Unauthorized();
 
         var claims = new List<Claim>()
         {
@@ -77,17 +89,21 @@ public class AuthController : ControllerBase
         var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
         return Ok(
-            new
+            new LoginResponseOk
             {
-                token = tokenString,
-                expiration = token.ValidTo,
-                user
+                Token = tokenString,
+                Expiration = token.ValidTo,
+                User = user
             }
         );
     }
 
+    #endregion
+
     [HttpGet("check")]
     [Authorize]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Check()
     {
         var userId = this.GetLoginUserId();
@@ -95,7 +111,9 @@ public class AuthController : ControllerBase
             return Unauthorized();
         return Ok();
     }
-    
+
+    #region Register
+
     public class RegisterRequest
     {
         public required string UserName { get; set; }
@@ -114,14 +132,16 @@ public class AuthController : ControllerBase
 
     [HttpPost("register")]
     [AllowAnonymous]
+    [ProducesResponseType<User>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ResponseError>(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> RegisterUser([FromBody] RegisterRequest request)
     {
         if ((await AppDbContext.Users.FirstOrDefaultAsync(x => x.UserName == request.UserName)) is not null)
         {
             return Conflict(
-                new
+                new ResponseError()
                 {
-                    message = "用户名已存在"
+                    Message = "用户名已存在"
                 }
             );
         }
@@ -143,20 +163,14 @@ public class AuthController : ControllerBase
         var res = await AppDbContext.SaveChangesAsync();
         if (res != 0)
         {
-            return Ok(
-                new
-                {
-                    message = "用户注册成功",
-                    data = addUser.Entity
-                }
-            );
+            return Ok(addUser.Entity);
         }
         else
         {
             return Conflict(
-                new
+                new ResponseError()
                 {
-                    message = "用户注册失败"
+                    Message = "用户注册失败"
                 }
             );
         }
@@ -164,14 +178,16 @@ public class AuthController : ControllerBase
 
     [HttpPost("registerAdmin")]
     [Authorize(AuthorizationHelper.Policy.Admin)]
+    [ProducesResponseType<User>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ResponseError>(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> RegisterAdmin([FromBody] RegisterRequest request)
     {
         if ((await AppDbContext.Users.FirstOrDefaultAsync(x => x.UserName == request.UserName)) is not null)
         {
             return Conflict(
-                new
+                new ResponseError()
                 {
-                    message = "用户名已存在"
+                    Message = "用户名已存在"
                 }
             );
         }
@@ -193,22 +209,18 @@ public class AuthController : ControllerBase
         var res = await AppDbContext.SaveChangesAsync();
         if (res != 0)
         {
-            return Ok(
-                new
-                {
-                    message = "用户注册成功",
-                    data = addUser.Entity
-                }
-            );
+            return Ok(addUser.Entity);
         }
         else
         {
             return Conflict(
-                new
+                new ResponseError()
                 {
-                    message = "用户注册失败"
+                    Message = "用户注册失败"
                 }
             );
         }
     }
+
+    #endregion
 }

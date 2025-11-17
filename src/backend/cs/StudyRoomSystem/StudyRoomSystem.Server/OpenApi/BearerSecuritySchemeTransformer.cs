@@ -33,20 +33,20 @@ internal sealed class BearerSecuritySchemeTransformer(IAuthenticationSchemeProvi
             };
             document.Components ??= new OpenApiComponents();
             document.Components.SecuritySchemes = requirements;
-            foreach (var operation in document.Paths.Values.SelectMany(path => path.Operations))
-            {
-                operation.Value.Security.Add(new OpenApiSecurityRequirement
-                {
-                    [new OpenApiSecurityScheme
-                    {
-                        Reference = new OpenApiReference
-                        {
-                            Id = JwtBearerDefaults.AuthenticationScheme,
-                            Type = ReferenceType.SecurityScheme
-                        }
-                    }] = Array.Empty<string>()
-                });
-            }
+            // foreach (var (type,operation) in document.Paths.Values.SelectMany(path => path.Operations))
+            // {
+            //     operation.Security.Add(new OpenApiSecurityRequirement
+            //     {
+            //         [new OpenApiSecurityScheme
+            //         {
+            //             Reference = new OpenApiReference
+            //             {
+            //                 Id = JwtBearerDefaults.AuthenticationScheme,
+            //                 Type = ReferenceType.SecurityScheme
+            //             }
+            //         }] = Array.Empty<string>()
+            //     });
+            // }
         }
     }
 }

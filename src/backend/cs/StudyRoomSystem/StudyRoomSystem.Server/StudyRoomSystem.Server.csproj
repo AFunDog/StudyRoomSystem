@@ -4,6 +4,7 @@
         <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
+        <IncludeOpenAPIAnalyzers>true</IncludeOpenAPIAnalyzers>
     </PropertyGroup>
 
     <ItemGroup>
@@ -36,6 +37,10 @@
             <Link>dist\%(RecursiveDir)%(Filename)%(Extension)</Link>
         </Content>
 
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Contacts\" />
     </ItemGroup>
 
 

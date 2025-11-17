@@ -1,64 +1,60 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { http } from './lib/utils';
+import { http } from './lib/Utils';
 import { Toaster } from '@/components/ui/sonner';
 import 'vue-sonner/style.css'
 import { useColorMode } from '@vueuse/core';
 import { toast } from 'vue-sonner';
-import { authRequest } from './lib/api/authRequest';
+import { authRequest } from './lib/api/AuthRequest';
 
 
 const router = useRouter();
-// const color = useColorMode();
-// const theme = computed(() => {
+const viewTransition = ref('main');
+const curIndex = ref(0);
+// router.push('/login');
 
-//   if (color.value === 'light') {
-//     return 'light';
+
+// 检查登录状态
+router.beforeEach(async (to, from, next) => {
+  // if(to.path === '/login') return;
+  console.log(to, from);
+
+  if (to.path === '/login' || to.path === '/admin/login') return next();
+
+  if (await CheckLogin() === false) {
+    console.log('登录失效');
+    if (to.path.startsWith('/admin')) {
+      return next('/admin/login');
+    }
+    else {
+      return next('/login');
+    }
+  }
+  return next();
+});
+
+// 路由切换动画
+// router.beforeEach((to, from) => {
+//   curIndex.value = to.meta.index as number
+//   if ((to.meta.index as number) > (from.meta.index as number)) {
+//     viewTransition.value = 'slide-right'
 //   }
-//   else if(color.value === 'dark') {
-//     return 'dark';
+//   else if ((to.meta.index as number) < (from.meta.index as number)) {
+//     viewTransition.value = 'slide-left'
 //   }
 //   else {
-//     return 'system';
+//     viewTransition.value = ''
 //   }
-// });
-const viewTransition = ref('v');
-// router.push('/login');
-// router.beforeEach(async (to, from, next) => {
-//   // if(to.path === '/login') return;
-//   console.log(to, from);
-
-//   if (to.path === '/login') return next();
-
-//   if (await CheckLogin() === false) {
-//     console.log('no token');
-//     return next('/login');
-//   }
-//   return next();
-// });
-
+// })
 
 
 async function CheckLogin() {
   return await authRequest.check().then(res => {
     console.log(res);
-    if (res.status === 200) {
-      return true;
-    }
-    else {
-      return false;
-    }
+    return res ?? false;
   }).catch(error => false);
 }
-
-onMounted(async () => {
-  if (await CheckLogin() === false) {
-    console.log('no token');
-    router.push('/login');
-    toast.error('登录失效，请先登录');
-  }
-});
 
 </script>
 
@@ -66,16 +62,34 @@ onMounted(async () => {
   <Toaster class="pointer-events-auto" rich-colors theme="system" />
   <div class="w-screen h-screen flex flex-col justify-center">
     <main class="flex-1">
-      <!-- TODO 切换动画 -->
       <RouterView v-slot="{ Component, route }">
         <Transition :name="viewTransition">
-          <component :is="Component" :key="route.path" />
+          <component :is="Component"  />
         </Transition>
       </RouterView>
     </main>
   </div>
 </template>
 <style scoped>
+/* 淡入淡出动画 */
+.main-enter-active,
+.main-leave-active {
+  position: absolute;
+  width: 100%;
+  transition: all .3s cubic-bezier(.215, .61, .355, 1);
+}
+
+.main-enter-from {
+  opacity: 0;
+  transform: translateY(32px);
+}
+
+.main-leave-to {
+  opacity: 0;
+  transform: translateY(-32px);
+}
+
+
 .slide-left-enter-active,
 .slide-left-leave-active,
 .slide-right-enter-active,

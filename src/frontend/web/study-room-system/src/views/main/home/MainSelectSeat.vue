@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { inject, ref, watch } from 'vue';
-import { SELECT_ROOM } from './define';
-import { cn, http } from '@/lib/utils';
+import { SELECT_ROOM } from '../define';
+import { cn, http } from '@/lib/Utils';
 import { Armchair, Dot } from 'lucide-vue-next';
 import {
   Dialog,
@@ -36,7 +36,7 @@ import { CalendarIcon } from 'lucide-vue-next';
 import { Calendar } from '@/components/ui/calendar';
 
 import Button from '@/components/ui/button/Button.vue';
-import type { Seat } from '@/lib/types/seat';
+import type { Seat } from '@/lib/types/Seat';
 import { computed, type RefSymbol } from '@vue/reactivity';
 import z from 'zod';
 import { toTypedSchema } from '@vee-validate/zod';
@@ -45,7 +45,7 @@ import type { DateValue } from 'reka-ui';
 import { parseDate, CalendarDate } from '@internationalized/date';
 import dayjs from 'dayjs';
 import ViewBox from '@/components/ui/view-box/ViewBox.vue';
-import { bookingRequest } from '@/lib/api/bookingRequest';
+import { bookingRequest } from '@/lib/api/BookingRequest';
 
 const isSelectDialogOpen = ref(false);
 const selectRoom = inject(SELECT_ROOM)!;
@@ -112,7 +112,7 @@ async function onSubmit(values: GenericObject) {
 </script>
 <template>
 
-  <div class="bg-accent p-4 rounded-xl h-full w-full grid grid-rows-[auto_1fr] ">
+  <div class="bg-accent p-4 rounded-xl w-full grid grid-rows-[auto_1fr] ">
     <div class="flex items-center justify-center gap-x-2">
       <div>
         <div class="rounded-full w-3 h-3 bg-green-400"></div>

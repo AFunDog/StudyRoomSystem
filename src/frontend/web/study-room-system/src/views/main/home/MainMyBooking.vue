@@ -10,13 +10,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Button } from '@/components/ui/button';
-import type { Booking } from '@/lib/types/booking';
-import { http } from '@/lib/utils';
+import type { Booking } from '@/lib/types/Booking';
+import { http } from '@/lib/Utils';
 import dayjs from 'dayjs';
 import { Trash2 } from 'lucide-vue-next';
 import { onMounted, onUnmounted, ref } from 'vue';
-import { getHubConnection } from '@/lib/api/hubConnection';
-import { bookingRequest } from '@/lib/api/bookingRequest';
+import { getHubConnection } from '@/lib/api/HubConnection';
+import { bookingRequest } from '@/lib/api/BookingRequest';
 
 // const hubConnection = getHubConnection();
 const bookings = ref<Booking[]>([]);
@@ -103,7 +103,7 @@ onUnmounted(() => {
     </Dialog>
     <div class="bg-accent h-full w-full rounded-xl overflow-hidden p-2">
       <div
-        class="flex flex-col px-4 min-w-0 min-h-10 max-h-20 gap-y-2 max-w-full flex-nowrap gap-x-2 overflow-x-hidden overflow-y-auto [&>.bookings-enter-active,.bookings-leave-active]:transition-all [&>.bookings-enter-from,.bookings-leave-to]:opacity-0 [&>.bookings-enter-from,.bookings-leave-to]:transform-[translateX(30px)]">
+        class="flex flex-col px-4 min-w-0 min-h-5 max-h-20 gap-y-2 max-w-full flex-nowrap gap-x-2 overflow-x-hidden overflow-y-auto [&>.bookings-enter-active,.bookings-leave-active]:transition-all [&>.bookings-enter-from,.bookings-leave-to]:opacity-0 [&>.bookings-enter-from,.bookings-leave-to]:transform-[translateX(30px)]">
         <TransitionGroup name="bookings">
           <div v-for="b in bookings" :key="b.id">
             <Card class=" py-2" @click="isDialogOpen = true; selectBooking = b">

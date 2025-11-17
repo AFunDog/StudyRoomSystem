@@ -1,19 +1,15 @@
-import { http } from "../utils";
+import { AxiosError } from "axios";
+import { http } from "../Utils";
 
 class AuthRequest {
-    public async login(request : { username: string, password: string}) {
-        try {
-            const res = await http.post("/auth/login", request);
-            return res.data;
-        }
-        catch (err) {
-            console.error(err);
-        }
+    public async login(request: { username: string, password: string }) {
+        const res = await http.post("/auth/login", request);
+        return res.data;
     }
     public async check() {
         try {
             const res = await http.get("/auth/check");
-            return res.data;
+            return res.status == 200;
         }
         catch (err) {
             console.error(err);

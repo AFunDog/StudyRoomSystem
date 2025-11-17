@@ -15,16 +15,16 @@ import { Button } from '@/components/ui/button';
 import { toTypedSchema } from '@vee-validate/zod';
 import z from 'zod';
 import { useForm, type GenericObject } from 'vee-validate';
-import { http } from '@/lib/utils';
+import { http } from '@/lib/Utils';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import type { User } from '@/lib/types/user';
-import { LockKeyhole, Eye, EyeOff } from 'lucide-vue-next';
-import { restartHubConnection } from '@/lib/api/hubConnection';
-import { useConfig } from '@/lib/config';
+import type { User } from '@/lib/types/User';
+import { LockKeyhole, Eye, EyeOff, Loader2 } from 'lucide-vue-next';
+import { restartHubConnection } from '@/lib/api/HubConnection';
+import { useConfig } from '@/lib/Config';
 import { toast } from 'vue-sonner';
 import { AxiosError } from 'axios';
-import { authRequest } from '@/lib/api/authRequest';
+import { authRequest } from '@/lib/api/AuthRequest';
 
 const router = useRouter();
 const schema = z.object({
@@ -33,10 +33,11 @@ const schema = z.object({
 });
 const formSchema = toTypedSchema(schema)
 const isShowPassword = ref(false);
+const isLoginLoading = ref(false);
 const form = useForm({ validationSchema: formSchema });
 const onSubmit = form.handleSubmit(async (values) => {
   try {
-    console.log(values);
+    isLoginLoading.value = true;
     var res = await authRequest.login({ username: values.userName, password: values.password });
     // var res = await http.post('/auth/login', {
     //   userName: values.userName,
@@ -50,7 +51,8 @@ const onSubmit = form.handleSubmit(async (values) => {
       toast.error('登录失败，用户名或密码错误');
       return;
     }
-
+    console.log("登录成功", token, user);
+    toast.success('登录成功');
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(user));
     http.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -61,7 +63,12 @@ const onSubmit = form.handleSubmit(async (values) => {
   catch (error) {
     if (error instanceof AxiosError)
       toast.error('登录失败', { description: error.response?.data.message });
+    else
+      toast.error('登录失败');
     console.log(error);
+  }
+  finally {
+    isLoginLoading.value = false;
   }
 });
 
@@ -121,7 +128,10 @@ onUnmounted(() => {
             </FormField>
             <!-- <div>{{ loginMessage }}</div> -->
             <div class="flex flex-row justify-center items-center gap-x-4">
-              <Button class="hover:cursor-pointer" type="submit">登录</Button>
+              <Button class="hover:cursor-pointer" type="submit" :disabled="isLoginLoading">
+                <Loader2 v-if="isLoginLoading" class="size-4 animate-spin" />
+                登录
+              </Button>
               <Button class="hover:cursor-pointer" type="button" variant="secondary"
                 @click="router.push('/register')">注册</Button>
             </div>

@@ -10,7 +10,7 @@ import {
   SelectItemText,
   useForwardProps,
 } from "reka-ui"
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/Utils"
 
 const props = defineProps<SelectItemProps & { class?: HTMLAttributes["class"] }>()
 

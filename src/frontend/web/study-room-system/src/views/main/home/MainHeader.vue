@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
-import type { User } from '@/lib/types/user';
+import type { User } from '@/lib/types/User';
 
 import {
   Dialog,
@@ -23,15 +23,14 @@ import {
 } from "@/components/ui/sheet";
 import { Menu, UserRound } from 'lucide-vue-next';
 import { useRouter } from 'vue-router';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ref } from 'vue';
+import MainUserSheetContent from './MainUserSheetContent.vue';
+
 
 const router = useRouter();
-var user = JSON.parse(localStorage.getItem('user')!) as User | null;
-
-function logout() {
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
-  router.push('/login');
-}
+const isSheetOpen = ref(false);
+const user = JSON.parse(localStorage.getItem('user')!) as User | null;
 
 </script>
 <template>
@@ -57,25 +56,15 @@ function logout() {
           </DialogFooter>
         </DialogContent>
       </Dialog> -->
-      <Sheet>
-        <SheetTrigger as-child>
-          <UserRound class="hover:cursor-pointer"></UserRound>
-        </SheetTrigger>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle class="flex flex-row items-center justify-center gap-x-2 text-2xl">
-              <div>{{ user?.displayName }}</div>
-            </SheetTitle>
-            <SheetDescription>
-              <div>用户名：{{ user?.userName }}</div>
-              <!-- <div>Id：{{ user?.id }}</div> -->
-               <div>学号/工号：{{ user?.campusId }}</div>
-              <div>手机号：{{ user?.phone }}</div>
-              <div>邮箱：{{ user?.email }}</div>
-              <div>角色：{{ user?.role }}</div>
-            </SheetDescription>
-          </SheetHeader>
-        </SheetContent>
+      <Avatar class="hover:cursor-pointer" @click="isSheetOpen = true">
+        <AvatarImage :src="user?.avatar ?? ''" />
+        <AvatarFallback>
+          <UserRound></UserRound>
+        </AvatarFallback>
+      </Avatar>
+
+      <Sheet v-model:open="isSheetOpen">
+        <MainUserSheetContent />
       </Sheet>
     </div>
   </div>

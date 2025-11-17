@@ -12,7 +12,18 @@ CREATE TABLE IF NOT EXISTS public.bookings
     end_time timestamp with time zone NOT NULL,
     check_in_time timestamp with time zone,
     check_out_time timestamp with time zone,
-    CONSTRAINT bookings_pkey PRIMARY KEY (id)
+    state text COLLATE pg_catalog."default" NOT NULL,
+    CONSTRAINT bookings_pkey PRIMARY KEY (id),
+    CONSTRAINT bookings_seat_id_fkey FOREIGN KEY (seat_id)
+        REFERENCES public.seats (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+        NOT VALID,
+    CONSTRAINT bookings_user_id_fkey FOREIGN KEY (user_id)
+        REFERENCES public.users (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+        NOT VALID
 )
 
 TABLESPACE pg_default;

@@ -8,7 +8,6 @@ import { getCurrentInstance } from "vue"
 import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
 
 
-const baseUrl = import.meta.env.DEV ? 'http://localhost:5106' : '';
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
@@ -16,7 +15,8 @@ function cn(...inputs: ClassValue[]) {
 const http: AxiosInstance = axios.create({
   timeout: 5000,
   headers: { "Content-Type": "application/json" },
-  baseURL: `${baseUrl}/api/v1`,
+  baseURL: `/api/v1`,
+  // baseURL: `${baseUrl}/api/v1`,
 });
 
 // 添加请求拦截器
@@ -28,8 +28,10 @@ http.interceptors.request.use(config => {
   return config;
 });
 
+function logout() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+}
 
 
-
-
-export { baseUrl,http, cn };
+export { http, cn,logout };

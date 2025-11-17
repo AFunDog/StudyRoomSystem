@@ -1,5 +1,5 @@
-import type { Seat } from "./seat";
-import type { User } from "./user";
+import type { Seat } from "./Seat";
+import type { User } from "./User";
 
 export interface Booking {
     id: string;

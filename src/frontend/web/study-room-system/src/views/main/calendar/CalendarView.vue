@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import BottomTag from '@/components/ui/bottomTag/BottomTag.vue';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { bookingRequest } from '@/lib/api/bookingRequest';
-import type { Booking } from '@/lib/types/booking';
-import { http } from '@/lib/utils';
+import { bookingRequest } from '@/lib/api/BookingRequest';
+import type { Booking } from '@/lib/types/Booking';
+import { http } from '@/lib/Utils';
 import { onMounted, ref } from 'vue';
 import dayjs from 'dayjs';
 
@@ -26,7 +26,7 @@ onMounted(() => {
 
 <template>
   <div class="flex flex-col items-stretch justify-between h-full">
-    <div class="flex-1 p-4">
+    <div class="flex-1 px-4 pt-4">
       <Card class="h-full bg-muted">
         <CardHeader>
           <CardTitle>
@@ -70,6 +70,6 @@ onMounted(() => {
         </CardContent>
       </Card>
     </div>
-    <BottomTag />
+    <!-- <BottomTag /> -->
   </div>
 </template>

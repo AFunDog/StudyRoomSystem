@@ -39,8 +39,24 @@ builder.Host.UseSerilog();
 builder.Services.AddHostedService<PgSqlNotificationsService>();
 
 // 配置 OpenApi
-builder.Services.AddOpenApi("v1", options => { options.AddDocumentTransformer<BearerSecuritySchemeTransformer>(); });
-builder.Services.AddOpenApi("v2", options => { options.AddDocumentTransformer<BearerSecuritySchemeTransformer>(); });
+builder.Services.AddOpenApi(
+    "v1",
+    options =>
+    {
+        options
+            .AddDocumentTransformer<BearerSecuritySchemeTransformer>()
+            .AddOperationTransformer<AuthorizeCheckOperationFilter>();
+    }
+);
+builder.Services.AddOpenApi(
+    "v2",
+    options =>
+    {
+        options
+            .AddDocumentTransformer<BearerSecuritySchemeTransformer>()
+            .AddOperationTransformer<AuthorizeCheckOperationFilter>();
+    }
+);
 
 // 添加 CORS 服务
 builder.Services.AddCors(options =>
@@ -92,7 +108,7 @@ builder
         }
     );
 builder.Services.Configure<JsonOptions>(options =>
-    { 
+    {
         // 日期时间转换
         options.JsonSerializerOptions.Converters.Add(new FlexibleDateTimeOffsetConverter());
         // Json枚举字符串转换
@@ -154,15 +170,18 @@ builder
     .AddPolicy(AuthorizationHelper.Policy.Admin, policy => policy.RequireRole(AuthorizationHelper.Role.Admin));
 
 // SignalR
-builder.Services.AddSignalR().AddJsonProtocol(options =>
-{
-    // 日期时间转换
-    options.PayloadSerializerOptions.Converters.Add(new FlexibleDateTimeOffsetConverter());
-    // Json枚举字符串转换
-    options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-    // 忽略循环引用
-    options.PayloadSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-});
+builder
+    .Services.AddSignalR()
+    .AddJsonProtocol(options =>
+        {
+            // 日期时间转换
+            options.PayloadSerializerOptions.Converters.Add(new FlexibleDateTimeOffsetConverter());
+            // Json枚举字符串转换
+            options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            // 忽略循环引用
+            options.PayloadSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        }
+    );
 // SignalR Hub UserIdProvider
 builder.Services.AddSingleton<IUserIdProvider, UserIdProvider>();
 
@@ -205,7 +224,7 @@ if (app.Environment.IsDevelopment())
     app.UseCors("AllowFrontend");
 }
 
-app.UseWebSockets(new WebSocketOptions(){});
+app.UseWebSockets(new WebSocketOptions() { });
 
 app.MapControllers();
 

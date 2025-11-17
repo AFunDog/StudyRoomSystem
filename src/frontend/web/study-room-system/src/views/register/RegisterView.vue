@@ -16,14 +16,14 @@ import { toast } from 'vue-sonner';
 import { toTypedSchema } from '@vee-validate/zod';
 import z from 'zod';
 import { useField, useForm, type GenericObject } from 'vee-validate';
-import { http } from '@/lib/utils';
+import { http } from '@/lib/Utils';
 import { onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import type { User } from '@/lib/types/user';
+import type { User } from '@/lib/types/User';
 import { LockKeyhole, Eye, EyeOff } from 'lucide-vue-next';
 import { email } from 'zod/v4';
 import { AxiosError } from 'axios';
-import { authRequest } from '@/lib/api/authRequest';
+import { authRequest } from '@/lib/api/AuthRequest';
 
 const router = useRouter();
 const schema = z.object({
