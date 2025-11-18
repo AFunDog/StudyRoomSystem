@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -25,12 +27,19 @@ public class AuthController : ControllerBase
 {
     private IConfiguration Configuration { get; }
     private AppDbContext AppDbContext { get; }
-
+    
     public AuthController(IConfiguration configuration, AppDbContext appDbContext)
     {
         Configuration = configuration;
         AppDbContext = appDbContext;
     }
+
+    // public static IEndpointRouteBuilder MapAuthController(this IEndpointRouteBuilder builder)
+    // {
+    //     var group = builder.MapGroup("api/v{version:apiVersion}/auth");
+    //     group.MapGet("l", () => { });
+    //     return builder;
+    // }
 
     #region Login
 
@@ -47,7 +56,7 @@ public class AuthController : ControllerBase
         public required User User { get; set; }
     }
 
-    
+
     /// <summary>
     /// 用户登录
     /// </summary>
@@ -57,6 +66,8 @@ public class AuthController : ControllerBase
     [AllowAnonymous]
     [ProducesResponseType<LoginResponseOk>(StatusCodes.Status200OK)]
     [ProducesResponseType<ResponseError>(StatusCodes.Status401Unauthorized)]
+    [EndpointSummary("用户登录")]
+    [EndpointDescription("用户需要使用该接口登录，获取具有权限的登录Token")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         var user = await AppDbContext.Users.SingleOrDefaultAsync(x => x.UserName == request.UserName);
@@ -102,8 +113,10 @@ public class AuthController : ControllerBase
 
     [HttpGet("check")]
     [Authorize]
-    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [EndpointSummary("检查登录Token是否有效")]
+    [EndpointDescription("此接口用于检查登录Token是否失效或者不处于登录状态")]
     public async Task<IActionResult> Check()
     {
         var userId = this.GetLoginUserId();
@@ -116,11 +129,18 @@ public class AuthController : ControllerBase
 
     public class RegisterRequest
     {
+        [MaxLength(64)]
+        [MinLength(4)]
         public required string UserName { get; set; }
+        
+        [MaxLength(64)]
+        [MinLength(8)]
         public required string Password { get; set; }
 
         public string? DisplayName { get; set; }
 
+        [MaxLength(64)]
+        [MinLength(4)]
         public required string CampusId { get; set; }
 
         [Phone]
@@ -134,6 +154,8 @@ public class AuthController : ControllerBase
     [AllowAnonymous]
     [ProducesResponseType<User>(StatusCodes.Status200OK)]
     [ProducesResponseType<ResponseError>(StatusCodes.Status409Conflict)]
+    [EndpointSummary("用户注册")]
+    [EndpointDescription("用户需要使用该接口注册，注册成功之后需要使用用户名密码登录")]
     public async Task<IActionResult> RegisterUser([FromBody] RegisterRequest request)
     {
         if ((await AppDbContext.Users.FirstOrDefaultAsync(x => x.UserName == request.UserName)) is not null)
@@ -180,6 +202,8 @@ public class AuthController : ControllerBase
     [Authorize(AuthorizationHelper.Policy.Admin)]
     [ProducesResponseType<User>(StatusCodes.Status200OK)]
     [ProducesResponseType<ResponseError>(StatusCodes.Status409Conflict)]
+    [EndpointSummary("管理员注册")]
+    [EndpointDescription("管理员需要使用该接口注册，注册成功之后需要使用用户名密码登录")]
     public async Task<IActionResult> RegisterAdmin([FromBody] RegisterRequest request)
     {
         if ((await AppDbContext.Users.FirstOrDefaultAsync(x => x.UserName == request.UserName)) is not null)

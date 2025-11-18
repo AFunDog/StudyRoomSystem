@@ -1,21 +1,15 @@
-using System;
-using System.IO;
 using System.Text;
 using System.Text.Json.Serialization;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
-using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using Serilog;
-using StudyRoomSystem.Server.Controllers.Filters;
+using StudyRoomSystem.Server.Controllers.V1;
 using StudyRoomSystem.Server.Converters;
 using StudyRoomSystem.Server.Database;
 using StudyRoomSystem.Server.Helpers;
@@ -23,6 +17,8 @@ using StudyRoomSystem.Server.Hubs;
 using StudyRoomSystem.Server.OpenApi;
 using StudyRoomSystem.Server.Services;
 using Zeng.CoreLibrary.Toolkit.Logging;
+
+// using ApiVersion = Asp.Versioning.ApiVersion;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -73,15 +69,40 @@ builder.Services.AddCors(options =>
 );
 
 // API文档版本控制
+// builder.Services.AddApiVersioning(options =>
+//     {
+//         options.DefaultApiVersion = new ApiVersion(1, 0);
+//         options.AssumeDefaultVersionWhenUnspecified = true;
+//         options.ReportApiVersions = true;
+//         // options.ApiVersionReader = ApiVersionReader.Combine(
+//         //     new UrlSegmentApiVersionReader(),
+//         //     new HeaderApiVersionReader("x-api-version"),
+//         //     new MediaTypeApiVersionReader("x-api-version")
+//         // );
+//         // 关键：指定版本号的来源
+//     }
+// ).AddVersionedApiExplorer(options =>
+//     {
+//         // 自动添加版本控制
+//         options.GroupNameFormat = "'v'VVV";
+//         options.SubstituteApiVersionInUrl = true;
+//     }
+// );
 builder
     .Services.AddApiVersioning(options =>
         {
             options.DefaultApiVersion = new ApiVersion(1, 0);
             options.AssumeDefaultVersionWhenUnspecified = true;
             options.ReportApiVersions = true;
+            // 关键：指定版本号的来源
+            options.ApiVersionReader = ApiVersionReader.Combine(
+                new UrlSegmentApiVersionReader(),
+                new HeaderApiVersionReader("x-api-version"),
+                new MediaTypeApiVersionReader("x-api-version")
+            );
         }
     )
-    .AddVersionedApiExplorer(options =>
+    .AddApiExplorer(options =>
         {
             // 自动添加版本控制
             options.GroupNameFormat = "'v'VVV";
@@ -132,7 +153,7 @@ builder
     )
     .AddJwtBearer(options =>
         {
-            options.TokenValidationParameters = new TokenValidationParameters()
+            options.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true,
                 ValidateAudience = true,
@@ -142,7 +163,7 @@ builder
                 ValidAudience = builder.Configuration["Jwt:Audience"],
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
             };
-            options.Events = new JwtBearerEvents()
+            options.Events = new JwtBearerEvents
             {
                 OnMessageReceived = context =>
                 {
@@ -193,7 +214,7 @@ app.UseSerilogRequestLogging();
 
 // 承载网页和静态资源
 app.UseDefaultFiles(
-    new DefaultFilesOptions()
+    new DefaultFilesOptions
     {
         FileProvider = new PhysicalFileProvider(
             Path.Combine(Environment.CurrentDirectory, app.Configuration.GetValue<string>("Web:Root", "web"))
@@ -202,7 +223,7 @@ app.UseDefaultFiles(
     }
 );
 app.UseStaticFiles(
-    new StaticFileOptions()
+    new StaticFileOptions
     {
         FileProvider = new PhysicalFileProvider(
             Path.Combine(Environment.CurrentDirectory, app.Configuration.GetValue<string>("Web:Root", "web"))
@@ -224,9 +245,10 @@ if (app.Environment.IsDevelopment())
     app.UseCors("AllowFrontend");
 }
 
-app.UseWebSockets(new WebSocketOptions() { });
+app.UseWebSockets(new WebSocketOptions());
 
 app.MapControllers();
+// app.MapUserController();
 
 // SignalR Hub
 var hub = app.MapGroup("/hub");
