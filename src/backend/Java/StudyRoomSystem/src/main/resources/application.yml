@@ -1,0 +1,21 @@
+server:
+  port: 5106
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/study_room_system
+    username: postgres
+    password: 96121221
+    driver-class-name: org.postgresql.Driver
+
+  security:
+    user:
+      name: admin
+      password: 123456
+
+#采用驼峰映射
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+#采用自定义UUID类型转换
+  type-handlers-package: com.zyx.studyroomsystem.handler
