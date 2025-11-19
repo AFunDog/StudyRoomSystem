@@ -33,7 +33,7 @@ public class SeatController {
     /** 创建座位 */
     @PostMapping
     public ApiResponse<?> create(@Valid @RequestBody Seat seat) {
-        seat.setId(UUID.randomUUID());
+//        seat.setId(UUID.randomUUID()); id通过ulid设置
         seatService.addSeat(seat);
         return ApiResponse.ok(Map.of("id", seat.getId()));
     }

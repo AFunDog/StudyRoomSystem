@@ -83,6 +83,20 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!--引入ulid依赖-->
+        <dependency>
+            <groupId>de.huxhorn.sulky</groupId>
+            <artifactId>de.huxhorn.sulky.ulid</artifactId>
+            <version>8.2.0</version>
+        </dependency>
+
+        <!--引入JPA依赖-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+
         <!--提供 OpenAPI 文档生成 和 Swagger UI 页面-->
         <dependency>
             <groupId>org.springdoc</groupId>

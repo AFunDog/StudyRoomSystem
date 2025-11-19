@@ -44,7 +44,7 @@ public class UserController {
         if (userService.getUserByUserName(user.getUserName()) != null) {
             throw new ResourceConflictException("用户名已存在: " + user.getUserName());
         }
-        user.setId(UUID.randomUUID());
+//        user.setId(UUID.randomUUID()); id通过ulid设置
         user.setCreateTime(java.time.OffsetDateTime.now());
         userService.addUser(user);
         return ApiResponse.ok(Map.of("id", user.getId()));

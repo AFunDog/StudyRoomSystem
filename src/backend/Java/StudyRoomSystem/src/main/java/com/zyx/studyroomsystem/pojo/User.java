@@ -1,18 +1,27 @@
 package com.zyx.studyroomsystem.pojo;
 
+import com.zyx.studyroomsystem.web.UlidToUuidConverter;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.validation.constraints.*;
 import lombok.Data;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
-import jakarta.validation.constraints.NotNull;
+
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Data
+@Entity
 public class User {
-    @NotNull(message = "用户ID不能为空")
+    @Id
     private UUID id;
+
+    @PrePersist
+    public void prePersist() {
+        if (id == null) {
+            this.id = UlidToUuidConverter.generateUuidFromUlid(); // 调用工具类生成 UUID
+        }
+    }
 
     @NotNull(message = "创建时间不能为空")
     private OffsetDateTime createTime;
@@ -22,7 +31,7 @@ public class User {
     @Pattern(regexp = "^[a-zA-Z0-9_.-]+$", message = "用户名只能包含字母、数字、下划线、点和短横线")
     private String userName;
 
-    @NotBlank(message = "昵称不能为空")
+    //昵称可以为空
     @Size(max = 64, message = "昵称长度不能超过 64")
     private String displayName;
 
@@ -30,7 +39,7 @@ public class User {
     @Size(min = 8, max = 64, message = "密码长度必须在 8 到 64 之间")
     private String password;
 
-    @Size(max = 32, message = "校园卡号长度不能超过 32")
+    @Size(max = 32, message = "工号长度不能超过 32")
     private String campusId;
 
     @Pattern(regexp = "^\\+?[0-9]{7,15}$", message = "手机号格式不正确")

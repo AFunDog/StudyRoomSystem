@@ -34,7 +34,7 @@ public class RoomController {
         if (roomService.existsByName(room.getName())) {
             throw new ResourceConflictException("房间已存在: " + room.getName());
         }
-        room.setId(UUID.randomUUID());
+//        room.setId(UUID.randomUUID()); id通过ulid设置
         roomService.addRoom(room);
         return ApiResponse.ok(Map.of("id", room.getId()));
     }

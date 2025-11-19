@@ -1,18 +1,30 @@
 package com.zyx.studyroomsystem.pojo;
 
-import lombok.Data;
-import jakarta.validation.constraints.NotNull;
+import com.zyx.studyroomsystem.web.UlidToUuidConverter;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
 import jakarta.validation.constraints.Future;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+import lombok.Data;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Data
+@Entity
 public class Booking {
-    @NotNull(message = "预订ID不能为空")
+    @Id
     private UUID id;
+
+    @PrePersist
+    public void prePersist() {
+        if (id == null) {
+            this.id = UlidToUuidConverter.generateUuidFromUlid(); // 调用工具类生成 UUID
+        }
+    }
 
     @NotNull(message = "用户ID不能为空")
     private UUID userId;

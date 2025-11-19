@@ -44,7 +44,7 @@ public class BookingController {
     @PostMapping
     public ApiResponse<?> create(@Valid @RequestBody Booking booking) {
         // 校验时间冲突逻辑放在了 service 层
-        booking.setId(UUID.randomUUID());
+//        booking.setId(UUID.randomUUID()); id通过ulid设置
         booking.setCreateTime(OffsetDateTime.now());
         bookingService.addBooking(booking);
         return ApiResponse.ok(Map.of("id", booking.getId()));
