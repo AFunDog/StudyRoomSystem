@@ -24,6 +24,7 @@ import { LockKeyhole, Eye, EyeOff } from 'lucide-vue-next';
 import { email } from 'zod/v4';
 import { AxiosError } from 'axios';
 import { authRequest } from '@/lib/api/AuthRequest';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const router = useRouter();
 const schema = z.object({
@@ -33,7 +34,8 @@ const schema = z.object({
   phone: z.string({ required_error: '请输入手机号' }).regex(/^1[3-9]\d{9}$/, '请输入有效的手机号'),
   // email : z.string({ }).email('请输入有效的邮箱').nullable(),
   password: z.string({ required_error: '请输入密码' }).min(6, '请输入密码'),
-  confirmPassword: z.string({ required_error: '请输入确认密码' }).min(6, '请输入确认密码')
+  confirmPassword: z.string({ required_error: '请输入确认密码' }).min(6, '请输入确认密码'),
+  agreePolicy: z.preprocess(val => val === 'on' || val === true, z.boolean().refine(value => value, '请同意隐私政策')),
 }).refine((data) => data.password === data.confirmPassword, {
   path: ['confirmPassword'],
   message: '确认密码与密码不一致'
@@ -85,8 +87,8 @@ const onSubmit = form.handleSubmit(async (values) => {
 
 </script>
 <template>
-  <div class="flex flex-col items-center justify-center h-screen">
-    <div class="w-5/6 max-w-xl">
+  <div class="flex flex-col items-center justify-center h-full">
+    <div class="w-5/6 max-w-120">
       <Card>
         <CardHeader>
           <div class="text-2xl tracking-widest">注册</div>
@@ -180,6 +182,26 @@ const onSubmit = form.handleSubmit(async (values) => {
                       <component :is="isShowPassword ? EyeOff : Eye" @click="isShowPassword = !isShowPassword"
                         class="size-4"></component>
                     </div> -->
+                  </div>
+                </FormControl>
+                <!-- <FormDescription>登录密码</FormDescription> -->
+                <FormMessage />
+              </FormItem>
+            </FormField>
+            <FormField v-slot="{ componentField }" name="agreePolicy">
+              <FormItem>
+                <FormControl>
+                  <div>
+                    <div class="flex flex-row gap-x-2 items-center">
+                      <Checkbox v-bind="componentField">
+                      </Checkbox>
+                      <div class="text-sm [&>a]:text-primary">
+                        我已阅读并同意
+                        <a href="">《隐私政策》</a>
+                        和
+                        <a href="">《用户协议》</a>
+                      </div>
+                    </div>
                   </div>
                 </FormControl>
                 <!-- <FormDescription>登录密码</FormDescription> -->

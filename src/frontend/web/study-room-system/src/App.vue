@@ -19,8 +19,9 @@ const curIndex = ref(0);
 router.beforeEach(async (to, from, next) => {
   // if(to.path === '/login') return;
   console.log(to, from);
+  const allowUrls = ['/login', '/admin/login','/register'];
 
-  if (to.path === '/login' || to.path === '/admin/login') return next();
+  if (allowUrls.includes(to.path)) return next();
 
   if (await CheckLogin() === false) {
     console.log('登录失效');
@@ -61,7 +62,8 @@ async function CheckLogin() {
 <template>
   <Toaster class="pointer-events-auto" rich-colors theme="system" />
   <div class="w-screen h-screen flex flex-col justify-center">
-    <main class="flex-1">
+    <!-- 给 main 设置 overflow: hidden; position: relative;，保证过渡元素始终在容器内 -->
+    <main class="flex-1 overflow-hidden relative">
       <RouterView v-slot="{ Component, route }">
         <Transition :name="viewTransition">
           <component :is="Component"  />
