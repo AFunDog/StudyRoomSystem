@@ -9,11 +9,15 @@ public class AppDbContext : DbContext
     public DbSet<Seat> Seats { get; set; }
     public DbSet<Room> Rooms { get; set; }
     public DbSet<Booking> Bookings { get; set; }
+    public DbSet<Violation> Violations { get; set; }
+    public DbSet<Complaint> Complaints { get; set; }
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        #region 数据关联
+
         // Seat 关联 Room
         modelBuilder
             .Entity<Seat>()
@@ -34,11 +38,42 @@ public class AppDbContext : DbContext
         modelBuilder
             .Entity<Booking>()
             .HasOne(b => b.Seat)
-            .WithMany()
+            .WithMany(s => s.Bookings)
             .HasForeignKey(b => b.SeatId)
             .HasPrincipalKey(s => s.Id)
             .IsRequired();
         // Booking State 枚举转换
         modelBuilder.Entity<Booking>().Property(b => b.State).HasConversion<string>();
+        // Violation 关联 User
+        modelBuilder
+            .Entity<Violation>()
+            .HasOne(v => v.User)
+            .WithMany()
+            .HasForeignKey(v => v.UserId)
+            .HasPrincipalKey(u => u.Id)
+            .IsRequired();
+        // Complaint 关联 User
+        modelBuilder
+            .Entity<Complaint>()
+            .HasOne(c => c.SendUser)
+            .WithMany()
+            .HasForeignKey(c => c.SendUserId)
+            .HasPrincipalKey(u => u.Id)
+            .IsRequired();
+        modelBuilder
+            .Entity<Complaint>()
+            .HasOne(c => c.ReceiveUser)
+            .WithMany()
+            .HasForeignKey(c => c.ReceiveUserId)
+            .HasPrincipalKey(u => u.Id)
+            .IsRequired();
+        modelBuilder
+            .Entity<Complaint>()
+            .HasOne(c => c.HandleUser)
+            .WithMany()
+            .HasForeignKey(c => c.HandleUserId)
+            .HasPrincipalKey(u => u.Id);
+
+        #endregion
     }
 }

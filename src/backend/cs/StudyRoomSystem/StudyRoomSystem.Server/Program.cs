@@ -41,7 +41,10 @@ builder.Services.AddOpenApi(
     {
         options
             .AddDocumentTransformer<BearerSecuritySchemeTransformer>()
-            .AddOperationTransformer<AuthorizeCheckOperationFilter>();
+            .AddOperationTransformer<AuthorizeCheckOperationFilter>()
+            // .AddSchemaTransformer<ModelDescSchemeTransformer>()
+            //
+            ;
     }
 );
 builder.Services.AddOpenApi(
@@ -50,7 +53,10 @@ builder.Services.AddOpenApi(
     {
         options
             .AddDocumentTransformer<BearerSecuritySchemeTransformer>()
-            .AddOperationTransformer<AuthorizeCheckOperationFilter>();
+            .AddOperationTransformer<AuthorizeCheckOperationFilter>()
+            // .AddSchemaTransformer<ModelDescSchemeTransformer>()
+            //
+            ;
     }
 );
 

@@ -5,7 +5,7 @@ using Microsoft.OpenApi.Models;
 
 namespace StudyRoomSystem.Server.OpenApi;
 
-public class AuthorizeCheckOperationFilter : IOpenApiOperationTransformer
+internal class AuthorizeCheckOperationFilter : IOpenApiOperationTransformer
 {
     public async Task TransformAsync(
         OpenApiOperation operation,

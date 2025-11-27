@@ -89,9 +89,9 @@ public class PgSqlNotificationsService : IHostedService
                         {
                             await foreach (var payloadData in Channel.Reader.ReadAllAsync(cancellationToken))
                             {
-                                Log.Logger.Trace().Information("{@Data}", payloadData);
                                 await using var scope = ServiceScopeFactory.CreateAsyncScope();
                                 var appDbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                                Log.Logger.Trace().Information("{@Data}", payloadData);
                                 // await DataHub.Clients.All.SendAsync(
                                 //     "data-change",
                                 //     payloadData,
@@ -107,7 +107,7 @@ public class PgSqlNotificationsService : IHostedService
                                             .Bookings.AsNoTracking()
                                             .Where(x => true)
                                             .ToListAsync(cancellationToken: cancellationToken);
-                                        
+
                                         break;
                                     }
                                 }

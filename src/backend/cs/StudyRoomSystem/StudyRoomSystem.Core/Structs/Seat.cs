@@ -8,4 +8,6 @@ public class Seat
     public required int Col { get; set; }
 
     public virtual Room Room { get; set; } = null!;
+    
+    public virtual ICollection<Booking> Bookings { get; set; } = [];
 }

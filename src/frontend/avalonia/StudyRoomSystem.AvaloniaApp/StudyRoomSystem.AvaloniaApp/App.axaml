@@ -1,0 +1,29 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:shadUi="clr-namespace:ShadUI;assembly=ShadUI"
+             x:Class="StudyRoomSystem.AvaloniaApp.App"
+             xmlns:zcta="clr-namespace:Zeng.CoreLibrary.Toolkit.Avalonia;assembly=CoreLibrary.Toolkit.Avalonia"
+             RequestedThemeVariant="Default">
+    <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+
+    <Application.Styles>
+        <FluentTheme />
+        <shadUi:ShadTheme />
+    </Application.Styles>
+
+    <Application>
+        <Application.Resources>
+            <ResourceDictionary.MergedDictionaries>
+                <zcta:ControlsProvider />
+            </ResourceDictionary.MergedDictionaries>
+            <Color x:Key="PrimaryColor">#FFFF6900</Color>
+            <Color x:Key="PrimaryColor75">#BFFF6900</Color>
+            <Color x:Key="PrimaryColor50">#80FF6900</Color>
+            <Color x:Key="PrimaryColor10">#19FF6900</Color>
+            <Color x:Key="DestructiveColor">#FFE7000B</Color>
+            <Color x:Key="DestructiveColor75">#BFE7000B</Color>
+            <Color x:Key="DestructiveColor50">#80E7000B</Color>
+            <Color x:Key="DestructiveColor10">#19E7000B</Color>
+        </Application.Resources>
+    </Application>
+</Application>

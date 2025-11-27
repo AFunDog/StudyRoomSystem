@@ -1,12 +1,16 @@
-﻿namespace StudyRoomSystem.Core.Structs;
+﻿using System.ComponentModel;
+
+namespace StudyRoomSystem.Core.Structs;
 
 public enum BookingStateEnum
 {
     Booking,CheckIn,Checkout,Canceled
 }
 
+[Description("预约记录")]
 public class Booking
 {
+    [Description("编号")]
     public required Guid Id { get; set; }
     public required Guid UserId { get; set; }
     public required Guid SeatId { get; set; }

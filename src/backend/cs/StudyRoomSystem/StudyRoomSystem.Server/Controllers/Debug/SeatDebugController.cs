@@ -10,7 +10,7 @@ using StudyRoomSystem.Server.Database;
 namespace StudyRoomSystem.Server.Controllers.Debug;
 
 
-#if DEBUG
+#if DEBUG_
 
 [ApiController]
 [Route("api/v{version:apiVersion}/seat-debug")]
