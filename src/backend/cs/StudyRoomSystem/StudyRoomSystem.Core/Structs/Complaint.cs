@@ -1,11 +1,9 @@
-﻿using System.ComponentModel;
-
-namespace StudyRoomSystem.Core.Structs;
+﻿namespace StudyRoomSystem.Core.Structs;
 
 /// <summary>
 /// 投诉记录
 /// </summary>
-[Description("投诉记录")]
+
 public class Complaint
 {
     public required Guid Id { get; set; }

@@ -219,24 +219,24 @@ app.UseSerilogRequestLogging();
 
 
 // 承载网页和静态资源
-app.UseDefaultFiles(
-    new DefaultFilesOptions
-    {
-        FileProvider = new PhysicalFileProvider(
-            Path.Combine(Environment.CurrentDirectory, app.Configuration.GetValue<string>("Web:Root", "web"))
-        ),
-        RequestPath = ""
-    }
-);
-app.UseStaticFiles(
-    new StaticFileOptions
-    {
-        FileProvider = new PhysicalFileProvider(
-            Path.Combine(Environment.CurrentDirectory, app.Configuration.GetValue<string>("Web:Root", "web"))
-        ),
-        RequestPath = ""
-    }
-);
+// app.UseDefaultFiles(
+//     new DefaultFilesOptions
+//     {
+//         FileProvider = new PhysicalFileProvider(
+//             Path.Combine(Environment.CurrentDirectory, app.Configuration.GetValue<string>("Web:Root", "web"))
+//         ),
+//         RequestPath = ""
+//     }
+// );
+// app.UseStaticFiles(
+//     new StaticFileOptions
+//     {
+//         FileProvider = new PhysicalFileProvider(
+//             Path.Combine(Environment.CurrentDirectory, app.Configuration.GetValue<string>("Web:Root", "web"))
+//         ),
+//         RequestPath = ""
+//     }
+// );
 app.UseRouting();
 
 app.UseAuthentication();
