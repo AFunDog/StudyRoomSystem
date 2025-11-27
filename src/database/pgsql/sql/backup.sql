@@ -2,12 +2,12 @@
 -- PostgreSQL database dump
 --
 
-\restrict 4lcPvhqlx3D9JIDhm2EqsKyiBJQlkHNP2xXM71jNLmQGBmyVuBIB421gDzWDod3
+\restrict rRM37I3uXBtom2MfpSkRe1aTctVUUjXoeDzqgRcaX7k73felyELBWjdPATLLWRR
 
 -- Dumped from database version 16.9
 -- Dumped by pg_dump version 18.0
 
--- Started on 2025-11-14 21:55:47
+-- Started on 2025-11-27 15:11:10
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -22,26 +22,7 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- TOC entry 4 (class 2615 OID 2200)
--- Name: public; Type: SCHEMA; Schema: -; Owner: pg_database_owner
---
-
-CREATE SCHEMA public;
-
-
-ALTER SCHEMA public OWNER TO pg_database_owner;
-
---
--- TOC entry 4870 (class 0 OID 0)
--- Dependencies: 4
--- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: pg_database_owner
---
-
-COMMENT ON SCHEMA public IS 'standard public schema';
-
-
---
--- TOC entry 219 (class 1255 OID 17833)
+-- TOC entry 221 (class 1255 OID 17833)
 -- Name: notify_data_change(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -87,6 +68,26 @@ CREATE TABLE public.bookings (
 
 
 ALTER TABLE public.bookings OWNER TO postgres;
+
+--
+-- TOC entry 220 (class 1259 OID 17871)
+-- Name: complaints; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.complaints (
+    id uuid NOT NULL,
+    send_user_id uuid NOT NULL,
+    receive_user_id uuid NOT NULL,
+    state text NOT NULL,
+    type text NOT NULL,
+    content text NOT NULL,
+    create_time timestamp with time zone NOT NULL,
+    handle_time timestamp with time zone,
+    handle_user_id uuid
+);
+
+
+ALTER TABLE public.complaints OWNER TO postgres;
 
 --
 -- TOC entry 216 (class 1259 OID 17794)
@@ -142,7 +143,23 @@ CREATE TABLE public.users (
 ALTER TABLE public.users OWNER TO postgres;
 
 --
--- TOC entry 4864 (class 0 OID 17811)
+-- TOC entry 219 (class 1259 OID 17858)
+-- Name: violations; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.violations (
+    id uuid NOT NULL,
+    user_id uuid NOT NULL,
+    state text NOT NULL,
+    type text NOT NULL,
+    content text NOT NULL
+);
+
+
+ALTER TABLE public.violations OWNER TO postgres;
+
+--
+-- TOC entry 4880 (class 0 OID 17811)
 -- Dependencies: 218
 -- Data for Name: bookings; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -155,7 +172,17 @@ COPY public.bookings (id, user_id, seat_id, create_time, start_time, end_time, c
 
 
 --
--- TOC entry 4862 (class 0 OID 17794)
+-- TOC entry 4882 (class 0 OID 17871)
+-- Dependencies: 220
+-- Data for Name: complaints; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.complaints (id, send_user_id, receive_user_id, state, type, content, create_time, handle_time, handle_user_id) FROM stdin;
+\.
+
+
+--
+-- TOC entry 4878 (class 0 OID 17794)
 -- Dependencies: 216
 -- Data for Name: rooms; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -167,7 +194,7 @@ COPY public.rooms (id, name, open_time, close_time, rows, cols) FROM stdin;
 
 
 --
--- TOC entry 4863 (class 0 OID 17801)
+-- TOC entry 4879 (class 0 OID 17801)
 -- Dependencies: 217
 -- Data for Name: seats; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -180,7 +207,7 @@ COPY public.seats (id, room_id, "row", col) FROM stdin;
 
 
 --
--- TOC entry 4861 (class 0 OID 17787)
+-- TOC entry 4877 (class 0 OID 17787)
 -- Dependencies: 215
 -- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -191,7 +218,17 @@ COPY public.users (id, create_time, user_name, display_name, password, campus_id
 
 
 --
--- TOC entry 4713 (class 2606 OID 17815)
+-- TOC entry 4881 (class 0 OID 17858)
+-- Dependencies: 219
+-- Data for Name: violations; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.violations (id, user_id, state, type, content) FROM stdin;
+\.
+
+
+--
+-- TOC entry 4721 (class 2606 OID 17815)
 -- Name: bookings bookings_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -200,7 +237,16 @@ ALTER TABLE ONLY public.bookings
 
 
 --
--- TOC entry 4709 (class 2606 OID 17798)
+-- TOC entry 4725 (class 2606 OID 17877)
+-- Name: complaints complaints_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.complaints
+    ADD CONSTRAINT complaints_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4717 (class 2606 OID 17798)
 -- Name: rooms rooms_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -209,7 +255,7 @@ ALTER TABLE ONLY public.rooms
 
 
 --
--- TOC entry 4711 (class 2606 OID 17805)
+-- TOC entry 4719 (class 2606 OID 17805)
 -- Name: seats seats_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -218,7 +264,7 @@ ALTER TABLE ONLY public.seats
 
 
 --
--- TOC entry 4701 (class 2606 OID 17845)
+-- TOC entry 4709 (class 2606 OID 17845)
 -- Name: users users_campus_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -227,7 +273,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- TOC entry 4703 (class 2606 OID 17847)
+-- TOC entry 4711 (class 2606 OID 17847)
 -- Name: users users_phone_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -236,7 +282,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- TOC entry 4705 (class 2606 OID 17793)
+-- TOC entry 4713 (class 2606 OID 17793)
 -- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -245,7 +291,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- TOC entry 4707 (class 2606 OID 17843)
+-- TOC entry 4715 (class 2606 OID 17843)
 -- Name: users users_user_name_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -254,7 +300,16 @@ ALTER TABLE ONLY public.users
 
 
 --
--- TOC entry 4717 (class 2620 OID 17835)
+-- TOC entry 4723 (class 2606 OID 17864)
+-- Name: violations violations_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.violations
+    ADD CONSTRAINT violations_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4733 (class 2620 OID 17835)
 -- Name: bookings on_data_change; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -262,7 +317,7 @@ CREATE TRIGGER on_data_change AFTER INSERT OR DELETE OR UPDATE ON public.booking
 
 
 --
--- TOC entry 4715 (class 2606 OID 17853)
+-- TOC entry 4727 (class 2606 OID 17853)
 -- Name: bookings bookings_seat_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -271,7 +326,7 @@ ALTER TABLE ONLY public.bookings
 
 
 --
--- TOC entry 4716 (class 2606 OID 17848)
+-- TOC entry 4728 (class 2606 OID 17848)
 -- Name: bookings bookings_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -280,7 +335,34 @@ ALTER TABLE ONLY public.bookings
 
 
 --
--- TOC entry 4714 (class 2606 OID 17806)
+-- TOC entry 4730 (class 2606 OID 17888)
+-- Name: complaints complaints_handle_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.complaints
+    ADD CONSTRAINT complaints_handle_user_id_fkey FOREIGN KEY (handle_user_id) REFERENCES public.users(id) NOT VALID;
+
+
+--
+-- TOC entry 4731 (class 2606 OID 17878)
+-- Name: complaints complaints_send_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.complaints
+    ADD CONSTRAINT complaints_send_user_id_fkey FOREIGN KEY (send_user_id) REFERENCES public.users(id) NOT VALID;
+
+
+--
+-- TOC entry 4732 (class 2606 OID 17883)
+-- Name: complaints complaints_send_user_id_fkey1; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.complaints
+    ADD CONSTRAINT complaints_send_user_id_fkey1 FOREIGN KEY (send_user_id) REFERENCES public.users(id) NOT VALID;
+
+
+--
+-- TOC entry 4726 (class 2606 OID 17806)
 -- Name: seats seats_roomId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -288,11 +370,20 @@ ALTER TABLE ONLY public.seats
     ADD CONSTRAINT "seats_roomId_fkey" FOREIGN KEY (room_id) REFERENCES public.rooms(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
--- Completed on 2025-11-14 21:55:47
+--
+-- TOC entry 4729 (class 2606 OID 17865)
+-- Name: violations violations_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.violations
+    ADD CONSTRAINT violations_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+-- Completed on 2025-11-27 15:11:10
 
 --
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 4lcPvhqlx3D9JIDhm2EqsKyiBJQlkHNP2xXM71jNLmQGBmyVuBIB421gDzWDod3
+\unrestrict rRM37I3uXBtom2MfpSkRe1aTctVUUjXoeDzqgRcaX7k73felyELBWjdPATLLWRR
 

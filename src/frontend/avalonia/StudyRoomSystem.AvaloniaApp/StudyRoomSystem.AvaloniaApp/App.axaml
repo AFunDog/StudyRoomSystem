@@ -10,6 +10,7 @@
         <FluentTheme />
         <shadUi:ShadTheme />
     </Application.Styles>
+    
 
     <Application>
         <Application.Resources>
