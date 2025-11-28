@@ -6,7 +6,9 @@
         xmlns:views="clr-namespace:StudyRoomSystem.AvaloniaApp.Views"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="StudyRoomSystem.AvaloniaApp.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="StudyRoomSystem.AvaloniaApp">
-        <views:MainView />
+        Title="StudyRoomSystem.AvaloniaApp"
+        FontFamily="Noto Sans SC"
+        Content="{Binding Content}">
 </Window>

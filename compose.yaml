@@ -1,0 +1,24 @@
+﻿services:
+  studyroomsystem.server:
+    build:
+      context: .
+      dockerfile: ./scripts/Dockerfile
+    ports:
+      - "80:8080"
+    depends_on:
+      - postgres
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=study_room_system;Username=postgres;Password=159241
+  postgres:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 159241
+      POSTGRES_DB: study_room_system
+    volumes:
+      - ./src/database/pgsql/initdb:/docker-entrypoint-initdb.d
+      - pgdata:/var/lib/postgresql/data
+volumes:
+  pgdata:

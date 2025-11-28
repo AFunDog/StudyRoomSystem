@@ -1,5 +1,5 @@
-import { http } from "../Utils";
-import type { Booking } from "../types/Booking";
+import { http } from "../utils";
+import type { Booking } from "../types/booking";
 import { AxiosError } from "axios";
 
 class BookingRequest {

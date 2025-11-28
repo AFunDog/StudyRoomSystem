@@ -1,5 +1,5 @@
 import { AxiosError } from "axios";
-import { http } from "../Utils";
+import { http } from "../utils";
 
 class AuthRequest {
     public async login(request: { username: string, password: string }) {

@@ -2,7 +2,7 @@
     <PropertyGroup>
         <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
-        <LangVersion>latest</LangVersion>
+        <LangVersion>preview</LangVersion>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     </PropertyGroup>
 
@@ -20,8 +20,19 @@
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
         </PackageReference>
         <PackageReference Include="CommunityToolkit.Mvvm"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+        <PackageReference Include="Microsoft.Extensions.Http" />
+        <PackageReference Include="Serilog.Formatting.Compact" />
+        <PackageReference Include="Serilog.Sinks.Console" />
+        <PackageReference Include="Serilog.Sinks.File" />
         <PackageReference Include="ShadUI"/>
         <PackageReference Include="Lucide.Avalonia"/>
         <PackageReference Include="Zeng.CoreLibrary.Toolkit.Avalonia"/>
+        <PackageReference Include="Xaml.Behaviors.Avalonia"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Contacts\" />
+      <Folder Include="Services\" />
     </ItemGroup>
 </Project>

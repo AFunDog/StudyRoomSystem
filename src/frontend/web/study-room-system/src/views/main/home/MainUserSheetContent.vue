@@ -20,10 +20,10 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import type { User } from "@/lib/types/User";
+import type { User } from "@/lib/types/user";
 import { Menu, UserRound } from 'lucide-vue-next';
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { logout } from "@/lib/Utils";
+import { logout } from "@/lib/utils";
 import { useRouter } from "vue-router";
 const router = useRouter();
 

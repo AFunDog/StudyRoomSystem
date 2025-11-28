@@ -3,7 +3,7 @@ import MainHeader from './home/MainHeader.vue'
 import MainContent from './home/MainContent.vue'
 import MainBottom from './home/MainBottom.vue'
 import { provide, ref, watch } from 'vue';
-import type { Room } from '@/lib/types/Room';
+import type { Room } from '@/lib/types/room';
 import { SELECT_ROOM } from './define';
 import BottomTag from '@/components/ui/bottomTag/BottomTag.vue';
 import { useRouter } from 'vue-router';

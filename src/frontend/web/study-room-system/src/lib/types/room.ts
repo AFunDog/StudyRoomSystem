@@ -1,4 +1,4 @@
-import type { Seat } from "./Seat";
+import type { Seat } from "./seat";
 
 export interface Room {
   id: string;

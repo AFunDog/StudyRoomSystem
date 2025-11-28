@@ -10,13 +10,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Button } from '@/components/ui/button';
-import type { Booking } from '@/lib/types/Booking';
-import { http } from '@/lib/Utils';
+import type { Booking } from '@/lib/types/booking';
+import { http } from '@/lib/utils';
 import dayjs from 'dayjs';
 import { Trash2 } from 'lucide-vue-next';
 import { onMounted, onUnmounted, ref } from 'vue';
-import { getHubConnection } from '@/lib/api/HubConnection';
-import { bookingRequest } from '@/lib/api/BookingRequest';
+import { getHubConnection } from '@/lib/api/hubConnection';
+import { bookingRequest } from '@/lib/api/bookingRequest';
 
 // const hubConnection = getHubConnection();
 const bookings = ref<Booking[]>([]);

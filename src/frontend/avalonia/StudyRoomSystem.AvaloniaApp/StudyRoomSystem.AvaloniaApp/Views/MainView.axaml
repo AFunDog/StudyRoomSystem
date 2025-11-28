@@ -3,14 +3,36 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:StudyRoomSystem.AvaloniaApp.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:shadUi="clr-namespace:ShadUI;assembly=ShadUI"
+             mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="800"
              x:Class="StudyRoomSystem.AvaloniaApp.Views.MainView"
              x:DataType="vm:MainViewModel">
-  <Design.DataContext>
-    <!-- This only sets the DataContext for the previewer in an IDE,
+    <Design.DataContext>
+        <!-- This only sets the DataContext for the previewer in an IDE,
          to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-    <vm:MainViewModel />
-  </Design.DataContext>
+        <vm:MainWindowViewModel />
+    </Design.DataContext>
+    <Interaction.Behaviors>
+        <LoadedTrigger>
+            <InvokeCommandAction Command="{Binding ViewLoadedCommand}"/>
+        </LoadedTrigger>
+    </Interaction.Behaviors>
 
-  <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    <Panel Name="RootPanel">
+        <!-- <shadUi:ToastHost ZIndex="9999" -->
+        <!--                   Manager="{x:Static avaloniaApp:App.ToastManager}"> -->
+        <!-- </shadUi:ToastHost> -->
+        <TransitioningContentControl
+            Content="{Binding Content,Mode=OneWay}">
+            <TransitioningContentControl.PageTransition>
+                <CompositePageTransition>
+                    <PageSlide
+                        Orientation="Vertical"
+                        SlideInEasing="ExponentialEaseOut"
+                        SlideOutEasing="ExponentialEaseOut"
+                        Duration="0:0:0.33" />
+                </CompositePageTransition>
+            </TransitioningContentControl.PageTransition>
+        </TransitioningContentControl>
+    </Panel>
 </UserControl>

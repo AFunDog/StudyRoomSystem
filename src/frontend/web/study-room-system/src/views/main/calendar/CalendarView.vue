@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import BottomTag from '@/components/ui/bottomTag/BottomTag.vue';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { bookingRequest } from '@/lib/api/BookingRequest';
-import type { Booking } from '@/lib/types/Booking';
-import { http } from '@/lib/Utils';
+import { bookingRequest } from '@/lib/api/bookingRequest';
+import type { Booking } from '@/lib/types/booking';
+import { http } from '@/lib/utils';
 import { onMounted, ref } from 'vue';
 import dayjs from 'dayjs';
 

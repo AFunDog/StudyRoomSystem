@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { inject, ref, watch } from 'vue';
 import { SELECT_ROOM } from '../define';
-import { cn, http } from '@/lib/Utils';
+import { cn, http } from '@/lib/utils';
 import { Armchair, Dot } from 'lucide-vue-next';
 import {
   Dialog,
@@ -36,7 +36,7 @@ import { CalendarIcon } from 'lucide-vue-next';
 import { Calendar } from '@/components/ui/calendar';
 
 import Button from '@/components/ui/button/Button.vue';
-import type { Seat } from '@/lib/types/Seat';
+import type { Seat } from '@/lib/types/seat';
 import { computed, type RefSymbol } from '@vue/reactivity';
 import z from 'zod';
 import { toTypedSchema } from '@vee-validate/zod';
@@ -45,7 +45,7 @@ import type { DateValue } from 'reka-ui';
 import { parseDate, CalendarDate } from '@internationalized/date';
 import dayjs from 'dayjs';
 import ViewBox from '@/components/ui/view-box/ViewBox.vue';
-import { bookingRequest } from '@/lib/api/BookingRequest';
+import { bookingRequest } from '@/lib/api/bookingRequest';
 
 const isSelectDialogOpen = ref(false);
 const selectRoom = inject(SELECT_ROOM)!;

@@ -3,7 +3,7 @@ import type { CalendarRootEmits, CalendarRootProps } from "reka-ui"
 import type { HTMLAttributes } from "vue"
 import { reactiveOmit } from "@vueuse/core"
 import { CalendarRoot, useForwardPropsEmits } from "reka-ui"
-import { cn } from "@/lib/Utils"
+import { cn } from "@/lib/utils"
 import { CalendarCell, CalendarCellTrigger, CalendarGrid, CalendarGridBody, CalendarGridHead, CalendarGridRow, CalendarHeadCell, CalendarHeader, CalendarHeading, CalendarNextButton, CalendarPrevButton } from "."
 
 const props = defineProps<CalendarRootProps & { class?: HTMLAttributes["class"] }>()

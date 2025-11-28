@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useConfig } from '@/lib/Config';
-import { cn } from '@/lib/Utils';
+import { useConfig } from '@/lib/config';
+import { cn } from '@/lib/utils';
 import { CalendarClock, CircleUserRound, House, Plus, Settings } from 'lucide-vue-next';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { useRouter } from 'vue-router';

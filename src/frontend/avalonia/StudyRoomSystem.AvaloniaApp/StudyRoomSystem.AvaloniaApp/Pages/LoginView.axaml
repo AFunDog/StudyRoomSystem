@@ -1,0 +1,37 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:shadUi="clr-namespace:ShadUI;assembly=ShadUI"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="800"
+             x:Class="StudyRoomSystem.AvaloniaApp.Pages.LoginView">
+    <Panel>
+        <Grid ColumnDefinitions="1*,12*,1*">
+            <shadUi:Card Grid.Column="1" VerticalAlignment="Center">
+                <shadUi:Card.Header>
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock Text="登录" FontSize="24" LetterSpacing="4"></TextBlock>
+                        <TextBlock Text="欢迎来到智慧自习室预约管理系统" Classes="Muted"></TextBlock>
+                    </StackPanel>
+                </shadUi:Card.Header>
+                <StackPanel Orientation="Vertical">
+                    <TextBox shadUi:ControlAssist.Label="用户名" Watermark="请输入用户名"></TextBox>
+                    <TextBox shadUi:ControlAssist.Label="密码" Watermark="请输入密码" PasswordChar="*" Classes="PasswordReveal"></TextBox>
+                    <CheckBox Content="我已阅读并同意"></CheckBox>
+                    <CheckBox Content="下次自动登录"></CheckBox>
+                    <Button Content="登录" Classes="Primary"></Button>
+                    <StackPanel Orientation="Horizontal" Spacing="16" HorizontalAlignment="Center">
+                        <StackPanel.Styles>
+                            <Style Selector="TextBlock.Link">
+                                <Setter Property="Cursor" Value="Hand"></Setter>
+                            </Style>
+                        </StackPanel.Styles>
+                        <TextBlock Classes="Link" Text="忘记密码" />
+                        <TextBlock Text="|"></TextBlock>
+                        <TextBlock Classes="Link" Text="新用户注册"/>
+                    </StackPanel>
+                </StackPanel>
+            </shadUi:Card>
+        </Grid>
+    </Panel>
+</UserControl>
