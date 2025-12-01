@@ -3,8 +3,8 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
+using StudyRoomSystem.Core.Structs.Api;
 using StudyRoomSystem.Server.Helpers;
-using StudyRoomSystem.Server.Structs;
 
 namespace StudyRoomSystem.Server.Controllers.V1;
 

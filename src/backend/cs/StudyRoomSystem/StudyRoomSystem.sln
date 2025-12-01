@@ -6,7 +6,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StudyRoomSystem.Core", "Stu
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionFolder", "SolutionFolder", "{C9080662-FBC0-4FFE-8869-305777EF4F85}"
 	ProjectSection(SolutionItems) = preProject
-		global.json = global.json
+		..\..\..\..\scripts\Dockerfile = ..\..\..\..\scripts\Dockerfile
 	EndProjectSection
 EndProject
 Global

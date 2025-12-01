@@ -9,6 +9,5 @@
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
         Title="StudyRoomSystem.AvaloniaApp"
-        FontFamily="Noto Sans SC"
         Content="{Binding Content}">
 </Window>

@@ -12,11 +12,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using Serilog;
 using StudyRoomSystem.Core.Structs;
+using StudyRoomSystem.Core.Structs.Api;
 using StudyRoomSystem.Server.Controllers.Filters;
 using StudyRoomSystem.Server.Database;
 using StudyRoomSystem.Server.Helpers;
-using StudyRoomSystem.Server.Structs;
+using Zeng.CoreLibrary.Toolkit.Logging;
 
 namespace StudyRoomSystem.Server.Controllers.V1;
 
@@ -41,33 +43,14 @@ public class AuthController : ControllerBase
     //     return builder;
     // }
 
+
     #region Login
 
-    public class LoginRequest
-    {
-        public required string UserName { get; set; }
-        public required string Password { get; set; }
-    }
-
-    public class LoginResponseOk
-    {
-        public required string Token { get; set; }
-        public required DateTime Expiration { get; set; }
-        public required User User { get; set; }
-    }
-
-
-    /// <summary>
-    /// 用户登录
-    /// </summary>
-    /// <param name="request"></param>
-    /// <returns></returns>
     [HttpPost("login")]
     [AllowAnonymous]
-    [ProducesResponseType<LoginResponseOk>(StatusCodes.Status200OK)]
+    [ProducesResponseType<LoginResponseOk2>(StatusCodes.Status200OK)]
     [ProducesResponseType<ResponseError>(StatusCodes.Status401Unauthorized)]
     [EndpointSummary("用户登录")]
-    [EndpointDescription("用户需要使用该接口登录，获取具有权限的登录Token")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         var user = await AppDbContext.Users.SingleOrDefaultAsync(x => x.UserName == request.UserName);
@@ -90,23 +73,53 @@ public class AuthController : ControllerBase
 
         var key = Encoding.UTF8.GetBytes(Configuration["Jwt:Key"]!);
         var cred = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256);
+        var minutes = double.TryParse(Configuration["Jwt:ExpireMinutes"], out var mins) ? mins : 7 * 24 * 60;
         var token = new JwtSecurityToken(
             issuer: Configuration["Jwt:Issuer"],
             audience: Configuration["Jwt:Audience"],
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(Convert.ToDouble(Configuration["Jwt:ExpireMinutes"])),
+            expires: DateTime.UtcNow.AddMinutes(minutes),
             signingCredentials: cred
         );
         var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
-        return Ok(
-            new LoginResponseOk
+        Response.Cookies.Append(
+            AuthorizationHelper.CookieKey,
+            tokenString,
+            new CookieOptions()
             {
-                Token = tokenString,
+                MaxAge = TimeSpan.FromMinutes(minutes),
+                IsEssential = true
+            }
+        );
+        Log.Logger.Trace().Information("用户登录 {Id}", user);
+        return Ok(
+            new LoginResponseOk2
+            {
                 Expiration = token.ValidTo,
                 User = user
             }
         );
+    }
+
+    #endregion
+
+    #region Logout
+
+    [HttpPost("logout")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [EndpointSummary("用户登出")]
+    public async Task<IActionResult> Logout()
+    {
+        var user = this.GetLoginUserId();
+        if (user == Guid.Empty)
+            return Unauthorized();
+
+        Response.Cookies.Delete(AuthorizationHelper.CookieKey);
+        Log.Logger.Trace().Information("用户登出 {Id}", user);
+        return Ok();
     }
 
     #endregion
@@ -124,5 +137,4 @@ public class AuthController : ControllerBase
             return Unauthorized();
         return Ok();
     }
-
 }

@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.CookiePolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -142,6 +143,17 @@ builder.Services.Configure<JsonOptions>(options =>
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     }
 );
+// 全局 Cookie
+builder.Services.Configure<CookiePolicyOptions>(options =>
+    {
+        // 所有 Cookie 默认启用 HttpOnly
+        options.HttpOnly = HttpOnlyPolicy.Always;
+        // 所有 Cookie 默认启用 SameSite=Lax
+        options.MinimumSameSitePolicy = SameSiteMode.Lax;
+        // 生产环境默认启用 Secure（仅 HTTPS）
+        options.Secure = CookieSecurePolicy.Always;
+    }
+);
 
 // builder.Services.AddRouting(options =>
 // {
@@ -173,12 +185,22 @@ builder
             {
                 OnMessageReceived = context =>
                 {
-                    var accessToken = context.Request.Query["access_token"];
-                    var path = context.HttpContext.Request.Path;
-                    if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hub"))
+                    // 从 Cookie 中获取 JWT Token
+                    if (context.Request.Cookies.TryGetValue(AuthorizationHelper.CookieKey, out var token))
                     {
-                        context.Token = accessToken;
-                        Log.Logger.Trace().Debug("Hub Token {Token}", accessToken.ToString());
+                        context.Token = token;
+                        Log.Logger.Trace().Debug("Cookie Token {Token}", token);
+                    }
+                    // 如果是 /hub 路径，从查询参数提取 access_token
+                    else
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+                        var path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hub"))
+                        {
+                            context.Token = accessToken;
+                            Log.Logger.Trace().Debug("Hub Token {Token}", accessToken.ToString());
+                        }
                     }
 
                     return Task.CompletedTask;
@@ -237,7 +259,13 @@ app.UseSerilogRequestLogging();
 //         RequestPath = ""
 //     }
 // );
+// 启用 Cookie 策略（必须在 UseRouting 之前）
+app.UseCookiePolicy();
+
 app.UseRouting();
+
+app.UseHttpsRedirection();
+
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -7,9 +7,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StudyRoomSystem.Core.Structs;
+using StudyRoomSystem.Core.Structs.Api;
 using StudyRoomSystem.Server.Database;
 using StudyRoomSystem.Server.Helpers;
-using StudyRoomSystem.Server.Structs;
 
 namespace StudyRoomSystem.Server.Controllers.V1;
 
@@ -42,28 +42,7 @@ public class UserController : ControllerBase
     
     #region Register
 
-    public class RegisterRequest
-    {
-        [MaxLength(64)]
-        [MinLength(4)]
-        public required string UserName { get; set; }
 
-        [MaxLength(64)]
-        [MinLength(8)]
-        public required string Password { get; set; }
-
-        public string? DisplayName { get; set; }
-
-        [MaxLength(64)]
-        [MinLength(4)]
-        public required string CampusId { get; set; }
-
-        [Phone]
-        public required string Phone { get; set; }
-
-        [EmailAddress]
-        public string? Email { get; set; }
-    }
 
     [HttpPost("register")]
     [AllowAnonymous]

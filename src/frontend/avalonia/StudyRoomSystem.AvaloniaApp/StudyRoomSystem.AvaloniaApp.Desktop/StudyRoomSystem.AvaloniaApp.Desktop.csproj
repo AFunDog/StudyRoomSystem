@@ -6,10 +6,15 @@
         <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+        
     </PropertyGroup>
 
     <PropertyGroup>
         <ApplicationManifest>app.manifest</ApplicationManifest>
+    </PropertyGroup>
+    
+    <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+        <PublishAot>true</PublishAot>
     </PropertyGroup>
 
     <ItemGroup>

@@ -7,7 +7,6 @@ public enum BookingStateEnum
     Booking,CheckIn,Checkout,Canceled
 }
 
-[Description("预约记录")]
 public class Booking
 {
     [Description("编号")]

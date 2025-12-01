@@ -32,7 +32,11 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Contacts\" />
-      <Folder Include="Services\" />
+      <Folder Include="Assets\Fonts\" />
+      <Folder Include="Structs\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\..\..\backend\cs\StudyRoomSystem\StudyRoomSystem.Core\StudyRoomSystem.Core.csproj" />
     </ItemGroup>
 </Project>
