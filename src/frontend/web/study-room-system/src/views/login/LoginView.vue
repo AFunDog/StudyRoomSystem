@@ -18,7 +18,7 @@ import { useForm, type GenericObject } from 'vee-validate';
 import { http } from '@/lib/utils';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import type { User } from '@/lib/types/User';
+import type { User } from '@/lib/types/user';
 import { LockKeyhole, Eye, EyeOff, Loader2, Info } from 'lucide-vue-next';
 import { restartHubConnection } from '@/lib/api/hubConnection';
 import { useConfig } from '@/lib/config';

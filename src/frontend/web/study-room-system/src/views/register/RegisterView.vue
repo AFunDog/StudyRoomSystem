@@ -19,7 +19,7 @@ import { useField, useForm, type GenericObject } from 'vee-validate';
 import { http } from '@/lib/utils';
 import { onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import type { User } from '@/lib/types/User';
+import type { User } from '@/lib/types/user';
 import { LockKeyhole, Eye, EyeOff } from 'lucide-vue-next';
 import { email } from 'zod/v4';
 import { AxiosError } from 'axios';

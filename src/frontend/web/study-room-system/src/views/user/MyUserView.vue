@@ -6,7 +6,7 @@ import type { Booking } from '@/lib/types/Booking';
 import { http } from '@/lib/utils';
 import { onMounted, ref } from 'vue';
 import dayjs from 'dayjs';
-import type { User } from '@/lib/types/User';
+import type { User } from '@/lib/types/user';
 
 const user = JSON.parse(localStorage.getItem('user')!) as User;
 
