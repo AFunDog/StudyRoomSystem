@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { http } from './lib/Utils';
+import { http } from './lib/utils';
 import { Toaster } from '@/components/ui/sonner';
 import 'vue-sonner/style.css'
 import { useColorMode } from '@vueuse/core';
 import { toast } from 'vue-sonner';
-import { authRequest } from './lib/api/AuthRequest';
+import { authRequest } from './lib/api/authRequest';
 
 
 const router = useRouter();
@@ -19,7 +19,7 @@ const curIndex = ref(0);
 router.beforeEach(async (to, from, next) => {
   // if(to.path === '/login') return;
   console.log(to, from);
-  const allowUrls = ['/login', '/admin/login','/register'];
+  const allowUrls = ['/login', '/admin/login','/register','/privacy-policy','/user-agreement','/'];
 
   if (allowUrls.includes(to.path)) return next();
 

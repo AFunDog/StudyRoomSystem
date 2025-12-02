@@ -1,6 +1,7 @@
 package com.zyx.studyroomsystem.service;
 
 import com.zyx.studyroomsystem.pojo.User;
+import com.zyx.studyroomsystem.web.RegisterDto;
 
 import java.util.List;
 import java.util.UUID;
@@ -41,4 +42,9 @@ public interface UserService {
      * 用户登录校验
      */
     boolean validateLogin(String userName, String password);
+
+    /**
+     * 用户注册校验
+     */
+    User registerUser(RegisterDto dto, String role);
 }

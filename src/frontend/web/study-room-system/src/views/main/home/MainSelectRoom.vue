@@ -3,7 +3,7 @@ import Button from '@/components/ui/button/Button.vue';
 import { inject, ref } from 'vue';
 import dayjs from 'dayjs';
 import type { Room } from '@/lib/types/Room';
-import { http } from '@/lib/Utils';
+import { http } from '@/lib/utils';
 import { SELECT_ROOM } from '../define';
 
 

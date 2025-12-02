@@ -20,13 +20,13 @@ public interface RoomMapper {
     List<Room> selectAllRooms();
 
     @Insert("INSERT INTO rooms(id, name, open_time, close_time, rows, cols) " +
-            "VALUES(#{id}, #{name}, #{openTime}, #{closeTime}, #{rows}, #{cols})")
+            "VALUES(#{id,jdbcType=OTHER}, #{name}, #{openTime}, #{closeTime}, #{rows}, #{cols})")
     void insertRoom(Room room);
 
-    @Update("UPDATE rooms SET name = #{name}, open_time = #{openTime}, close_time = #{closeTime}, rows = #{rows}, cols = #{cols} WHERE id=#{id}")
+    @Update("UPDATE rooms SET name = #{name}, open_time = #{openTime}, close_time = #{closeTime}, rows = #{rows}, cols = #{cols} WHERE id=#{id,jdbcType=OTHER}")
     void updateRoom(Room room);
 
-    @Delete("DELETE FROM rooms WHERE id=#{id}")
+    @Delete("DELETE FROM rooms WHERE id=#{id,jdbcType=OTHER}")
     int deleteRoom(UUID id);  // 返回受影响的行数
 
     /** 新增：判断房间名是否存在 */

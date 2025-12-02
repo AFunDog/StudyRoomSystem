@@ -11,30 +11,30 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 
-@MappedJdbcTypes(JdbcType.VARCHAR)
+@MappedJdbcTypes(JdbcType.OTHER)   // PostgreSQL uuid 类型对应 JDBC OTHER
 @MappedTypes(UUID.class)
 public class UUIDTypeHandler extends BaseTypeHandler<UUID> {
 
     @Override
     public void setNonNullParameter(PreparedStatement ps, int i, UUID parameter, JdbcType jdbcType) throws SQLException {
-        ps.setString(i, parameter.toString());
+        ps.setObject(i, parameter, java.sql.Types.OTHER); // 用 setObject + Types.OTHER
     }
 
     @Override
     public UUID getNullableResult(ResultSet rs, String columnName) throws SQLException {
-        String uuid = rs.getString(columnName);
-        return uuid != null ? UUID.fromString(uuid) : null;
+        Object obj = rs.getObject(columnName);
+        return obj != null ? (UUID) obj : null;
     }
 
     @Override
     public UUID getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
-        String uuid = rs.getString(columnIndex);
-        return uuid != null ? UUID.fromString(uuid) : null;
+        Object obj = rs.getObject(columnIndex);
+        return obj != null ? (UUID) obj : null;
     }
 
     @Override
     public UUID getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
-        String uuid = cs.getString(columnIndex);
-        return uuid != null ? UUID.fromString(uuid) : null;
+        Object obj = cs.getObject(columnIndex);
+        return obj != null ? (UUID) obj : null;
     }
 }

@@ -11,11 +11,11 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from '@/components/ui/button';
 import type { Booking } from '@/lib/types/Booking';
-import { http } from '@/lib/Utils';
+import { http } from '@/lib/utils';
 import dayjs from 'dayjs';
 import { Trash2 } from 'lucide-vue-next';
 import { onMounted, onUnmounted, ref } from 'vue';
-import { getHubConnection } from '@/lib/api/HubConnection';
+import { getHubConnection } from '@/lib/api/hubConnection';
 import { bookingRequest } from '@/lib/api/BookingRequest';
 
 // const hubConnection = getHubConnection();

@@ -1,9 +1,5 @@
 package com.zyx.studyroomsystem.pojo;
 
-import com.zyx.studyroomsystem.web.UlidToUuidConverter;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
@@ -11,17 +7,9 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Data
-@Entity
 public class User {
-    @Id
-    private UUID id;
 
-    @PrePersist
-    public void prePersist() {
-        if (id == null) {
-            this.id = UlidToUuidConverter.generateUuidFromUlid(); // 调用工具类生成 UUID
-        }
-    }
+    private UUID id;
 
     @NotNull(message = "创建时间不能为空")
     private OffsetDateTime createTime;

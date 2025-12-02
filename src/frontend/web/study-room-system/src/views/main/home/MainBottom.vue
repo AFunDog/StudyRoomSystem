@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { cn } from '@/lib/Utils';
+import { cn } from '@/lib/utils';
 import { CalendarClock, House, Plus, Settings } from 'lucide-vue-next';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { useRouter } from 'vue-router';

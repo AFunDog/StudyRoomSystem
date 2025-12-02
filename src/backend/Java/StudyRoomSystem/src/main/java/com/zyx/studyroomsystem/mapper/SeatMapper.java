@@ -15,12 +15,12 @@ public interface SeatMapper {
     @Select("SELECT id, room_id, row, col FROM seats WHERE room_id = #{roomId}")
     List<Seat> selectSeatsByRoomId(UUID roomId);
 
-    @Insert("INSERT INTO seats(id, room_id, row, col) VALUES(#{id}, #{roomId}, #{row}, #{col})")
+    @Insert("INSERT INTO seats(id, room_id, row, col) VALUES(#{id,jdbcType=OTHER}, #{roomId}, #{row}, #{col})")
     void insertSeat(Seat seat);
 
-    @Update("UPDATE seats SET room_id = #{roomId}, row = #{row}, col = #{col} WHERE id=#{id}")
+    @Update("UPDATE seats SET room_id = #{roomId}, row = #{row}, col = #{col} WHERE id=#{id,jdbcType=OTHER}")
     void updateSeat(Seat seat);
 
-    @Delete("DELETE FROM seats WHERE id=#{id}")
+    @Delete("DELETE FROM seats WHERE id=#{id,jdbcType=OTHER}")
     void deleteSeat(UUID id);
 }

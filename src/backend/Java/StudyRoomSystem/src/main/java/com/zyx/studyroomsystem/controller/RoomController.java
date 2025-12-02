@@ -5,6 +5,7 @@ import com.zyx.studyroomsystem.exception.ResourceNotFoundException;
 import com.zyx.studyroomsystem.pojo.Room;
 import com.zyx.studyroomsystem.service.RoomService;
 import com.zyx.studyroomsystem.web.ApiResponse;
+import com.zyx.studyroomsystem.web.UlidToUuidConverter;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,7 +35,8 @@ public class RoomController {
         if (roomService.existsByName(room.getName())) {
             throw new ResourceConflictException("房间已存在: " + room.getName());
         }
-//        room.setId(UUID.randomUUID()); id通过ulid设置
+        // 手动生成 ULID → UUID
+        room.setId(UlidToUuidConverter.generateUuidFromUlid());
         roomService.addRoom(room);
         return ApiResponse.ok(Map.of("id", room.getId()));
     }

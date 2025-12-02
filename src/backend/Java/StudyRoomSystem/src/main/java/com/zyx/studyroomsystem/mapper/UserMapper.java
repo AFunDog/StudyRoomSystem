@@ -22,13 +22,13 @@ public interface UserMapper {
     List<User> selectAllUsers();
 
     @Insert("INSERT INTO users(id, create_time, user_name, display_name, password, campus_id, phone, email, role, avatar) " +
-            "VALUES(#{id}, #{createTime}, #{userName}, #{displayName}, #{password}, #{campusId}, #{phone}, #{email}, #{role}, #{avatar})")
+            "VALUES(#{id,jdbcType=OTHER}, #{createTime}, #{userName}, #{displayName}, #{password}, #{campusId}, #{phone}, #{email}, #{role}, #{avatar})")
     void insertUser(User user);
 
     @Update("UPDATE users SET display_name = #{displayName}, phone = #{phone}, email = #{email}, role = #{role}, avatar = #{avatar} " +
-            "WHERE id=#{id}")
+            "WHERE id=#{id,jdbcType=OTHER}")
     void updateUser(User user);
 
-    @Delete("DELETE FROM users WHERE id=#{id}")
+    @Delete("DELETE FROM users WHERE id=#{id,jdbcType=OTHER}")
     void deleteUser(UUID id);
 }

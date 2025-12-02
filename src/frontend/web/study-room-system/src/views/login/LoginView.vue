@@ -15,50 +15,52 @@ import { Button } from '@/components/ui/button';
 import { toTypedSchema } from '@vee-validate/zod';
 import z from 'zod';
 import { useForm, type GenericObject } from 'vee-validate';
-import { http } from '@/lib/Utils';
+import { http } from '@/lib/utils';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import type { User } from '@/lib/types/User';
 import { LockKeyhole, Eye, EyeOff, Loader2, Info } from 'lucide-vue-next';
-import { restartHubConnection } from '@/lib/api/HubConnection';
-import { useConfig } from '@/lib/Config';
+import { restartHubConnection } from '@/lib/api/hubConnection';
+import { useConfig } from '@/lib/config';
 import { toast } from 'vue-sonner';
 import { AxiosError } from 'axios';
-import { authRequest } from '@/lib/api/AuthRequest';
+import { authRequest } from '@/lib/api/authRequest';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip'
 
 const router = useRouter();
 const schema = z.object({
-  userName: z.string({ required_error: '请输入用户名' }).min(4, '请输入用户名'),
-  password: z.string({ required_error: '请输入密码' }).min(6, '请输入密码'),
+  userName: z.string({ required_error: '请输入用户名' })
+    .min(4, "用户名至少 4 位")
+    .max(20, "用户名不能超过 20 位")
+    .regex(/^[a-zA-Z0-9._]+$/, "用户名只能包含字母、数字、点或下划线"),
+  password: z.string({ required_error: '请输入密码' })
+    .min(8, "密码至少 8 位")
+    .max(32, "密码不能超过 32 位")
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).+$/, "密码必须包含大小写字母、数字和特殊字符"),
   agreePolicy: z.preprocess(val => val === 'on' || val === true, z.boolean().refine(value => value, '请同意隐私政策')),
   autoLogin: z.preprocess(val => val === 'on' || val === true, z.boolean()).optional(),
 });
 const formSchema = toTypedSchema(schema)
-const isShowPassword = ref(false);
+// const isShowPassword = ref(false);
 const isLoginLoading = ref(false);
 const form = useForm({ validationSchema: formSchema });
 const onSubmit = form.handleSubmit(async (values) => {
   try {
     isLoginLoading.value = true;
     var res = await authRequest.login({ username: values.userName, password: values.password });
-    // var res = await http.post('/auth/login', {
-    //   userName: values.userName,
-    //   password: values.password
-    // })
 
-    const token = res.token;
+    //改成 HttpOnly Cookie 后，后端依然会生成token，但不会再通过 res.token 返回给前端
+    //前端 JS 无法访问这个 Cookie，但浏览器会自动在请求时带上它
+    // const token = res.token;
     const user = res.user as User;
 
-    if (!token || !user) {
-      toast.error('登录失败，用户名或密码错误');
-      return;
-    }
-    console.log("登录成功", token, user);
-    toast.success('登录成功');
-    localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(user));
-    http.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    //统一由后端返回错误信息
+    // if (!user) {
+    //   toast.error('登录失败，用户名或密码错误');
+    //   return;
+    // }
+
     restartHubConnection();
     router.push('/');
 
@@ -96,7 +98,7 @@ onUnmounted(() => {
           <div class="text-sm text-muted-foreground">欢迎来到智慧自习室预约管理系统</div>
         </CardHeader>
         <CardContent class="flex flex-col gap-y-4">
-          <form class="flex flex-col gap-y-4" :validation-schema="formSchema" @submit="onSubmit">
+          <form class="flex flex-col gap-y-4" @submit="onSubmit">
             <FormField v-slot="{ componentField }" name="userName">
               <FormItem>
                 <FormLabel>用户名</FormLabel>
@@ -138,9 +140,9 @@ onUnmounted(() => {
                       </Checkbox>
                       <div class="text-sm [&>a]:text-primary">
                         我已阅读并同意
-                        <a href="">《隐私政策》</a>
+                        <a href="/privacy-policy" target="_blank">《隐私政策》</a>
                         和
-                        <a href="">《用户协议》</a>
+                        <a href="/user-agreement" target="_blank">《用户协议》</a>
                       </div>
                     </div>
                   </div>
@@ -160,7 +162,17 @@ onUnmounted(() => {
                         <div>
                           下次自动登录
                         </div>
-                        <Info class="size-4 bg-"></Info>
+                        <!-- 信息图标：默认灰色，悬停变主题色，并显示提示 -->
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info class="size-4 text-gray-400 hover:text-primary cursor-pointer" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              勾选后，登录状态保持7天；如不勾选则关闭浏览器即为退出
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </div>
                     </div>
                   </div>
@@ -181,6 +193,7 @@ onUnmounted(() => {
             </div>
           </form>
           <div class="flex flex-row items-center justify-center gap-x-4 [&>Button]:hover:cursor-pointer">
+            <!-- TODO: 忘记密码功能 -->
             <Button variant="ghost">
               忘记密码
             </Button>

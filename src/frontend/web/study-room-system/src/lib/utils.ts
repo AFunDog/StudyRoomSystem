@@ -16,22 +16,24 @@ const http: AxiosInstance = axios.create({
   timeout: 5000,
   headers: { "Content-Type": "application/json" },
   baseURL: `/api/v1`,
-  // baseURL: `${baseUrl}/api/v1`,
+  withCredentials: true, // 让请求自动带上 HttpOnly Cookie
 });
 
 // 添加请求拦截器
 http.interceptors.request.use(config => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
+  //TODO: 可以在这里添加日志、公共 header、Loading 状态。
+  // 响应拦截器：统一处理错误，比如 401 时清理前端状态并跳转登录。
   return config;
 });
 
-function logout() {
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
+async function logout() {
+  try {
+    await http.post('/auth/logout'); // 后端负责清除 HttpOnly Cookie
+  } catch (e) {
+    console.error(e);
+  }
+  // 清理前端状态（非敏感信息）
+  // store.user = null;
 }
-
 
 export { http, cn,logout };

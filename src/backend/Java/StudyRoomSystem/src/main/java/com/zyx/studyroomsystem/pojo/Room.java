@@ -1,9 +1,5 @@
 package com.zyx.studyroomsystem.pojo;
 
-import com.zyx.studyroomsystem.web.UlidToUuidConverter;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
@@ -11,17 +7,9 @@ import java.time.LocalTime;
 import java.util.UUID;
 
 @Data
-@Entity
 public class Room {
-    @Id
-    private UUID id;
 
-    @PrePersist
-    public void prePersist() {
-        if (id == null) {
-            this.id = UlidToUuidConverter.generateUuidFromUlid(); // 调用工具类生成 UUID
-        }
-    }
+    private UUID id;
 
     @NotBlank(message = "房间名称不能为空")
     @Size(max = 64, message = "房间名称不能超过 64 个字符")

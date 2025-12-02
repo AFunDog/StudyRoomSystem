@@ -16,25 +16,31 @@ import { toast } from 'vue-sonner';
 import { toTypedSchema } from '@vee-validate/zod';
 import z from 'zod';
 import { useField, useForm, type GenericObject } from 'vee-validate';
-import { http } from '@/lib/Utils';
+import { http } from '@/lib/utils';
 import { onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import type { User } from '@/lib/types/User';
 import { LockKeyhole, Eye, EyeOff } from 'lucide-vue-next';
 import { email } from 'zod/v4';
 import { AxiosError } from 'axios';
-import { authRequest } from '@/lib/api/AuthRequest';
+import { authRequest } from '@/lib/api/authRequest';
 import { Checkbox } from '@/components/ui/checkbox';
 
 const router = useRouter();
 const schema = z.object({
-  userName: z.string({ required_error: '请输入用户名' }).min(4, '请输入用户名'),
+  userName: z.string({ required_error: '请输入用户名' })
+    .min(4, "用户名至少 4 位")
+    .max(20, "用户名不能超过 20 位")
+    .regex(/^[a-zA-Z0-9._]+$/, "用户名只能包含字母、数字、点或下划线"),
   campusId: z.string({ required_error: '请输入学号/工号' }),
   // displayName: z.string().min(4,'请输入昵称').nullable(),
   phone: z.string({ required_error: '请输入手机号' }).regex(/^1[3-9]\d{9}$/, '请输入有效的手机号'),
   // email : z.string({ }).email('请输入有效的邮箱').nullable(),
-  password: z.string({ required_error: '请输入密码' }).min(6, '请输入密码'),
-  confirmPassword: z.string({ required_error: '请输入确认密码' }).min(6, '请输入确认密码'),
+  password: z.string({ required_error: '请输入密码' })
+    .min(8, "密码至少 8 位")
+    .max(32, "密码不能超过 32 位")
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).+$/, "密码必须包含大小写字母、数字和特殊字符"),
+  confirmPassword: z.string({ required_error: '请输入确认密码' }),
   agreePolicy: z.preprocess(val => val === 'on' || val === true, z.boolean().refine(value => value, '请同意隐私政策')),
 }).refine((data) => data.password === data.confirmPassword, {
   path: ['confirmPassword'],
@@ -43,19 +49,14 @@ const schema = z.object({
 const formSchema = toTypedSchema(schema)
 const form = useForm({ validationSchema: formSchema });
 
-// const displayNamePlaceholder = ref('请输入昵称');
-// const registerMessage = ref('');
-const isShowPassword = ref(false);
+// const isShowPassword = ref(false);
+const isRegisterLoading = ref(false); //注册按钮状态
 
-
-// watch(() => form.values.userName,v => {
-//   displayNamePlaceholder.value = v ?? '请输入昵称';
-//   console.log(v);
-// })
-
+//注册提交逻辑
 const onSubmit = form.handleSubmit(async (values) => {
   try {
     console.log(values);
+    isRegisterLoading.value = true; //开始注册，设置按钮为加载状态
     var res = await authRequest.register({
       userName: values.userName,
       password: values.password,
@@ -63,27 +64,42 @@ const onSubmit = form.handleSubmit(async (values) => {
       phone: values.phone
     })
 
-    const token = res.data.token;
-    const user = res.data.user as User;
+    // const user = res.data.user as User;
 
-    if (!token || !user) {
-      // registerMessage.value = '注册失败';
-      toast.error('注册失败');
-      return;
-    }
+    //统一由后端返回错误信息
+    // if (!user) {
+    //   toast.error('注册失败');
+    //   return;
+    // }
 
+    //注册成功信息
+    toast.success('注册成功，请登录')
     router.push('/login');
 
   }
   catch (error) {
-    // registerMessage.value = '注册失败';
     if (error instanceof AxiosError)
       toast.error('注册失败', {
         description: error.response?.data.message,
       });
+    else
+      toast.error('注册失败');
     console.log(error);
   }
+  finally {
+    isRegisterLoading.value = false; //注册完成，恢复按钮状态
+  }
 });
+
+//返回逻辑
+function handleBack() {
+  if (window.history.length <= 1) {
+    // 没有历史记录，说明是直接打开注册页
+    router.push('/login');
+  } else {
+    router.back();
+  }
+}
 
 </script>
 <template>
@@ -156,10 +172,6 @@ const onSubmit = form.handleSubmit(async (values) => {
                       class="pl-10">
                     </Input>
 
-                    <!-- <div class="absolute flex flex-row justify-center items-center w-10 right-0">
-                      <component :is="isShowPassword ? EyeOff : Eye" @click="isShowPassword = !isShowPassword"
-                        class="size-4"></component>
-                    </div> -->
                   </div>
                 </FormControl>
                 <!-- <FormDescription>登录密码</FormDescription> -->
@@ -210,8 +222,11 @@ const onSubmit = form.handleSubmit(async (values) => {
             </FormField>
             <!-- <div>{{ registerMessage }}</div> -->
             <div class="flex flex-row justify-center items-center gap-x-4">
-              <Button class="hover:cursor-pointer" type="button" variant="secondary" @click="router.back()">返回</Button>
-              <Button class="hover:cursor-pointer" type="submit">注册</Button>
+              <Button class="hover:cursor-pointer" type="button" variant="secondary" @click="handleBack()">返回</Button>
+              <Button class="hover:cursor-pointer" type="submit" :disabled="isRegisterLoading">
+                <Loader2 v-if="isRegisterLoading" class="size-4 animate-spin" />
+                注册
+              </Button>
             </div>
           </form>
         </CardContent>

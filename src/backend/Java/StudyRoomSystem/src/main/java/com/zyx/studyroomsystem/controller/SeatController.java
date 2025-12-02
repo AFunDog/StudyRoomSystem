@@ -4,6 +4,7 @@ import com.zyx.studyroomsystem.exception.ResourceNotFoundException;
 import com.zyx.studyroomsystem.pojo.Seat;
 import com.zyx.studyroomsystem.service.SeatService;
 import com.zyx.studyroomsystem.web.ApiResponse;
+import com.zyx.studyroomsystem.web.UlidToUuidConverter;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,7 +34,8 @@ public class SeatController {
     /** 创建座位 */
     @PostMapping
     public ApiResponse<?> create(@Valid @RequestBody Seat seat) {
-//        seat.setId(UUID.randomUUID()); id通过ulid设置
+        // 手动生成 ULID → UUID
+        seat.setId(UlidToUuidConverter.generateUuidFromUlid());
         seatService.addSeat(seat);
         return ApiResponse.ok(Map.of("id", seat.getId()));
     }

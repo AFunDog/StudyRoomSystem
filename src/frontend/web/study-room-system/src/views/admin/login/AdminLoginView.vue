@@ -15,43 +15,46 @@ import { Button } from '@/components/ui/button';
 import { toTypedSchema } from '@vee-validate/zod';
 import z from 'zod';
 import type { GenericObject } from 'vee-validate';
-import { http } from '@/lib/Utils';
+import { http } from '@/lib/utils';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import type { User } from '@/lib/types/User';
 import { LockKeyhole, Eye, EyeOff, UserStar } from 'lucide-vue-next';
-import { restartHubConnection } from '@/lib/api/HubConnection';
-import { authRequest } from '@/lib/api/AuthRequest';
+import { restartHubConnection } from '@/lib/api/hubConnection';
+import { authRequest } from '@/lib/api/authRequest';
 
 const router = useRouter();
 const schema = z.object({
-  userName: z.string({ required_error: '请输入用户名' }).min(4, '请输入用户名'),
-  password: z.string({ required_error: '请输入密码' }).min(6, '请输入密码'),
+  userName: z.string({ required_error: '请输入用户名' })
+    .min(4, "用户名至少 4 位")
+    .max(20, "用户名不能超过 20 位")
+    .regex(/^[a-zA-Z0-9._]+$/, "用户名只能包含字母、数字、点或下划线"),
+  password: z.string({ required_error: '请输入密码' })
+    .min(8, "密码至少 8 位")
+    .max(32, "密码不能超过 32 位")
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).+$/, "密码必须包含大小写字母、数字和特殊字符"),
 });
 const formSchema = toTypedSchema(schema)
 const loginMessage = ref('');
-const isShowPassword = ref(false);
+
+// const isShowPassword = ref(false);
+const isAdminLoginLoading = ref(false); // 管理员登录按钮 loading 状态
 
 async function onSubmit(values: GenericObject) {
   try {
     console.log(values);
-    var res = await authRequest.login({ username: values.userName, password: values.password });
-    // var res = await http.post('/auth/login', {
-    //   userName: values.userName,
-    //   password: values.password
-    // })
+    isAdminLoginLoading.value = true; // 开始 loading
+    // var res = await authRequest.login({ username: values.userName, password: values.password });
 
-    const token = res.token;
-    const user = res.user as User;
+    // const token = res.token;
+    // const user = res.user as User;
 
-    if (!token || !user) {
-      loginMessage.value = '登录失败，用户名或密码错误';
-      return;
-    }
+    //统一由后端返回错误信息
+    // if (!user) {
+    //   loginMessage.value = '登录失败，用户名或密码错误';
+    //   return;
+    // }
 
-    localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(user));
-    http.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     restartHubConnection();
     router.push('/admin');
 
@@ -59,6 +62,9 @@ async function onSubmit(values: GenericObject) {
   catch (error) {
     loginMessage.value = '登录失败，请检查用户名或密码';
     console.log(error);
+  }
+  finally {
+    isAdminLoginLoading.value = false; // 结束 loading
   }
 }
 
@@ -110,9 +116,12 @@ async function onSubmit(values: GenericObject) {
             </FormField>
             <div>{{ loginMessage }}</div>
             <div class="flex flex-row justify-center items-center gap-x-4">
-              <Button class="hover:cursor-pointer" type="submit">登录</Button>
-              <Button class="hover:cursor-pointer" type="button" variant="secondary"
-                @click="router.push('/register')">注册</Button>
+              <Button class="hover:cursor-pointer" type="submit" :disabled="isAdminLoginLoading">
+                <Loader2 v-if="isAdminLoginLoading" class="size-4 animate-spin mr-2" />
+                登录
+              </Button>
+              <!-- <Button class="hover:cursor-pointer" type="button" variant="secondary"
+                @click="router.push('/register')">注册</Button> -->
             </div>
           </Form>
         </CardContent>

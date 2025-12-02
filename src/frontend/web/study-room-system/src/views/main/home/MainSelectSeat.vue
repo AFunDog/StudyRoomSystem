@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { inject, ref, watch } from 'vue';
 import { SELECT_ROOM } from '../define';
-import { cn, http } from '@/lib/Utils';
+import { cn, http } from '@/lib/utils';
 import { Armchair, Dot } from 'lucide-vue-next';
 import {
   Dialog,

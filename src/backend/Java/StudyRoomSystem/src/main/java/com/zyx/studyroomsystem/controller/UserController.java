@@ -1,10 +1,11 @@
 package com.zyx.studyroomsystem.controller;
 
-import com.zyx.studyroomsystem.exception.ResourceNotFoundException;
 import com.zyx.studyroomsystem.exception.ResourceConflictException;
+import com.zyx.studyroomsystem.exception.ResourceNotFoundException;
 import com.zyx.studyroomsystem.pojo.User;
 import com.zyx.studyroomsystem.service.UserService;
 import com.zyx.studyroomsystem.web.ApiResponse;
+import com.zyx.studyroomsystem.web.UlidToUuidConverter;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,7 +45,8 @@ public class UserController {
         if (userService.getUserByUserName(user.getUserName()) != null) {
             throw new ResourceConflictException("用户名已存在: " + user.getUserName());
         }
-//        user.setId(UUID.randomUUID()); id通过ulid设置
+        // 手动生成 ULID → UUID
+        user.setId(UlidToUuidConverter.generateUuidFromUlid());
         user.setCreateTime(java.time.OffsetDateTime.now());
         userService.addUser(user);
         return ApiResponse.ok(Map.of("id", user.getId()));

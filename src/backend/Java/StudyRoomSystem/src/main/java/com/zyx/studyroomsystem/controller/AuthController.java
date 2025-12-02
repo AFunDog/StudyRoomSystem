@@ -1,7 +1,6 @@
 package com.zyx.studyroomsystem.controller;
 
 import com.zyx.studyroomsystem.exception.AuthenticationFailedException;
-import com.zyx.studyroomsystem.exception.UserAlreadyExistsException;
 import com.zyx.studyroomsystem.pojo.User;
 import com.zyx.studyroomsystem.security.JwtUtil;
 import com.zyx.studyroomsystem.security.SecurityUser;
@@ -13,7 +12,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -28,43 +26,21 @@ public class AuthController {
         this.jwtUtil = jwtUtil;
     }
 
-    /**
-     * 私有方法：创建用户并保存
-     * @param dto  注册信息
-     * @param role 用户角色（USER / ADMIN）
-     * @return 创建好的 User 对象
-     */
-    private User createUser(RegisterDto dto, String role) {
-        if (userService.getUserByUserName(dto.userName()) != null) {
-            throw new UserAlreadyExistsException(role + "已存在: " + dto.userName());
-        }
-        User u = new User();
-        u.setId(UUID.randomUUID());
-        u.setCreateTime(java.time.OffsetDateTime.now());
-        u.setUserName(dto.userName());
-        u.setDisplayName(dto.displayName());
-        u.setEmail(dto.email());
-        u.setPassword(passwordEncoder.encode(dto.password()));
-        u.setRole(role);
-        userService.addUser(u);
-        return u;
-    }
-
     @PostMapping("/register")
     public ApiResponse<?> register(@Valid @RequestBody RegisterDto dto) {
-        User u = createUser(dto, "USER");
+        User u = userService.registerUser(dto, "USER");
         return ApiResponse.ok(Map.of("id", u.getId()));
     }
 
     @PostMapping("/registerAdmin")
     public ApiResponse<?> registerAdmin(@Valid @RequestBody RegisterDto dto) {
-        User u = createUser(dto, "ADMIN");
+        User u = userService.registerUser(dto, "ADMIN");
         return ApiResponse.ok(Map.of("id", u.getId()));
     }
 
     @PostMapping("/login")
     public ApiResponse<?> login(@RequestBody Map<String,String> body) {
-        String userName = body.get("userName");
+        String userName = body.get("username");
         String password = body.get("password");
         User user = userService.getUserByUserName(userName);
         if (user == null) {

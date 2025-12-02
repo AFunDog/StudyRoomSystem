@@ -1,0 +1,77 @@
+/* 标题栏按钮样式以及鼠标悬停效果 */
+/*.title-bar-button {*/
+/*    -fx-background-color: transparent;*/
+/*    -fx-padding: 4 8;*/
+/*    -fx-cursor: hand;*/
+/*}*/
+
+/*.title-bar-button:hover {*/
+/*    -fx-background-color: #e0e0e0;*/
+/*    -fx-background-radius: 4;*/
+/*}*/
+
+.button {
+    -fx-background-color: #007BFF;
+    -fx-text-fill: white;
+    -fx-font-size: 16px;
+    -fx-background-radius: 8;
+    -fx-padding: 10 20;
+}
+.text-field, .password-field {
+    -fx-font-size: 14px;
+    -fx-background-radius: 6;
+}
+
+/* 链接样式：蓝色字体，无下划线，悬浮变小手 */
+.hyperlink {
+    -fx-text-fill: #007BFF;
+    -fx-underline: false;
+    -fx-cursor: hand;
+    -fx-font-size: 13px;
+}
+
+
+/* 勾选框样式 */
+.check-box .box {
+    -fx-background-color: white;
+    -fx-border-color: #007BFF;
+    -fx-border-radius: 4;
+    -fx-padding: 4;
+}
+
+/* 信息图标颜色 */
+.info-icon {
+    -fx-background-color: #999999;   /* 初始灰色背景 */
+    -fx-text-fill: white;            /* 白色文字 */
+    -fx-font-weight: bold;           /* 加粗 */
+    -fx-background-radius: 50;       /* 圆形 */
+    -fx-min-width: 20px;             /* 固定宽度 */
+    -fx-min-height: 20px;            /* 固定高度 */
+    -fx-alignment: center;           /* 居中显示 */
+    -fx-font-size: 12px;             /* 字母大小 */
+}
+
+/* 鼠标悬停时变蓝 */
+.info-icon:hover {
+    -fx-background-color: #007BFF;
+}
+
+/* 小屏幕阴影效果 */
+.form-box {
+    -fx-background-color: white;         /* 白色背景 */
+    -fx-background-radius: 8;            /* 圆角半径 */
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 10, 0, 0, 0);
+}
+
+.outer-root {
+    -fx-background-color: #f4f4fc;   /* 灰色背景 */
+    -fx-background-radius: 8;        /* 圆角半径 */
+
+    /* 边框设置 */
+    -fx-border-color: #9a9a9a;       /* 边框颜色（深灰） */
+    -fx-border-width: 1;             /* 边框宽度 */
+    -fx-border-radius: 8;            /* 边框圆角，和背景保持一致 */
+
+    -fx-padding: 15;                 /* 内边距，避免内容贴边 */
+}
+

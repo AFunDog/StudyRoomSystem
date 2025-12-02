@@ -5,6 +5,7 @@ import com.zyx.studyroomsystem.exception.ResourceNotFoundException;
 import com.zyx.studyroomsystem.pojo.Booking;
 import com.zyx.studyroomsystem.service.BookingService;
 import com.zyx.studyroomsystem.web.ApiResponse;
+import com.zyx.studyroomsystem.web.UlidToUuidConverter;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.web.bind.annotation.*;
@@ -44,7 +45,9 @@ public class BookingController {
     @PostMapping
     public ApiResponse<?> create(@Valid @RequestBody Booking booking) {
         // 校验时间冲突逻辑放在了 service 层
-//        booking.setId(UUID.randomUUID()); id通过ulid设置
+
+        // 手动生成 ULID → UUID
+        booking.setId(UlidToUuidConverter.generateUuidFromUlid());
         booking.setCreateTime(OffsetDateTime.now());
         bookingService.addBooking(booking);
         return ApiResponse.ok(Map.of("id", booking.getId()));

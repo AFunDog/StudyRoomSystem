@@ -22,13 +22,13 @@ public interface BookingMapper {
     List<Booking> selectBookingsBySeatId(UUID seatId);
 
     @Insert("INSERT INTO bookings(id, user_id, seat_id, create_time, start_time, end_time, check_in_time, check_out_time, state) " +
-            "VALUES(#{id}, #{userId}, #{seatId}, #{createTime}, #{startTime}, #{endTime}, #{checkInTime}, #{checkOutTime}, #{state})")
+            "VALUES(#{id,jdbcType=OTHER}, #{userId}, #{seatId}, #{createTime}, #{startTime}, #{endTime}, #{checkInTime}, #{checkOutTime}, #{state})")
     void insertBooking(Booking booking);
 
     @Update("UPDATE bookings SET user_id = #{userId}, seat_id = #{seatId}, start_time = #{startTime}, end_time = #{endTime}, " +
-            "check_in_time = #{checkInTime}, check_out_time = #{checkOutTime}, state = #{state} WHERE id=#{id}")
+            "check_in_time = #{checkInTime}, check_out_time = #{checkOutTime}, state = #{state} WHERE id=#{id,jdbcType=OTHER}")
     void updateBooking(Booking booking);
 
-    @Delete("DELETE FROM bookings WHERE id=#{id}")
+    @Delete("DELETE FROM bookings WHERE id=#{id,jdbcType=OTHER}")
     void deleteBooking(UUID id);
 }

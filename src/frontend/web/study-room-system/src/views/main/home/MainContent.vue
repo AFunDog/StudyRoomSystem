@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { cn } from '@/lib/Utils';
+import { cn } from '@/lib/utils';
 import { Armchair, House } from 'lucide-vue-next';
 import { inject, ref } from 'vue';
 import MainSelectRoom from './MainSelectRoom.vue';
