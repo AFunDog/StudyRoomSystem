@@ -53,7 +53,7 @@ const onSubmit = form.handleSubmit(async (values) => {
     //改成 HttpOnly Cookie 后，后端依然会生成token，但不会再通过 res.token 返回给前端
     //前端 JS 无法访问这个 Cookie，但浏览器会自动在请求时带上它
     // const token = res.token;
-    const user = res.user as User;
+    // const user = res.user as User;
 
     //统一由后端返回错误信息
     // if (!user) {
