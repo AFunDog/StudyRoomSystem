@@ -6,7 +6,7 @@ let connection: HubConnection | null = null;
 function getHubConnection() {
     if (!connection) {
         connection = new HubConnectionBuilder()
-            .withUrl(`${baseUrl}/hub/data`, { accessTokenFactory: () => `${localStorage.getItem("token")}` })
+            .withUrl(`${baseUrl}/hub/data`, { })
             // .withUrl(`/hub/data`, { accessTokenFactory: () => `${localStorage.getItem("token")}` })
             .withAutomaticReconnect()
             .configureLogging(LogLevel.Information)
