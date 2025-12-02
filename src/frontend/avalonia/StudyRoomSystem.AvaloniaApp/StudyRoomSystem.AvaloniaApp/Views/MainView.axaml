@@ -1,0 +1,59 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:StudyRoomSystem.AvaloniaApp.ViewModels"
+             xmlns:shadUi="clr-namespace:ShadUI;assembly=ShadUI"
+             xmlns:avaloniaExts="clr-namespace:StudyRoomSystem.AvaloniaApp.AvaloniaExts"
+             xmlns:avaloniaApp="clr-namespace:StudyRoomSystem.AvaloniaApp"
+             mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="800"
+             x:Class="StudyRoomSystem.AvaloniaApp.Views.MainView"
+             FontFamily="../Assets/Fonts/#Noto Sans SC"
+             x:DataType="vm:MainViewModel">
+    <Design.DataContext>
+        <!-- This only sets the DataContext for the previewer in an IDE,
+         to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+        <vm:MainWindowViewModel />
+    </Design.DataContext>
+    <Interaction.Behaviors>
+        <LoadedTrigger>
+            <InvokeCommandAction Command="{Binding ViewLoadedCommand}" />
+        </LoadedTrigger>
+    </Interaction.Behaviors>
+    <!-- <UserControl.Styles> -->
+    <!--     <Style Selector="TransitioningContentControl#PageContentControl > :is(Control)"> -->
+    <!--         <Style.Animations> -->
+    <!--             <Animation Duration="0:0:0.3" FillMode="Forward"> -->
+    <!--                 <KeyFrame Cue="0%"> -->
+    <!--                     <Setter Property="TranslateTransform.Y" Value="32"></Setter> -->
+    <!--                 </KeyFrame> -->
+    <!--                 <KeyFrame Cue="100%"> -->
+    <!--                     <Setter Property="TranslateTransform.Y" Value="0"></Setter> -->
+    <!--                 </KeyFrame> -->
+    <!--             </Animation> -->
+    <!--         </Style.Animations> -->
+    <!--     </Style> -->
+    <!-- </UserControl.Styles> -->
+
+    <Panel Name="RootPanel">
+        <shadUi:ToastHost ZIndex="9999"
+                          Manager="{x:Static avaloniaApp:Service.ToastManager}">
+        </shadUi:ToastHost>
+        <TransitioningContentControl
+            Name="PageContentControl"
+            Content="{Binding Content,Mode=OneWay}">
+            <TransitioningContentControl.PageTransition>
+                <!-- <CompositePageTransition> -->
+                <!--      -->
+                <!--     ~1~ <PageSlide @1@ -->
+                <!--     ~1~     Orientation="Vertical" @1@ -->
+                <!--     ~1~     SlideInEasing="ExponentialEaseOut" @1@ -->
+                <!--     ~1~     SlideOutEasing="ExponentialEaseOut" @1@ -->
+                <!--     ~1~     Duration="0:0:0.33" /> @1@ -->
+                <!-- </CompositePageTransition> -->
+                <avaloniaExts:EnterSlide/>
+                <!-- <PageSlide Orientation="Vertical" Duration="0:0:0.3" /> -->
+            </TransitioningContentControl.PageTransition>
+        </TransitioningContentControl>
+    </Panel>
+</UserControl>

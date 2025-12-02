@@ -45,7 +45,7 @@ import type { DateValue } from 'reka-ui';
 import { parseDate, CalendarDate } from '@internationalized/date';
 import dayjs from 'dayjs';
 import ViewBox from '@/components/ui/view-box/ViewBox.vue';
-import { bookingRequest } from '@/lib/api/BookingRequest';
+import { bookingRequest } from '@/lib/api/bookingRequest';
 
 const isSelectDialogOpen = ref(false);
 const selectRoom = inject(SELECT_ROOM)!;

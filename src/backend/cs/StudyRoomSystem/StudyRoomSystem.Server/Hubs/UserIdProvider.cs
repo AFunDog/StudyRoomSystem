@@ -7,6 +7,6 @@ public sealed class UserIdProvider : IUserIdProvider
 {
     public string? GetUserId(HubConnectionContext connection)
     {
-        return connection.User?.FindFirst(ClaimExtendTypes.Id)?.Value;
+        return connection.User.FindFirst(ClaimExtendTypes.Id)?.Value;
     }
 }

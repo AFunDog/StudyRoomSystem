@@ -1,6 +1,10 @@
-﻿using Asp.Versioning;
+﻿using System.Data;
+using Asp.Versioning;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
+using StudyRoomSystem.Core.Structs.Api;
+using StudyRoomSystem.Server.Helpers;
 
 namespace StudyRoomSystem.Server.Controllers.V1;
 
@@ -9,11 +13,17 @@ namespace StudyRoomSystem.Server.Controllers.V1;
 [ApiVersion("1.0")]
 public class FileController : ControllerBase
 {
+    
+    // TODO 之后要限制上传文件的类型和大小
     [HttpPost]
+    [Authorize]
+    [ProducesResponseType<ResponseError>(StatusCodes.Status400BadRequest)]
+    [EndpointSummary("上传文件")]
+    [EndpointDescription("使用该接口上传文件")]
     public async Task<IActionResult> Upload(IFormFile file)
     {
         if (file.Length == 0)
-            return BadRequest();
+            return BadRequest(new ResponseError(){ Message = "文件流为空"});
 
         var fileId = Ulid.NewUlid().ToGuid();
         var fileExt = Path.GetExtension(file.FileName);
@@ -28,6 +38,8 @@ public class FileController : ControllerBase
     }
 
     [HttpGet("{file:file}")]
+    [EndpointSummary("获取指定路径下的文件")]
+    [EndpointDescription("目前文件的路径为guid格式，文件也只能按照id查找")]
     public async Task<IActionResult> Get(string file)
     {
         var fileId = Guid.TryParse(file.Split('.')[0], out var id) ? id : Guid.Empty;
@@ -46,5 +58,14 @@ public class FileController : ControllerBase
         }
         
         return PhysicalFile(filePath, contentType);
+    }
+
+    
+    [HttpDelete("{file:file}")]
+    [Authorize(AuthorizationHelper.Policy.Admin)]
+    [EndpointSummary("删除指定路径下的文件")]
+    public async Task<IActionResult> Delete(string file)
+    {
+        throw new NotImplementedException();
     }
 }

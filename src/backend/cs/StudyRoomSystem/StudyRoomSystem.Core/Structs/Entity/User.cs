@@ -22,6 +22,7 @@ public class User
     
     [MaxLength(64)]
     [Phone]
+    // TODO Phone
     public required string Phone { get; set; }
     
     [MaxLength(64)]

@@ -1,4 +1,4 @@
-﻿namespace StudyRoomSystem.Server.Structs;
+﻿namespace StudyRoomSystem.Core.Structs.Api;
 
 public class ResponseError
 {

@@ -16,7 +16,7 @@ import dayjs from 'dayjs';
 import { Trash2 } from 'lucide-vue-next';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { getHubConnection } from '@/lib/api/hubConnection';
-import { bookingRequest } from '@/lib/api/BookingRequest';
+import { bookingRequest } from '@/lib/api/bookingRequest';
 
 // const hubConnection = getHubConnection();
 const bookings = ref<Booking[]>([]);

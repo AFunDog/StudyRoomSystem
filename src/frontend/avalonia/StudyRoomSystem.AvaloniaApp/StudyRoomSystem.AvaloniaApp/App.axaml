@@ -1,0 +1,42 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="StudyRoomSystem.AvaloniaApp.App"
+             xmlns:shadUi="clr-namespace:ShadUI;assembly=ShadUI"
+             xmlns:avalonia="clr-namespace:Zeng.CoreLibrary.Toolkit.Avalonia;assembly=CoreLibrary.Toolkit.Avalonia"
+             RequestedThemeVariant="Default">
+
+    <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+
+    <Application.Styles>
+        <FluentTheme />
+        <shadUi:ShadTheme />
+        <!-- 默认样式 -->
+        <Style Selector="StackPanel">
+            <Setter Property="Spacing" Value="8"></Setter>
+        </Style>
+        <Style Selector="TextBlock">
+            <Setter Property="FontSize" Value="14"></Setter>
+        </Style>
+        <Style Selector="LucideIcon">
+            <Setter Property="Size" Value="32"></Setter>
+        </Style>
+        <Style Selector="Border.Card">
+            
+        </Style>
+    </Application.Styles>
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <avalonia:ControlsProvider />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+        <Color x:Key="PrimaryColor">#FFFF6900</Color>
+        <Color x:Key="PrimaryColor75">#BFFF6900</Color>
+        <Color x:Key="PrimaryColor50">#80FF6900</Color>
+        <Color x:Key="PrimaryColor10">#19FF6900</Color>
+        <Color x:Key="DestructiveColor">#FFE7000B</Color>
+        <Color x:Key="DestructiveColor75">#BFE7000B</Color>
+        <Color x:Key="DestructiveColor50">#80E7000B</Color>
+        <Color x:Key="DestructiveColor10">#19E7000B</Color>
+    </Application.Resources>
+</Application>

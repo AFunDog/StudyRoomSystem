@@ -30,6 +30,8 @@ public class SeatController : ControllerBase
 
     [HttpGet("{id:guid}")]
     [AllowAnonymous]
+    [EndpointSummary("获取指定座位信息")]
+    [EndpointDescription("获取座位信息时会附带所在房间信息和该座位的历史预约信息")]
     public async Task<IActionResult> Get(Guid id)
     {
         var seat = await AppDbContext.Seats.AsNoTracking().Include(x => x.Room).SingleOrDefaultAsync(x => x.Id == id);
@@ -52,6 +54,7 @@ public class SeatController : ControllerBase
     /// <returns></returns>
     [HttpPost]
     [Authorize(AuthorizationHelper.Policy.Admin)]
+    [EndpointSummary("管理员创建座位")]
     public async Task<IActionResult> Create(CreateSeatRequest request)
     {
         // 检查房间是否存在
@@ -72,5 +75,13 @@ public class SeatController : ControllerBase
         await AppDbContext.SaveChangesAsync();
         return Ok(newSeat);
         // return CreatedAtAction(nameof(Get), new { id = newSeat.Id }, newSeat);
+    }
+
+    [HttpPut]
+    [Authorize(AuthorizationHelper.Policy.Admin)]
+    [EndpointSummary("管理员修改座位信息")]
+    public async Task<IActionResult> Edit()
+    {
+        return Ok();
     }
 }

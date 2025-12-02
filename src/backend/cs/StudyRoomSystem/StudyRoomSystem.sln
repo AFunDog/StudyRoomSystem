@@ -4,6 +4,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StudyRoomSystem.Server", "S
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StudyRoomSystem.Core", "StudyRoomSystem.Core\StudyRoomSystem.Core.csproj", "{8C28D3D5-BFC8-413C-99F7-C6ECDC3C727D}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionFolder", "SolutionFolder", "{C9080662-FBC0-4FFE-8869-305777EF4F85}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\..\..\scripts\Dockerfile = ..\..\..\..\scripts\Dockerfile
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

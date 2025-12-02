@@ -6,9 +6,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StudyRoomSystem.Core.Structs;
+using StudyRoomSystem.Core.Structs.Api;
 using StudyRoomSystem.Server.Database;
 using StudyRoomSystem.Server.Helpers;
-using StudyRoomSystem.Server.Structs;
 
 namespace StudyRoomSystem.Server.Controllers.V1;
 
@@ -58,12 +58,6 @@ public class BookingController : ControllerBase
         return Ok(booking);
     }
 
-    public class CreateBookingRequest
-    {
-        public required Guid SeatId { get; set; }
-        public required DateTime StartTime { get; set; }
-        public required DateTime EndTime { get; set; }
-    }
 
     [HttpPost]
     [Authorize]
@@ -144,12 +138,7 @@ public class BookingController : ControllerBase
         return Ok();
     }
 
-    public class EditBookingRequest
-    {
-        public required Guid Id { get; set; }
-        public DateTime? StartTime { get; set; }
-        public DateTime? EndTime { get; set; }
-    }
+
 
     [HttpPut]
     [Authorize]
@@ -194,10 +183,7 @@ public class BookingController : ControllerBase
         return Ok(track.Entity);
     }
 
-    public class CheckInRequest
-    {
-        public Guid Id { get; set; }
-    }
+
 
     [HttpPost("check-in")]
     [Authorize]
@@ -233,10 +219,10 @@ public class BookingController : ControllerBase
     [ProducesResponseType<ResponseError>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<Booking>(StatusCodes.Status200OK)]
     [EndpointSummary("签退")]
-    public async Task<IActionResult> CheckOut()
+    public async Task<IActionResult> CheckOut([FromBody] CheckOutRequest request)
     {
         var userId = this.GetLoginUserId();
-        var booking = await AppDbContext.Bookings.SingleOrDefaultAsync(b => b.UserId == userId);
+        var booking = await AppDbContext.Bookings.SingleOrDefaultAsync(b => b.Id == request.Id);
         if (booking is null)
             return NotFound(new ResponseError(){ Message = "预约不存在" });
         if (booking.UserId != userId)

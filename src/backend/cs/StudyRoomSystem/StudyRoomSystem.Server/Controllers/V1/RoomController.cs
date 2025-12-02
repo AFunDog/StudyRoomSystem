@@ -25,6 +25,8 @@ public class RoomController : ControllerBase
 
     [HttpGet]
     [AllowAnonymous]
+    [EndpointSummary("获取所有的房间信息")]
+    [EndpointDescription("在获取房间信息时会附带房间内的所有座位信息")]
     public async Task<IActionResult> GetAll()
     {
         return Ok(await AppDbContext.Rooms.Include(r => r.Seats).AsNoTracking().ToListAsync());
@@ -32,6 +34,8 @@ public class RoomController : ControllerBase
 
     [HttpGet("{id:guid}")]
     [AllowAnonymous]
+    [EndpointSummary("获取所有的房间信息")]
+    [EndpointDescription("在获取房间信息时会附带房间内的所有座位信息")]
     public async Task<IActionResult> Get(Guid id)
     {
         var room = await AppDbContext.Rooms.Include(r => r.Seats).AsNoTracking().SingleOrDefaultAsync(x => x.Id == id);
@@ -59,6 +63,8 @@ public class RoomController : ControllerBase
     /// <returns></returns>
     [HttpPost]
     [Authorize(AuthorizationHelper.Policy.Admin)]
+    [EndpointSummary("管理员创建房间")]
+    // [EndpointDescription("在获取房间信息时会附带房间内的所有座位信息")]
     public async Task<IActionResult> CreateRoom([FromBody] CreateRoomRequest request)
     {
         var room = new Room()
@@ -87,6 +93,7 @@ public class RoomController : ControllerBase
     /// <returns></returns>
     [HttpDelete("{id:guid}")]
     [Authorize(AuthorizationHelper.Policy.Admin)]
+    [EndpointSummary("管理员创建房间")]
     public async Task<IActionResult> DeleteRoom(Guid id)
     {
         var room = await AppDbContext.Rooms.SingleOrDefaultAsync(x => x.Id == id);

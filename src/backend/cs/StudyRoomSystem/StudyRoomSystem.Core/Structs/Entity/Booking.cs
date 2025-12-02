@@ -1,4 +1,6 @@
-﻿namespace StudyRoomSystem.Core.Structs;
+﻿using System.ComponentModel;
+
+namespace StudyRoomSystem.Core.Structs;
 
 public enum BookingStateEnum
 {
@@ -7,6 +9,7 @@ public enum BookingStateEnum
 
 public class Booking
 {
+    [Description("编号")]
     public required Guid Id { get; set; }
     public required Guid UserId { get; set; }
     public required Guid SeatId { get; set; }

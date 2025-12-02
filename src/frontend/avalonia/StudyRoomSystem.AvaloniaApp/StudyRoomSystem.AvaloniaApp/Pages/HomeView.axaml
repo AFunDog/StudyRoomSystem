@@ -1,0 +1,42 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:StudyRoomSystem.AvaloniaApp.ViewModels"
+             xmlns:shadUi="clr-namespace:ShadUI;assembly=ShadUI"
+             mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="800"
+             x:Class="StudyRoomSystem.AvaloniaApp.Pages.HomeView"
+             x:DataType="vm:HomeViewModel">
+    <Grid RowDefinitions="Auto,*,Auto" RowSpacing="8">
+        <Panel>
+            <!-- <Border Background="{DynamicResource BorderColor}"> -->
+            <shadUi:Card Padding="0" CornerRadius="0">
+
+                <DockPanel LastChildFill="False" HorizontalSpacing="8" Margin="8">
+                    <LucideIcon Kind="Menu" DockPanel.Dock="Left" VerticalAlignment="Center"></LucideIcon>
+                    <LucideIcon DockPanel.Dock="Right" Kind="CircleUserRound"></LucideIcon>
+                    <TextBlock Classes="h4" DockPanel.Dock="Right" VerticalAlignment="Center" Text="智慧自习室预约管理系统"></TextBlock>
+                </DockPanel>
+            </shadUi:Card>
+            <!-- </Border> -->
+        </Panel>
+        <Panel Grid.Row="1">
+            <!-- <Border Classes="Card" Margin="8,0" CornerRadius="{DynamicResource LgCornerRadius}"> -->
+            <!--      -->
+            <!-- </Border> -->
+            <shadUi:Card Margin="8,0" />
+        </Panel>
+        <Panel Grid.Row="2">
+            <!-- <Border Classes="Card" Margin="8,0,8,8" -->
+            <!--         HorizontalAlignment="Center" CornerRadius="10000" Padding="8"> -->
+            <!-- </Border> -->
+            <shadUi:Card Margin="8,0,8,8" Padding="8" HorizontalAlignment="Center" CornerRadius="1000">
+
+                <StackPanel Orientation="Horizontal">
+                    <LucideIcon Kind="CalendarClock"></LucideIcon>
+                    <LucideIcon Kind="House"></LucideIcon>
+                </StackPanel>
+            </shadUi:Card>
+        </Panel>
+    </Grid>
+</UserControl>
