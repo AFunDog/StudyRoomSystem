@@ -6,6 +6,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualBasic;
 using StudyRoomSystem.Core.Structs;
 using StudyRoomSystem.Core.Structs.Api;
 using StudyRoomSystem.Server.Database;
@@ -151,12 +152,12 @@ public class UserController : ControllerBase
     }
 
     // TODO
-    [HttpPut]
-    // [Authorize]
+    [HttpPut("information")]
+    [Authorize]
     [ProducesResponseType<ResponseError>(StatusCodes.Status404NotFound)]
     [ProducesResponseType<User>(StatusCodes.Status200OK)]
-    [EndpointSummary("更新用户基本信息")]
-    public async Task<IActionResult>? EditUserNormal([FromBody] EditRequestNormal request)
+    [EndpointSummary("用户更新基本信息")]
+    public async Task<IActionResult>EditUserNormal([FromBody] EditRequestNormal request)
     {
         var userId = this.GetLoginUserId();
         var loginUser = await AppDbContext.Users.SingleOrDefaultAsync(b => b.Id == request.Id);
@@ -173,10 +174,60 @@ public class UserController : ControllerBase
     
     public class EditRequestPassword
     {
-        return Ok();
+        public required Guid Id { get; set; }
+        [MaxLength(64)]
+        [MinLength(8)]
+        public required string OldPassword { get; set; }
+        [MaxLength(64)]
+        [MinLength(8)]
+        public required string NewPassword { get; set; }
+        
+    }
+
+    [HttpPut("password")]
+    [Authorize]
+    [ProducesResponseType<ResponseError>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ResponseError>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<User>(StatusCodes.Status200OK)]
+    [EndpointSummary("用户更新密码")]
+    public async Task<IActionResult>EditUserPassword([FromBody] EditRequestPassword request)
+    {
+        var userId = this.GetLoginUserId();
+        var loginUser = await AppDbContext.Users.SingleOrDefaultAsync(b => b.Id == request.Id);
+        if (loginUser is null)
+            return NotFound(new ResponseError() { Message = "用户不存在" });
+        if (!PasswordHelper.CheckPassword(request.OldPassword, loginUser.Password))
+            return Conflict(new ResponseError() { Message = "旧密码错误" });
+        loginUser.Password=PasswordHelper.HashPassword(request.NewPassword);
+        await AppDbContext.SaveChangesAsync();
+        var track = AppDbContext.Users.Update(loginUser);
+        return Ok(track.Entity);
     }
     
-
+    public class EditRequestRole
+    {
+        public required Guid Id { get; set; }
+        [Required]
+        public required string Role { get; set; }
+    }
+    
+    [HttpPut("role")]
+    [Authorize(AuthorizationHelper.Policy.Admin)]
+    [ProducesResponseType<ResponseError>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<User>(StatusCodes.Status200OK)]
+    [EndpointSummary("管理员修改用户角色")]
+    public async Task<IActionResult>EditUserRole([FromBody] EditRequestRole request)
+    {
+        var userId = this.GetLoginUserId();
+        var loginUser = await AppDbContext.Users.SingleOrDefaultAsync(b => b.Id == request.Id);
+        if (loginUser is null)
+            return NotFound(new ResponseError() { Message = "用户不存在" });
+        loginUser.Role=request.Role;
+        await AppDbContext.SaveChangesAsync();
+        var track = AppDbContext.Users.Update(loginUser);
+        return Ok(track.Entity);
+    }
+    
     #endregion
 
     #region Delete
@@ -192,20 +243,20 @@ public class UserController : ControllerBase
     
     #endregion
 
-    #region 锁定用户
-
-    [HttpPost("block")]
-    [Authorize(AuthorizationHelper.Policy.Admin)]
-    [EndpointSummary("锁定用户")]
-    public async Task<IActionResult> Block()
-    {
-        public required Guid Id { get; set; }
-        [MaxLength(64)]
-        [MinLength(8)]
-        public required string NewPassword { get; set; }
-    }
-    
-
-
-    #endregion
+    // #region 锁定用户
+    //
+    // [HttpPost("block")]
+    // [Authorize(AuthorizationHelper.Policy.Admin)]
+    // [EndpointSummary("锁定用户")]
+    // public async Task<IActionResult> Block()
+    // {
+    //     public required Guid Id { get; set; }
+    //     [MaxLength(64)]
+    //     [MinLength(8)]
+    //     public required string NewPassword { get; set; }
+    // }
+    //
+    //
+    //
+    // #endregion
 }
