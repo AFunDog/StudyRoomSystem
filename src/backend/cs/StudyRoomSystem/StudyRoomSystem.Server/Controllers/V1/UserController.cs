@@ -134,20 +134,48 @@ public class UserController : ControllerBase
 
     #region Edit
 
-    public class EditRequest
+    public class EditRequestNormal
     {
+        public required Guid Id { get; set; }
+        [MaxLength(128)]
+        public required string DisplayName { get; set; }
+        [MaxLength(64)]
+        public required string CampusId { get; set; }
+        [MaxLength(64)]
+        [Phone]
+        public required string Phone { get; set; }
+        [MaxLength(64)]
+        [EmailAddress]
+        public string? Email { get; set; }
         
     }
-    
 
     // TODO
     [HttpPut]
-    [Authorize]
+    // [Authorize]
+    [ProducesResponseType<ResponseError>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<User>(StatusCodes.Status200OK)]
     [EndpointSummary("更新用户基本信息")]
-    public async Task<IActionResult> EditUser(EditRequest request)
+    public async Task<IActionResult>? EditUserNormal([FromBody] EditRequestNormal request)
+    {
+        var userId = this.GetLoginUserId();
+        var loginUser = await AppDbContext.Users.SingleOrDefaultAsync(b => b.Id == request.Id);
+        if (loginUser is null) 
+            return NotFound(new ResponseError() { Message = "用户不存在" }); 
+        loginUser.DisplayName=request.DisplayName;
+        loginUser.CampusId=request.CampusId;
+        loginUser.Phone=request.Phone;
+        loginUser.Email=request.Email??loginUser.Email;
+        await AppDbContext.SaveChangesAsync();
+        var track = AppDbContext.Users.Update(loginUser);
+        return Ok(track.Entity);
+    }
+    
+    public class EditRequestPassword
     {
         return Ok();
     }
+    
 
     #endregion
 
@@ -171,7 +199,10 @@ public class UserController : ControllerBase
     [EndpointSummary("锁定用户")]
     public async Task<IActionResult> Block()
     {
-        return Ok();
+        public required Guid Id { get; set; }
+        [MaxLength(64)]
+        [MinLength(8)]
+        public required string NewPassword { get; set; }
     }
     
 
