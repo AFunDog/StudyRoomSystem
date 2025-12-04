@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Net.Http;
 using Avalonia.Controls;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,6 +10,7 @@ using ShadUI;
 using StudyRoomSystem.AvaloniaApp.Contacts;
 using StudyRoomSystem.AvaloniaApp.Pages;
 using StudyRoomSystem.AvaloniaApp.Services;
+using StudyRoomSystem.AvaloniaApp.Services.Api;
 using StudyRoomSystem.AvaloniaApp.ViewModels;
 using StudyRoomSystem.AvaloniaApp.Views;
 using Zeng.CoreLibrary.Toolkit.Extensions;
@@ -21,7 +23,7 @@ namespace StudyRoomSystem.AvaloniaApp;
 public static class Service
 {
     public static ToastManager ToastManager => App.ServiceProvider.GetRequiredService<ToastManager>();
-    
+
     public static IServiceProvider BuildServices()
     {
         Log.Logger = new LoggerConfiguration()
@@ -43,6 +45,8 @@ public static class Service
         var services = new ServiceCollection()
             // 日志
             .AddSingleton<ILogger>(s => Log.Logger)
+            .AddTransient<HttpLogHandler>()
+            // HTTP
             .AddHttpClient(
                 "API",
                 client =>
@@ -52,19 +56,37 @@ public static class Service
                     client.DefaultRequestHeaders.Add("Accept", "application/json");
                 }
             )
-            .AddHttpMessageHandler(p =>
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler()
                 {
-                    var tokenHandler = p.GetRequiredService<TokenHandler>();
-                    return tokenHandler;
+                    UseCookies = true,
+                    CookieContainer = new CookieContainer()
                 }
             )
+            .AddHttpMessageHandler(p => p.GetRequiredService<HttpLogHandler>())
+            // .AddHttpMessageHandler(p =>
+            //     {
+            //         // var tokenHandler = p.GetRequiredService<TokenHandler>();
+            //         // return tokenHandler;
+            //         return new HttpClientHandler()
+            //         {
+            //             
+            //         };
+            //     }
+            // )
             .Services
             // 通知管理
             .AddSingleton<ToastManager>()
+            // 用户信息
+            .AddSingleton<IUserProvider, UserProvider>()
+            // API
+            .AddSingleton<IAuthApiService, HttpAuthApiService>()
+            .AddSingleton<IUserApiService, HttpUserApiService>()
+            .AddSingleton<IBookingApiService, HttpBookingApiService>()
+            .AddSingleton<IRoomApiService, HttpRoomApiService>()
             // token处理
-            .AddTransient<TokenHandler>()
+            // .AddTransient<TokenHandler>()
             // JWT
-            .AddSingleton<ITokenProvider, JsonWebTokenProvider>()
+            // .AddSingleton<ITokenProvider, JsonWebTokenProvider>()
             // 导航
             .UseNavigateService()
             // 页面
@@ -121,6 +143,6 @@ public static class Service
         navigator
             .RegisterViewRoute("/login", () => provider.GetRequiredKeyedService<UserControl>("LoginView"))
             .RegisterViewRoute("/register", () => provider.GetRequiredKeyedService<UserControl>("RegisterView"))
-            .RegisterViewRoute("/home",() => provider.GetRequiredKeyedService<UserControl>("HomeView"));
+            .RegisterViewRoute("/home", () => provider.GetRequiredKeyedService<UserControl>("HomeView"));
     }
 }

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace StudyRoomSystem.Core.Structs;
+namespace StudyRoomSystem.Core.Structs.Entity;
 
 public class Room
 {

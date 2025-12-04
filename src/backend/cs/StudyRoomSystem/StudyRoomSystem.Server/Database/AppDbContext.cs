@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using StudyRoomSystem.Core.Structs;
+using StudyRoomSystem.Core.Structs.Entity;
 
 namespace StudyRoomSystem.Server.Database;
 

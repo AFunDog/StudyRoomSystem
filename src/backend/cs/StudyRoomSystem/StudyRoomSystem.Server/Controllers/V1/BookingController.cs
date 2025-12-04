@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StudyRoomSystem.Core.Structs;
@@ -43,7 +45,44 @@ public class BookingController : ControllerBase
                 .ToListAsync()
         );
     }
+    
+    [HttpGet("all")]
+    [Authorize(AuthorizationHelper.Policy.Admin)]
+    [ProducesResponseType<IEnumerable<Booking>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [EndpointSummary("管理员获取所有预约")]
+    public async Task<IActionResult> GetAllBookings([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    {
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 1;
+        if (pageSize > 100) pageSize = 100; // 限制最大页大小
 
+        var query = AppDbContext
+            .Bookings
+            .Include(b => b.Seat)
+            .Include(b => b.Seat.Room)
+            .AsQueryable();
+
+        var total = await query.CountAsync();
+
+        var items = await query
+            .OrderByDescending(b => b.CreateTime)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return Ok(new
+        {
+            total,
+            page,
+            pageSize,
+            items
+        });
+    }
+
+    
+    
+    
     [HttpGet("{id:guid}")]
     [Authorize]
     [ProducesResponseType<Booking>(StatusCodes.Status200OK)]
@@ -61,9 +100,9 @@ public class BookingController : ControllerBase
 
     [HttpPost]
     [Authorize]
-    [ProducesResponseType<ResponseError>(StatusCodes.Status404NotFound)]
-    [ProducesResponseType<ResponseError>(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType<ResponseError>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType<Booking>(StatusCodes.Status200OK)]
     [EndpointSummary("创建预约")]
@@ -75,10 +114,10 @@ public class BookingController : ControllerBase
 
         var seat = await AppDbContext.Seats.FirstOrDefaultAsync(x => x.Id == request.SeatId);
         if (seat is null)
-            return NotFound(new ResponseError() { Message = "找不到座位" });
+            return NotFound(new ProblemDetails() { Title = "找不到座位" });
 
         if (request.StartTime >= request.EndTime)
-            return BadRequest(new ResponseError() { Message = "开始时间不能大于结束时间" });
+            return BadRequest(new ProblemDetails() { Title = "开始时间不能大于结束时间" });
 
         // 检查座位是否在时间段内被占用
         var booking = await AppDbContext.Bookings.FirstOrDefaultAsync(x
@@ -108,8 +147,8 @@ public class BookingController : ControllerBase
 
     [HttpDelete("{id:guid}")]
     [Authorize]
-    [ProducesResponseType<ResponseError>(StatusCodes.Status404NotFound)]
-    [ProducesResponseType<ResponseError>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [EndpointSummary("取消预约")]
@@ -118,19 +157,19 @@ public class BookingController : ControllerBase
         var userId = this.GetLoginUserId();
         var booking = await AppDbContext.Bookings.SingleOrDefaultAsync(b => b.Id == id);
         if (booking is null)
-            return NotFound(new ResponseError { Message = "预约不存在" });
+            return NotFound(new ProblemDetails { Title = "预约不存在" });
         if (booking.UserId != userId)
             return Forbid();
 
         if (booking.State != BookingStateEnum.Booking)
-            return BadRequest(new ResponseError() { Message = "必须在预约中的才能取消预约" });
+            return BadRequest(new ProblemDetails() { Title = "必须在预约中的才能取消预约" });
 
         booking.State = BookingStateEnum.Canceled;
 
         // TODO 检查取消预约的时间，并检查可能违规行为
         if (booking.StartTime - DateTime.UtcNow < TimeSpan.FromHours(3))
             if (!isForce)
-                return BadRequest(new ResponseError() { Message = "距离预约起始时间小于3小时，若强制取消预约将会记录为违规" });
+                return BadRequest(new ProblemDetails() { Title = "距离预约起始时间小于3小时，若强制取消预约将会记录为违规" });
 
 
         AppDbContext.Bookings.Update(booking);
@@ -140,11 +179,11 @@ public class BookingController : ControllerBase
 
 
 
-    [HttpPut]
+    [HttpPut] 
     [Authorize]
-    [ProducesResponseType<ResponseError>(StatusCodes.Status404NotFound)]
-    [ProducesResponseType<ResponseError>(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType<ResponseError>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
     [ProducesResponseType<Booking>(StatusCodes.Status200OK)]
     [EndpointSummary("修改预约")]
     public async Task<IActionResult> EditBooking([FromBody] EditBookingRequest request)
@@ -152,17 +191,17 @@ public class BookingController : ControllerBase
         var userId = this.GetLoginUserId();
         var booking = await AppDbContext.Bookings.SingleOrDefaultAsync(b => b.Id == request.Id);
         if (booking is null)
-            return NotFound(new ResponseError() { Message = "预约不存在" });
+            return NotFound(new ProblemDetails() { Title = "预约不存在" });
         if (booking.UserId != userId)
             return Forbid();
         if (request.StartTime >= request.EndTime)
-            return BadRequest(new ResponseError() { Message = "开始时间不能大于结束时间" });
+            return BadRequest(new ProblemDetails() { Title = "开始时间不能大于结束时间" });
         if (booking.State != BookingStateEnum.Booking)
-            return BadRequest(new ResponseError() { Message = "必须在预约中的才能修改预约" });
+            return BadRequest(new ProblemDetails() { Title = "必须在预约中的才能修改预约" });
 
         // 修改后的起始时间距离预约小于3小时
         if (booking.StartTime - DateTime.UtcNow < TimeSpan.FromHours(3))
-            return BadRequest(new ResponseError() { Message = "距离预约起始时间小于3小时，不可修改" });
+            return BadRequest(new ProblemDetails() { Title = "距离预约起始时间小于3小时，不可修改" });
 
         booking.StartTime = request.StartTime ?? booking.StartTime;
         booking.EndTime = request.EndTime ?? booking.EndTime;
@@ -175,7 +214,7 @@ public class BookingController : ControllerBase
                && (x.State == (BookingStateEnum.Booking) || x.State == (BookingStateEnum.CheckIn))
         );
         if (existBooking is not null)
-            return Conflict(new ResponseError(){ Message = "座位在时间范围内已被用户预约" });
+            return Conflict(new ProblemDetails(){ Title = "座位在时间范围内已被用户预约" });
 
 
         var track = AppDbContext.Bookings.Update(booking);
@@ -187,8 +226,8 @@ public class BookingController : ControllerBase
 
     [HttpPost("check-in")]
     [Authorize]
-    [ProducesResponseType<ResponseError>(StatusCodes.Status404NotFound)]
-    [ProducesResponseType<ResponseError>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<Booking>(StatusCodes.Status200OK)]
     [EndpointSummary("签到")]
     public async Task<IActionResult> CheckIn([FromBody] CheckInRequest request)
@@ -196,16 +235,16 @@ public class BookingController : ControllerBase
         var userId = this.GetLoginUserId();
         var booking = await AppDbContext.Bookings.SingleOrDefaultAsync(b => b.Id == request.Id);
         if (booking is null)
-            return NotFound(new ResponseError(){ Message = "预约不存在" });
+            return NotFound(new ProblemDetails(){ Title = "预约不存在" });
         if (booking.UserId != userId)
             return Forbid();
 
         if (booking.State is not (BookingStateEnum.Booking))
-            return BadRequest(new ResponseError(){ Message = "当前状态不能签到" });
+            return BadRequest(new ProblemDetails(){ Title = "当前状态不能签到" });
 
         // TODO 由于定时系统自动清理逾期预约，所以可以不检查预约时间
         if ((booking.StartTime - DateTime.UtcNow).Duration() > TimeSpan.FromMinutes(15))
-            return BadRequest(new ResponseError(){ Message = "距离开始时间超过15分钟，不可签到" });
+            return BadRequest(new ProblemDetails(){ Title = "距离开始时间超过15分钟，不可签到" });
 
         booking.State = (BookingStateEnum.CheckIn);
         var track = AppDbContext.Bookings.Update(booking);
@@ -215,8 +254,8 @@ public class BookingController : ControllerBase
 
     [HttpPost("check-out")]
     [Authorize]
-    [ProducesResponseType<ResponseError>(StatusCodes.Status404NotFound)]
-    [ProducesResponseType<ResponseError>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<Booking>(StatusCodes.Status200OK)]
     [EndpointSummary("签退")]
     public async Task<IActionResult> CheckOut([FromBody] CheckOutRequest request)
@@ -224,15 +263,15 @@ public class BookingController : ControllerBase
         var userId = this.GetLoginUserId();
         var booking = await AppDbContext.Bookings.SingleOrDefaultAsync(b => b.Id == request.Id);
         if (booking is null)
-            return NotFound(new ResponseError(){ Message = "预约不存在" });
+            return NotFound(new ProblemDetails(){ Title = "预约不存在" });
         if (booking.UserId != userId)
             return Forbid();
         if (booking.State is not BookingStateEnum.CheckIn)
-            return BadRequest(new ResponseError(){ Message = "当前状态不能签退" });
+            return BadRequest(new ProblemDetails(){ Title = "当前状态不能签退" });
 
         // WHY 能不能提前签退
         if ((booking.EndTime - DateTime.UtcNow).Duration() > TimeSpan.FromMinutes(15))
-            return BadRequest(new ResponseError(){ Message = "距离结束时间超过15分钟，不可签退" });
+            return BadRequest(new ProblemDetails(){ Title = "距离结束时间超过15分钟，不可签退" });
 
         booking.State = (BookingStateEnum.Checkout);
         var track = AppDbContext.Bookings.Update(booking);

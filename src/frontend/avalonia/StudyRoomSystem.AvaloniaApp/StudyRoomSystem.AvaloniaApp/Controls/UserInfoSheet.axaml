@@ -1,0 +1,26 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:shadUi="clr-namespace:ShadUI;assembly=ShadUI"
+             xmlns:controls="clr-namespace:StudyRoomSystem.AvaloniaApp.Controls"
+             mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="800"
+             x:Class="StudyRoomSystem.AvaloniaApp.Controls.UserInfoSheet">
+    <UserControl.Styles>
+        <Style Selector=":is(Control).Panel">
+            <Setter Property="RenderTransform" Value="{Binding Converter={x:Static }}"></Setter>
+        </Style>
+    </UserControl.Styles>
+    <Panel Classes="Panel">
+        <shadUi:Card CornerRadius="0">
+            <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Horizontal">
+                    <LucideIcon Kind="CircleUserRound" Size="48"></LucideIcon>
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock Text="{Binding $parent[controls:UserInfoSheet].User.DisplayName,Mode=OneWay}"></TextBlock>
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </shadUi:Card>
+    </Panel>
+</UserControl>

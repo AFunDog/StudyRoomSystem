@@ -1,6 +1,7 @@
 import type { Seat } from "./Seat";
 import type { User } from "./User";
 
+
 export interface Booking {
     id: string;
     userId: string;

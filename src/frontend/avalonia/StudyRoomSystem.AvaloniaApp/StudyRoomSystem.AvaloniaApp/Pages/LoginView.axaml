@@ -9,7 +9,7 @@
              x:Class="StudyRoomSystem.AvaloniaApp.Pages.LoginView">
     <Panel>
         <Grid ColumnDefinitions="1*,12*,1*">
-            <shadUi:Card Grid.Column="1" VerticalAlignment="Center">
+            <shadUi:Card Grid.Column="1" VerticalAlignment="Center" MaxWidth="576">
                 <shadUi:Card.Header>
                     <StackPanel Orientation="Vertical">
                         <TextBlock Text="登录" FontSize="24" LetterSpacing="4"></TextBlock>

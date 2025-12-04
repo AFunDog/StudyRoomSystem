@@ -1,11 +1,14 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualBasic;
 using StudyRoomSystem.Core.Structs;
 using StudyRoomSystem.Core.Structs.Api;
 using StudyRoomSystem.Server.Database;
@@ -47,7 +50,7 @@ public class UserController : ControllerBase
     [HttpPost("register")]
     [AllowAnonymous]
     [ProducesResponseType<User>(StatusCodes.Status200OK)]
-    [ProducesResponseType<ResponseError>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
     [EndpointSummary("用户注册")]
     [EndpointDescription("用户需要使用该接口注册，注册成功之后需要使用用户名密码登录")]
     public async Task<IActionResult> RegisterUser([FromBody] RegisterRequest request)
@@ -55,9 +58,9 @@ public class UserController : ControllerBase
         if ((await AppDbContext.Users.FirstOrDefaultAsync(x => x.UserName == request.UserName)) is not null)
         {
             return Conflict(
-                new ResponseError()
+                new ProblemDetails()
                 {
-                    Message = "用户名已存在"
+                    Title = "用户名已存在"
                 }
             );
         }
@@ -72,9 +75,9 @@ public class UserController : ControllerBase
         else
         {
             return Conflict(
-                new ResponseError()
+                new ProblemDetails()
                 {
-                    Message = "用户注册失败"
+                    Title = "用户注册失败"
                 }
             );
         }
@@ -96,7 +99,7 @@ public class UserController : ControllerBase
     [HttpPost("registerAdmin")]
     [Authorize(AuthorizationHelper.Policy.Admin)]
     [ProducesResponseType<User>(StatusCodes.Status200OK)]
-    [ProducesResponseType<ResponseError>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
     [EndpointSummary("管理员注册")]
     [EndpointDescription("管理员需要使用该接口注册，注册成功之后需要使用用户名密码登录")]
     public async Task<IActionResult> RegisterAdmin([FromBody] RegisterRequest request)
@@ -104,9 +107,9 @@ public class UserController : ControllerBase
         if ((await AppDbContext.Users.FirstOrDefaultAsync(x => x.UserName == request.UserName)) is not null)
         {
             return Conflict(
-                new ResponseError()
+                new ProblemDetails()
                 {
-                    Message = "用户名已存在"
+                    Title = "用户名已存在"
                 }
             );
         }
@@ -121,9 +124,9 @@ public class UserController : ControllerBase
         else
         {
             return Conflict(
-                new ResponseError()
+                new ProblemDetails()
                 {
-                    Message = "用户注册失败"
+                    Title = "用户注册失败"
                 }
             );
         }
@@ -134,21 +137,99 @@ public class UserController : ControllerBase
 
     #region Edit
 
-    public class EditRequest
+    public class EditRequestNormal
     {
+        public required Guid Id { get; set; }
+        [MaxLength(128)]
+        public required string DisplayName { get; set; }
+        [MaxLength(64)]
+        public required string CampusId { get; set; }
+        [MaxLength(64)]
+        [Phone]
+        public required string Phone { get; set; }
+        [MaxLength(64)]
+        [EmailAddress]
+        public string? Email { get; set; }
         
     }
-    
 
     // TODO
-    [HttpPut]
+    [HttpPut("information")]
     [Authorize]
-    [EndpointSummary("更新用户基本信息")]
-    public async Task<IActionResult> EditUser(EditRequest request)
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<User>(StatusCodes.Status200OK)]
+    [EndpointSummary("用户更新基本信息")]
+    public async Task<IActionResult>EditUserNormal([FromBody] EditRequestNormal request)
     {
-        return Ok();
+        var userId = this.GetLoginUserId();
+        var loginUser = await AppDbContext.Users.SingleOrDefaultAsync(b => b.Id == request.Id);
+        if (loginUser is null) 
+            return NotFound(new ProblemDetails() { Title = "用户不存在" }); 
+        loginUser.DisplayName=request.DisplayName;
+        loginUser.CampusId=request.CampusId;
+        loginUser.Phone=request.Phone;
+        loginUser.Email=request.Email??loginUser.Email;
+        await AppDbContext.SaveChangesAsync();
+        var track = AppDbContext.Users.Update(loginUser);
+        return Ok(track.Entity);
+    }
+    
+    public class EditRequestPassword
+    {
+        public required Guid Id { get; set; }
+        [MaxLength(64)]
+        [MinLength(8)]
+        public required string OldPassword { get; set; }
+        [MaxLength(64)]
+        [MinLength(8)]
+        public required string NewPassword { get; set; }
+        
     }
 
+    [HttpPut("password")]
+    [Authorize]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<User>(StatusCodes.Status200OK)]
+    [EndpointSummary("用户更新密码")]
+    public async Task<IActionResult>EditUserPassword([FromBody] EditRequestPassword request)
+    {
+        var userId = this.GetLoginUserId();
+        var loginUser = await AppDbContext.Users.SingleOrDefaultAsync(b => b.Id == request.Id);
+        if (loginUser is null)
+            return NotFound(new ProblemDetails() { Title = "用户不存在" });
+        if (!PasswordHelper.CheckPassword(request.OldPassword, loginUser.Password))
+            return Conflict(new ProblemDetails() { Title = "旧密码错误" });
+        loginUser.Password=PasswordHelper.HashPassword(request.NewPassword);
+        await AppDbContext.SaveChangesAsync();
+        var track = AppDbContext.Users.Update(loginUser);
+        return Ok(track.Entity);
+    }
+    
+    public class EditRequestRole
+    {
+        public required Guid Id { get; set; }
+        [Required]
+        public required string Role { get; set; }
+    }
+    
+    [HttpPut("role")]
+    [Authorize(AuthorizationHelper.Policy.Admin)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<User>(StatusCodes.Status200OK)]
+    [EndpointSummary("管理员修改用户角色")]
+    public async Task<IActionResult>EditUserRole([FromBody] EditRequestRole request)
+    {
+        var userId = this.GetLoginUserId();
+        var loginUser = await AppDbContext.Users.SingleOrDefaultAsync(b => b.Id == request.Id);
+        if (loginUser is null)
+            return NotFound(new ProblemDetails() { Title = "用户不存在" });
+        loginUser.Role=request.Role;
+        await AppDbContext.SaveChangesAsync();
+        var track = AppDbContext.Users.Update(loginUser);
+        return Ok(track.Entity);
+    }
+    
     #endregion
 
     #region Delete
@@ -164,17 +245,57 @@ public class UserController : ControllerBase
     
     #endregion
 
-    #region 锁定用户
-
-    [HttpPost("block")]
-    [Authorize(AuthorizationHelper.Policy.Admin)]
-    [EndpointSummary("锁定用户")]
-    public async Task<IActionResult> Block()
-    {
-        return Ok();
-    }
+    // #region 锁定用户
+    //
+    // [HttpPost("block")]
+    // [Authorize(AuthorizationHelper.Policy.Admin)]
+    // [EndpointSummary("锁定用户")]
+    // public async Task<IActionResult> Block()
+    // {
+    //     public required Guid Id { get; set; }
+    //     [MaxLength(64)]
+    //     [MinLength(8)]
+    //     public required string NewPassword { get; set; }
+    // }
+    //
+    //
+    //
+    // #endregion
     
+    #region Get
+    
+    [HttpGet("all")]
+    [Authorize(AuthorizationHelper.Policy.Admin)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [EndpointSummary("管理员获取所有用户")]
+    public async Task<IActionResult> GetAllUsers([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    {
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 1;
+        if (pageSize > 100) pageSize = 100; // 限制最大页大小
 
+        var query = AppDbContext.Users.AsQueryable();
 
+        var total = await query.CountAsync();
+
+        var items = await query
+            .OrderByDescending(u => u.CreateTime)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToArrayAsync();
+
+        return Ok(new
+        {
+            total,
+            page,
+            pageSize,
+            items
+        });
+    }
+
+    
+    
+    
+    
     #endregion
 }
