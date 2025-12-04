@@ -17,13 +17,13 @@ public class FileController : ControllerBase
     // TODO 之后要限制上传文件的类型和大小
     [HttpPost]
     [Authorize]
-    [ProducesResponseType<ResponseError>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
     [EndpointSummary("上传文件")]
     [EndpointDescription("使用该接口上传文件")]
     public async Task<IActionResult> Upload(IFormFile file)
     {
         if (file.Length == 0)
-            return BadRequest(new ResponseError(){ Message = "文件流为空"});
+            return BadRequest(new ProblemDetails(){ Title = "文件流为空"});
 
         var fileId = Ulid.NewUlid().ToGuid();
         var fileExt = Path.GetExtension(file.FileName);

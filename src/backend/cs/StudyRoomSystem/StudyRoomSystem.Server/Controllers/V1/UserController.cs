@@ -48,7 +48,7 @@ public class UserController : ControllerBase
     [HttpPost("register")]
     [AllowAnonymous]
     [ProducesResponseType<User>(StatusCodes.Status200OK)]
-    [ProducesResponseType<ResponseError>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
     [EndpointSummary("用户注册")]
     [EndpointDescription("用户需要使用该接口注册，注册成功之后需要使用用户名密码登录")]
     public async Task<IActionResult> RegisterUser([FromBody] RegisterRequest request)
@@ -56,9 +56,9 @@ public class UserController : ControllerBase
         if ((await AppDbContext.Users.FirstOrDefaultAsync(x => x.UserName == request.UserName)) is not null)
         {
             return Conflict(
-                new ResponseError()
+                new ProblemDetails()
                 {
-                    Message = "用户名已存在"
+                    Title = "用户名已存在"
                 }
             );
         }
@@ -73,9 +73,9 @@ public class UserController : ControllerBase
         else
         {
             return Conflict(
-                new ResponseError()
+                new ProblemDetails()
                 {
-                    Message = "用户注册失败"
+                    Title = "用户注册失败"
                 }
             );
         }
@@ -97,7 +97,7 @@ public class UserController : ControllerBase
     [HttpPost("registerAdmin")]
     [Authorize(AuthorizationHelper.Policy.Admin)]
     [ProducesResponseType<User>(StatusCodes.Status200OK)]
-    [ProducesResponseType<ResponseError>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
     [EndpointSummary("管理员注册")]
     [EndpointDescription("管理员需要使用该接口注册，注册成功之后需要使用用户名密码登录")]
     public async Task<IActionResult> RegisterAdmin([FromBody] RegisterRequest request)
@@ -105,9 +105,9 @@ public class UserController : ControllerBase
         if ((await AppDbContext.Users.FirstOrDefaultAsync(x => x.UserName == request.UserName)) is not null)
         {
             return Conflict(
-                new ResponseError()
+                new ProblemDetails()
                 {
-                    Message = "用户名已存在"
+                    Title = "用户名已存在"
                 }
             );
         }
@@ -122,9 +122,9 @@ public class UserController : ControllerBase
         else
         {
             return Conflict(
-                new ResponseError()
+                new ProblemDetails()
                 {
-                    Message = "用户注册失败"
+                    Title = "用户注册失败"
                 }
             );
         }
@@ -154,7 +154,7 @@ public class UserController : ControllerBase
     // TODO
     [HttpPut("information")]
     [Authorize]
-    [ProducesResponseType<ResponseError>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     [ProducesResponseType<User>(StatusCodes.Status200OK)]
     [EndpointSummary("用户更新基本信息")]
     public async Task<IActionResult>EditUserNormal([FromBody] EditRequestNormal request)
@@ -162,7 +162,7 @@ public class UserController : ControllerBase
         var userId = this.GetLoginUserId();
         var loginUser = await AppDbContext.Users.SingleOrDefaultAsync(b => b.Id == request.Id);
         if (loginUser is null) 
-            return NotFound(new ResponseError() { Message = "用户不存在" }); 
+            return NotFound(new ProblemDetails() { Title = "用户不存在" }); 
         loginUser.DisplayName=request.DisplayName;
         loginUser.CampusId=request.CampusId;
         loginUser.Phone=request.Phone;
@@ -186,8 +186,8 @@ public class UserController : ControllerBase
 
     [HttpPut("password")]
     [Authorize]
-    [ProducesResponseType<ResponseError>(StatusCodes.Status404NotFound)]
-    [ProducesResponseType<ResponseError>(StatusCodes.Status409Conflict)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
     [ProducesResponseType<User>(StatusCodes.Status200OK)]
     [EndpointSummary("用户更新密码")]
     public async Task<IActionResult>EditUserPassword([FromBody] EditRequestPassword request)
@@ -195,9 +195,9 @@ public class UserController : ControllerBase
         var userId = this.GetLoginUserId();
         var loginUser = await AppDbContext.Users.SingleOrDefaultAsync(b => b.Id == request.Id);
         if (loginUser is null)
-            return NotFound(new ResponseError() { Message = "用户不存在" });
+            return NotFound(new ProblemDetails() { Title = "用户不存在" });
         if (!PasswordHelper.CheckPassword(request.OldPassword, loginUser.Password))
-            return Conflict(new ResponseError() { Message = "旧密码错误" });
+            return Conflict(new ProblemDetails() { Title = "旧密码错误" });
         loginUser.Password=PasswordHelper.HashPassword(request.NewPassword);
         await AppDbContext.SaveChangesAsync();
         var track = AppDbContext.Users.Update(loginUser);
@@ -213,7 +213,7 @@ public class UserController : ControllerBase
     
     [HttpPut("role")]
     [Authorize(AuthorizationHelper.Policy.Admin)]
-    [ProducesResponseType<ResponseError>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     [ProducesResponseType<User>(StatusCodes.Status200OK)]
     [EndpointSummary("管理员修改用户角色")]
     public async Task<IActionResult>EditUserRole([FromBody] EditRequestRole request)
@@ -221,7 +221,7 @@ public class UserController : ControllerBase
         var userId = this.GetLoginUserId();
         var loginUser = await AppDbContext.Users.SingleOrDefaultAsync(b => b.Id == request.Id);
         if (loginUser is null)
-            return NotFound(new ResponseError() { Message = "用户不存在" });
+            return NotFound(new ProblemDetails() { Title = "用户不存在" });
         loginUser.Role=request.Role;
         await AppDbContext.SaveChangesAsync();
         var track = AppDbContext.Users.Update(loginUser);

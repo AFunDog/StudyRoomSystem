@@ -48,22 +48,28 @@ public class AuthController : ControllerBase
 
     [HttpPost("login")]
     [AllowAnonymous]
-    [ProducesResponseType<LoginResponseOk2>(StatusCodes.Status200OK)]
-    [ProducesResponseType<ResponseError>(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType<LoginResponseOk>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
     [EndpointSummary("用户登录")]
+    [EndpointDescription("登陆后会自动写入Cookie")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         var user = await AppDbContext.Users.SingleOrDefaultAsync(x => x.UserName == request.UserName);
         if (user is null)
             return Unauthorized(
-                new ResponseError
+                new ProblemDetails()
                 {
-                    Message = "用户不存在"
+                    Title = "用户不存在"
                 }
             );
 
         if (PasswordHelper.CheckPassword(request.Password, user.Password) is false)
-            return Unauthorized();
+            return Unauthorized(
+                new ProblemDetails()
+                {
+                    Title = "密码错误"
+                }
+            );
 
         var claims = new List<Claim>()
         {
@@ -94,7 +100,7 @@ public class AuthController : ControllerBase
         );
         Log.Logger.Trace().Information("用户登录 {Id}", user);
         return Ok(
-            new LoginResponseOk2
+            new LoginResponseOk
             {
                 Expiration = token.ValidTo,
                 User = user

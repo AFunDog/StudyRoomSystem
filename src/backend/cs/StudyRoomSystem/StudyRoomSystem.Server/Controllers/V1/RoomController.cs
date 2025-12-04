@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StudyRoomSystem.Core.Structs;
+using StudyRoomSystem.Core.Structs.Api;
 using StudyRoomSystem.Server.Database;
 using StudyRoomSystem.Server.Helpers;
 
@@ -25,6 +26,7 @@ public class RoomController : ControllerBase
 
     [HttpGet]
     [AllowAnonymous]
+    [ProducesResponseType<Room[]>(StatusCodes.Status200OK)]
     [EndpointSummary("获取所有的房间信息")]
     [EndpointDescription("在获取房间信息时会附带房间内的所有座位信息")]
     public async Task<IActionResult> GetAll()
@@ -34,7 +36,9 @@ public class RoomController : ControllerBase
 
     [HttpGet("{id:guid}")]
     [AllowAnonymous]
-    [EndpointSummary("获取所有的房间信息")]
+    [ProducesResponseType<Room>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [EndpointSummary("获取指定的房间信息")]
     [EndpointDescription("在获取房间信息时会附带房间内的所有座位信息")]
     public async Task<IActionResult> Get(Guid id)
     {
@@ -44,17 +48,7 @@ public class RoomController : ControllerBase
         return Ok(room);
     }
 
-    public class CreateRoomRequest
-    {
-        public required string Name { get; set; }
-        public required TimeOnly OpenTime { get; set; }
-        public required TimeOnly CloseTime { get; set; }
 
-        [Range(1, 2048)]
-        public required int Rows { get; set; }
-        [Range(1, 2048)]
-        public required int Cols { get; set; }
-    }
 
     /// <summary>
     /// 管理员创建房间
@@ -63,6 +57,8 @@ public class RoomController : ControllerBase
     /// <returns></returns>
     [HttpPost]
     [Authorize(AuthorizationHelper.Policy.Admin)]
+    [ProducesResponseType<Room>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
     [EndpointSummary("管理员创建房间")]
     // [EndpointDescription("在获取房间信息时会附带房间内的所有座位信息")]
     public async Task<IActionResult> CreateRoom([FromBody] CreateRoomRequest request)
@@ -83,25 +79,48 @@ public class RoomController : ControllerBase
             return Ok(track.Entity);
         }
 
-        return BadRequest(new { message = "数据添加失败" });
+        return Conflict(new ProblemDetails(){ Title = "数据添加失败" });
     }
-
-    /// <summary>
-    /// 管理员删除房间
-    /// </summary>
-    /// <param name="id"></param>
-    /// <returns></returns>
+    
     [HttpDelete("{id:guid}")]
     [Authorize(AuthorizationHelper.Policy.Admin)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
     [EndpointSummary("管理员创建房间")]
     public async Task<IActionResult> DeleteRoom(Guid id)
     {
         var room = await AppDbContext.Rooms.SingleOrDefaultAsync(x => x.Id == id);
         if (room is null)
-            return NotFound(new{ message = "管理员找不到房间" });
+            return NotFound(new ProblemDetails(){ Title = "找不到房间" });
         
         AppDbContext.Rooms.Remove(room);
         var res = await AppDbContext.SaveChangesAsync();
-        return res != 0 ? Ok() : BadRequest(new { message = "数据删除失败" });
+        return res != 0 ? Ok() : Conflict(new ProblemDetails(){ Title = "数据删除失败" });
+    }
+    
+    [HttpPut]
+    [Authorize(AuthorizationHelper.Policy.Admin)]
+    [ProducesResponseType<Room>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [EndpointSummary("管理员修改房间信息")]
+    public async Task<IActionResult> EditRoom([FromBody] EditRoomRequest request)
+    {
+        var room = await AppDbContext.Rooms.SingleOrDefaultAsync(x => x.Id == request.Id);
+        if (room is null)
+            return NotFound(new ProblemDetails(){ Title = "管理员找不到房间" });
+        
+        room.Name = request.Name ?? room.Name;
+        room.OpenTime = request.OpenTime ?? room.OpenTime;
+        room.CloseTime = request.CloseTime ?? room.CloseTime;
+        room.Rows = request.Rows ?? room.Rows;
+        room.Cols = request.Cols ?? room.Cols;
+        
+        // TODO 数据校验
+
+        var track = AppDbContext.Rooms.Update(room);
+        await AppDbContext.SaveChangesAsync();
+        
+        return Ok(track.Entity);
     }
 }
