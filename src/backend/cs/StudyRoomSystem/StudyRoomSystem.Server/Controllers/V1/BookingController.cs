@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StudyRoomSystem.Core.Structs;
@@ -43,7 +45,44 @@ public class BookingController : ControllerBase
                 .ToListAsync()
         );
     }
+    
+    [HttpGet("all")]
+    [Authorize(AuthorizationHelper.Policy.Admin)]
+    [ProducesResponseType<IEnumerable<Booking>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+    [EndpointSummary("管理员获取所有预约")]
+    public async Task<IActionResult> GetAllBookings([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    {
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 1;
+        if (pageSize > 100) pageSize = 100; // 限制最大页大小
 
+        var query = AppDbContext
+            .Bookings
+            .Include(b => b.Seat)
+            .Include(b => b.Seat.Room)
+            .AsQueryable();
+
+        var total = await query.CountAsync();
+
+        var items = await query
+            .OrderByDescending(b => b.CreateTime)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return Ok(new
+        {
+            total,
+            page,
+            pageSize,
+            items
+        });
+    }
+
+    
+    
+    
     [HttpGet("{id:guid}")]
     [Authorize]
     [ProducesResponseType<Booking>(StatusCodes.Status200OK)]
@@ -140,7 +179,7 @@ public class BookingController : ControllerBase
 
 
 
-    [HttpPut]
+    [HttpPut] 
     [Authorize]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]

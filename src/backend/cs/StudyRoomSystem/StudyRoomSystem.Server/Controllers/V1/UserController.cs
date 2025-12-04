@@ -1,9 +1,11 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualBasic;
@@ -259,4 +261,41 @@ public class UserController : ControllerBase
     //
     //
     // #endregion
+    
+    #region Get
+    
+    [HttpGet("all")]
+    [Authorize(AuthorizationHelper.Policy.Admin)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [EndpointSummary("管理员获取所有用户")]
+    public async Task<IActionResult> GetAllUsers([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    {
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 1;
+        if (pageSize > 100) pageSize = 100; // 限制最大页大小
+
+        var query = AppDbContext.Users.AsQueryable();
+
+        var total = await query.CountAsync();
+
+        var items = await query
+            .OrderByDescending(u => u.CreateTime)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToArrayAsync();
+
+        return Ok(new
+        {
+            total,
+            page,
+            pageSize,
+            items
+        });
+    }
+
+    
+    
+    
+    
+    #endregion
 }
