@@ -1,6 +1,9 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StudyRoomSystem.Core.Structs;
@@ -82,6 +85,29 @@ public class SeatController : ControllerBase
     [EndpointSummary("管理员修改座位信息")]
     public async Task<IActionResult> Edit()
     {
+        return Ok();
+    }
+    
+
+    [HttpDelete("{id:guid}")]
+    [Authorize(AuthorizationHelper.Policy.Admin)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [EndpointSummary("管理员删除座位")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        var seat = await AppDbContext.Seats.Include(x => x.Bookings).SingleOrDefaultAsync(x => x.Id == id);
+        if (seat is null)
+            return NotFound(new { message = "座位不存在" });
+
+        // 检查是否有未结束的预约
+        var hasActiveBooking = seat.Bookings.Any(booking => booking.EndTime > DateTime.UtcNow);
+        if (hasActiveBooking)
+            return BadRequest(new { message = "该座位有未结束的预约，无法删除" });
+
+        AppDbContext.Seats.Remove(seat);
+        await AppDbContext.SaveChangesAsync();
         return Ok();
     }
 }
