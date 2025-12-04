@@ -19,7 +19,7 @@ class AuthRequest {
         userName: string, password: string, displayName?: string | null, campusId: string, phone: string, email?: string
     }) {
         try {
-            const res = await http.post("/auth/register", request);
+            const res = await http.post("/user/register", request);
             return res.data;
         }
         catch (err) {

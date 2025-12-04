@@ -62,6 +62,8 @@ const onSubmit = form.handleSubmit(async (values) => {
     // }
 
     restartHubConnection();
+    //登录成功信息
+    toast.success(`欢迎回来，${res.user.displayName}`)
     router.push('/');
 
   }
