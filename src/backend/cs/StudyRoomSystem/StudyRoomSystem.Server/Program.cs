@@ -283,20 +283,7 @@ app.UseWebSockets(new WebSocketOptions());
 
 app.MapControllers();
 
-// app.Use(async (context, next) =>
-// {
-//     await next();
-//
-//     if (context.Response.StatusCode == StatusCodes.Status404NotFound)
-//     {
-//         if (!context.Request.Path.StartsWithSegments("/api"))
-//         {
-//             context.Response.Redirect("/");
-//             context.Response.StatusCode = StatusCodes.Status302Found;
-//         }
-//     }
-// });
-
+// 路径访问网页
 app.MapFallbackToFile(
     "index.html",
     new StaticFileOptions
