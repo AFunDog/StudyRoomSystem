@@ -1,7 +1,7 @@
 import { ref, type Ref } from "vue";
 import { getHubConnection, restartHubConnection } from "../api/hubConnection";
 import type { Room } from "../types/Room";
-import type { User } from "../types/user";
+import type { User } from "../types/User";
 import type { Booking } from "../types/Booking";
 
 class DataProvider {

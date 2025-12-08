@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
-import type { User } from '@/lib/types/user';
+import type { User } from '@/lib/types/User';
 
 import {
   Dialog,
