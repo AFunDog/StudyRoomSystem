@@ -282,6 +282,32 @@ if (app.Environment.IsDevelopment())
 app.UseWebSockets(new WebSocketOptions());
 
 app.MapControllers();
+
+// app.Use(async (context, next) =>
+// {
+//     await next();
+//
+//     if (context.Response.StatusCode == StatusCodes.Status404NotFound)
+//     {
+//         if (!context.Request.Path.StartsWithSegments("/api"))
+//         {
+//             context.Response.Redirect("/");
+//             context.Response.StatusCode = StatusCodes.Status302Found;
+//         }
+//     }
+// });
+
+app.MapFallbackToFile(
+    "index.html",
+    new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(
+            Path.Combine(Environment.CurrentDirectory, app.Configuration.GetValue<string>("Web:Root", "web"))
+        ),
+        RequestPath = ""
+    }
+);
+
 // app.MapUserController();
 
 // SignalR Hub
