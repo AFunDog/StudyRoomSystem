@@ -18,7 +18,7 @@ import type { GenericObject } from 'vee-validate';
 import { http } from '@/lib/utils';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import type { User } from '@/lib/types/user';
+import type { User } from '@/lib/types/User';
 import { LockKeyhole, Eye, EyeOff, UserStar } from 'lucide-vue-next';
 import { restartHubConnection } from '@/lib/api/hubConnection';
 import { authRequest } from '@/lib/api/authRequest';

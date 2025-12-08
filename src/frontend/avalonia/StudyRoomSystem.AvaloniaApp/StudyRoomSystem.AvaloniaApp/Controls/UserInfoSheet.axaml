@@ -63,7 +63,7 @@
         </Panel>
         <shadUi:Card HorizontalAlignment="Right" Classes="Panel" Width="300" CornerRadius="0">
             <DockPanel LastChildFill="False">
-                <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Vertical" DockPanel.Dock="Top">
 
                     <StackPanel Orientation="Horizontal">
                         <LucideIcon Kind="CircleUserRound" Size="48" VerticalAlignment="Center"></LucideIcon>
