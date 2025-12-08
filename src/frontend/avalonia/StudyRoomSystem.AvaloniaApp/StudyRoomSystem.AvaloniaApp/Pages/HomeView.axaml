@@ -6,19 +6,35 @@
              xmlns:shadUi="clr-namespace:ShadUI;assembly=ShadUI"
              xmlns:controls="clr-namespace:StudyRoomSystem.AvaloniaApp.Controls"
              xmlns:structs="clr-namespace:StudyRoomSystem.Core.Structs;assembly=StudyRoomSystem.Core"
+             xmlns:pages="clr-namespace:StudyRoomSystem.AvaloniaApp.Pages"
+             xmlns:entity="clr-namespace:StudyRoomSystem.Core.Structs.Entity;assembly=StudyRoomSystem.Core"
+             xmlns:converters="clr-namespace:StudyRoomSystem.AvaloniaApp.Converters"
+             xmlns:generic="using:System.Collections.Generic"
+             xmlns:system="using:System"
              mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="800"
              x:Class="StudyRoomSystem.AvaloniaApp.Pages.HomeView"
              x:DataType="vm:HomeViewModel">
+    <Design.DataContext>
+        <vm:HomeViewModel>
+        </vm:HomeViewModel>
+    </Design.DataContext>
     <Panel>
-        
+
         <Grid RowDefinitions="Auto,*,Auto" RowSpacing="8">
+            <!-- 顶部栏 -->
             <Panel>
                 <!-- <Border Background="{DynamicResource BorderColor}"> -->
                 <shadUi:Card Padding="0" CornerRadius="0">
 
                     <DockPanel LastChildFill="False" HorizontalSpacing="8" Margin="8">
                         <LucideIcon Kind="Menu" DockPanel.Dock="Left" VerticalAlignment="Center"></LucideIcon>
-                        <LucideIcon DockPanel.Dock="Right" Kind="CircleUserRound"></LucideIcon>
+                        <LucideIcon DockPanel.Dock="Right" Kind="CircleUserRound">
+                            <Interaction.Behaviors>
+                                <PointerPressedEventTrigger RoutingStrategies="Bubble">
+                                    <InvokeCommandAction Command="{Binding ToggleUserSheetCommand}"></InvokeCommandAction>
+                                </PointerPressedEventTrigger>
+                            </Interaction.Behaviors>
+                        </LucideIcon>
                         <TextBlock Classes="h4" DockPanel.Dock="Right" VerticalAlignment="Center" Text="智慧自习室预约管理系统"></TextBlock>
                     </DockPanel>
                 </shadUi:Card>
@@ -28,24 +44,146 @@
                 <!-- <Border Classes="Card" Margin="8,0" CornerRadius="{DynamicResource LgCornerRadius}"> -->
                 <!--      -->
                 <!-- </Border> -->
-                <shadUi:Card Margin="8,0" />
+                <Grid RowDefinitions="Auto,*,Auto,Auto" RowSpacing="8" ClipToBounds="True">
+                    <!-- 选择房间 -->
+                    <StackPanel>
+                        <shadUi:Card Grid.Row="1" Margin="8,0" Padding="8">
+                            <StackPanel Orientation="Vertical">
+                                <TextBlock Text="选择自习室" Classes="Muted"></TextBlock>
+                                <ItemsControl ItemsSource="{Binding Rooms}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal"></StackPanel>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="entity:Room">
+                                            <Button Classes="Outline" Padding="4" VerticalContentAlignment="Center"
+                                                    Command="{Binding ((vm:HomeViewModel)DataContext).SelectRoomCommand,RelativeSource={RelativeSource AncestorType={x:Type pages:HomeView}}}"
+                                                    CommandParameter="{Binding}">
+                                                <TextBlock Text="{Binding Name}"></TextBlock>
+                                            </Button>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </shadUi:Card>
+                    </StackPanel>
+                    <!-- 选择座位 -->
+                    <shadUi:Card Grid.Row="1" Margin="8,0" Padding="16" ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <Grid RowDefinitions="Auto,*">
+                            <TextBlock Text="{Binding SelectedRoom.Name,FallbackValue=请选择自习室}"></TextBlock>
+                            <Viewbox Stretch="Uniform" StretchDirection="Both" Grid.Row="1">
+                                <Border IsVisible="{Binding !!SelectedRoom}" BorderThickness="8" BorderBrush="Gray"
+                                        CornerRadius="{DynamicResource LgCornerRadius}">
+                                    <ItemsControl ItemsSource="{Binding SelectedRoomSeats}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <Canvas
+                                                    Width="{Binding SelectedRoomWidth}"
+                                                    Height="{Binding SelectedRoomHeight}">
+
+                                                </Canvas>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemContainerTheme>
+                                            <ControlTheme TargetType="ContentPresenter">
+                                                <Setter Property="Canvas.Left"
+                                                        Value="{Binding $self.((entity:Seat)DataContext).Row,Converter={x:Static converters:MulitConverter.Instance},ConverterParameter=32}" />
+                                                <Setter Property="Canvas.Top"
+                                                        Value="{Binding $self.((entity:Seat)DataContext).Col,Converter={x:Static converters:MulitConverter.Instance},ConverterParameter=32}">
+                                                </Setter>
+                                            </ControlTheme>
+                                        </ItemsControl.ItemContainerTheme>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="entity:Seat">
+                                                <LucideIcon
+                                                    Size="32"
+                                                    Kind="Armchair">
+                                                    <Interaction.Behaviors>
+                                                        <PointerPressedEventTrigger RoutingStrategies="Bubble">
+                                                            <InvokeCommandAction
+                                                                CommandParameter="{Binding .}"
+                                                                Command="{Binding ((vm:HomeViewModel)DataContext).OpenSeatDialogCommand ,RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}">
+                                                            </InvokeCommandAction>
+                                                        </PointerPressedEventTrigger>
+                                                    </Interaction.Behaviors>
+                                                </LucideIcon>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </Border>
+                                <!-- <TextBlock Text="123"></TextBlock> -->
+                            </Viewbox>
+                        </Grid>
+                    </shadUi:Card>
+                    <shadUi:Card MaxHeight="240" Grid.Row="2" Margin="8,0" Padding="16">
+                        <StackPanel Orientation="Vertical">
+                            <TextBlock Text="我的预约" Classes="Muted" />
+                            <ItemsControl ItemsSource="{Binding MyBookings}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel></StackPanel>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="entity:Booking">
+                                        <shadUi:Card Padding="8">
+                                            <DockPanel LastChildFill="False" HorizontalSpacing="8">
+                                                <TextBlock Text="{Binding Seat.Room.Name}" FontWeight="Bold"></TextBlock>
+                                                <TextBlock>
+                                                    <TextBlock.Text>
+                                                        <MultiBinding StringFormat="{}{0}-{1}">
+                                                            <Binding Path="Seat.Col"></Binding>
+                                                            <Binding Path="Seat.Row"></Binding>
+                                                        </MultiBinding>
+                                                    </TextBlock.Text>
+                                                </TextBlock>
+                                                <TextBlock DockPanel.Dock="Right">
+                                                    <TextBlock.Text>
+                                                        <MultiBinding StringFormat="{}{0}-{1}">
+                                                            <Binding Path="StartTime"></Binding>
+                                                            <Binding Path="EndTime"></Binding>
+                                                        </MultiBinding>
+                                                    </TextBlock.Text>
+                                                </TextBlock>
+                                            </DockPanel>
+                                        </shadUi:Card>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </shadUi:Card>
+                    <Button Grid.Row="3" Content="添加" Command="{Binding AddCommand}">
+
+                    </Button>
+                </Grid>
             </Panel>
+            <!-- 底部导航栏 -->
             <Panel Grid.Row="2">
                 <!-- <Border Classes="Card" Margin="8,0,8,8" -->
                 <!--         HorizontalAlignment="Center" CornerRadius="10000" Padding="8"> -->
                 <!-- </Border> -->
-                <shadUi:Card Margin="8,0,8,8" Padding="8" HorizontalAlignment="Center" CornerRadius="1000">
+                <shadUi:Card Margin="8,0,8,4" Padding="24,8" HorizontalAlignment="Center" CornerRadius="1000">
 
                     <StackPanel Orientation="Horizontal">
-                        <LucideIcon Kind="CalendarClock"></LucideIcon>
-                        <LucideIcon Kind="House"></LucideIcon>
+                        <StackPanel Orientation="Vertical">
+                            <LucideIcon Kind="CalendarClock" HorizontalAlignment="Center"></LucideIcon>
+                            <TextBlock Text="日历" HorizontalAlignment="Center"></TextBlock>
+                        </StackPanel>
+                        <StackPanel Orientation="Vertical">
+                            <LucideIcon Kind="House" HorizontalAlignment="Center"></LucideIcon>
+                            <TextBlock Text="首页" HorizontalAlignment="Center"></TextBlock>
+                        </StackPanel>
                     </StackPanel>
                 </shadUi:Card>
             </Panel>
         </Grid>
-        <controls:UserInfoSheet Width="300" HorizontalAlignment="Right">
+        <!-- 抽屉 -->
+        <controls:UserInfoSheet HorizontalAlignment="Stretch" IsOpen="{Binding IsUserSheetOpen,Mode=TwoWay}">
             <controls:UserInfoSheet.User>
-                <structs:User DisplayName="123"/>
+                <entity:User DisplayName="123" />
             </controls:UserInfoSheet.User>
         </controls:UserInfoSheet>
     </Panel>

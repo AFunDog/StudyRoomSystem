@@ -1,0 +1,35 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:StudyRoomSystem.AvaloniaApp.ViewModels"
+             xmlns:shadUi="clr-namespace:ShadUI;assembly=ShadUI"
+             xmlns:avaloniaApp="clr-namespace:StudyRoomSystem.AvaloniaApp"
+             mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="450"
+             x:Class="StudyRoomSystem.AvaloniaApp.Controls.SeatInfoContent"
+             x:DataType="vm:SeatInfoContentViewModel">
+    <Design.DataContext>
+        <vm:SeatInfoContentViewModel ErrorMessage="Error">
+        </vm:SeatInfoContentViewModel>
+    </Design.DataContext>
+    <Panel>
+
+        <shadUi:Card>
+
+            <StackPanel Orientation="Vertical">
+                <TextBlock Classes="h4" Text="预约座位" />
+                <TextBlock Text="已经预约的时间段"></TextBlock>
+                <CalendarDatePicker SelectedDate="{Binding SelectedDate,Mode=TwoWay}" shadUi:ControlAssist.Label="预约日期" />
+                <TimePicker SelectedTime="{Binding CheckInTime,Mode=TwoWay}" shadUi:ControlAssist.Label="签到时间" />
+                <TimePicker SelectedTime="{Binding CheckOutTime,Mode=TwoWay}" shadUi:ControlAssist.Label="签退时间" />
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                    <Button Classes="Primary" shadUi:ButtonAssist.ShowProgress="{Binding BookCommand.IsRunning}" Content="预约"
+                            Command="{Binding BookCommand}" />
+                    <Button Grid.Column="1" Classes="Secondary" Content="取消"
+                            Command="{Binding CancelBookCommand}" />
+                </Grid>
+                <TextBlock Text="{Binding ErrorMessage}" Classes="Error"></TextBlock>
+            </StackPanel>
+        </shadUi:Card>
+    </Panel>
+</UserControl>

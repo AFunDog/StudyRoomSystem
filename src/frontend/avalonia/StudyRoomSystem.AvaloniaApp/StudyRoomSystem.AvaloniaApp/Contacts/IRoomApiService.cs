@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using StudyRoomSystem.Core.Structs;
+using StudyRoomSystem.Core.Structs.Entity;
 
 namespace StudyRoomSystem.AvaloniaApp.Contacts;
 

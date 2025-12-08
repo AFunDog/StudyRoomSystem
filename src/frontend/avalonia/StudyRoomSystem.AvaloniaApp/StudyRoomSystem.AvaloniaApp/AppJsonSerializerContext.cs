@@ -19,6 +19,8 @@ namespace StudyRoomSystem.AvaloniaApp;
 
 [JsonSerializable(typeof(RegisterRequest))]
 
+[JsonSerializable(typeof(CreateBookingRequest))]
+
 #endregion
 
 #region Entity
