@@ -155,9 +155,6 @@
                             </ItemsControl>
                         </StackPanel>
                     </shadUi:Card>
-                    <Button Grid.Row="3" Content="添加" Command="{Binding AddCommand}">
-
-                    </Button>
                 </Grid>
             </Panel>
             <!-- 底部导航栏 -->

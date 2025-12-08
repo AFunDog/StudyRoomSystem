@@ -45,8 +45,8 @@ public sealed partial class HomeViewModel : ViewModelBase
     //         SeatId = Guid.NewGuid(), State = BookingStateEnum.Booking
     //     }
     // };
-    
-    private SourceCache<Room,Guid> RoomCache { get; } = new(x => x.Id);
+
+    private SourceCache<Room, Guid> RoomCache { get; } = new(x => x.Id);
     public IReadOnlyCollection<Room> Rooms { get; }
 
     private SourceCache<Booking, Guid> MyBookingCache { get; } = new(x => x.Id);
@@ -120,21 +120,20 @@ public sealed partial class HomeViewModel : ViewModelBase
         Rooms = rooms;
 
         #endregion
-
     }
 #pragma warning restore CS8618 // 在退出构造函数时，不可为 null 的字段必须包含非 null 值。请考虑添加 'required' 修饰符或声明为可以为 null。
 
-    public HomeViewModel(IRoomApiService roomApiService,IBookingApiService bookingApiService)
+    public HomeViewModel(IRoomApiService roomApiService, IBookingApiService bookingApiService)
     {
         RoomApiService = roomApiService;
         BookingApiService = bookingApiService;
-        
+
         MyBookingCache.Connect().Bind(out var myBookings).Subscribe();
         MyBookings = myBookings;
-        
+
         RoomCache.Connect().Bind(out var rooms).Subscribe();
         Rooms = rooms;
-        
+
         InitDataCommand.Execute(null);
     }
 
@@ -142,14 +141,8 @@ public sealed partial class HomeViewModel : ViewModelBase
     private void InitData()
     {
         Log.Logger.Trace().Information("初始化数据");
-        RoomApiService.GetAll(async (s, e) =>
-        {
-            RoomCache.AddOrUpdate(e);
-        });
-        BookingApiService.GetMy(async (s, e) =>
-        {
-            MyBookingCache.AddOrUpdate(e);
-        });
+        RoomApiService.GetAll(async (s, e) => { RoomCache.AddOrUpdate(e); });
+        BookingApiService.GetMy(async (s, e) => { MyBookingCache.AddOrUpdate(e); });
     }
 
     [RelayCommand]
@@ -198,39 +191,5 @@ public sealed partial class HomeViewModel : ViewModelBase
         //     .WithSuccessCallback(() => { })
         //     .Show();
         // Log.Logger.Trace().Information("OpenSeatDialog {Seat}", seat);
-    }
-
-    [RelayCommand]
-    private async Task Add()
-    {
-        MyBookingCache.AddOrUpdate(
-            new Booking()
-            {
-                Id = Guid.NewGuid(),
-                UserId = Guid.NewGuid(),
-                CreateTime = DateTime.UtcNow,
-                StartTime = DateTime.UtcNow,
-                EndTime = DateTime.UtcNow.AddHours(1),
-                SeatId = Guid.NewGuid(), State = BookingStateEnum.Booking
-            }
-        );
-        // MyBookings[Guid.NewGuid()] = new Booking()
-        // {
-        //     Id = Guid.NewGuid(),
-        //     UserId = Guid.NewGuid(),
-        //     CreateTime = DateTime.UtcNow,
-        //     StartTime = DateTime.UtcNow,
-        //     EndTime = DateTime.UtcNow.AddHours(1),
-        //     SeatId = Guid.NewGuid(), State = BookingStateEnum.Booking
-        // };
-        // MyBookings.Add(Guid.NewGuid(),new Booking()
-        // {
-        //     Id = Guid.NewGuid(),
-        //     UserId = Guid.NewGuid(),
-        //     CreateTime = DateTime.UtcNow,
-        //     StartTime = DateTime.UtcNow,
-        //     EndTime = DateTime.UtcNow.AddHours(1),
-        //     SeatId = Guid.NewGuid(), State = BookingStateEnum.Booking
-        // });
     }
 }
