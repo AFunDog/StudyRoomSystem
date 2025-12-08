@@ -2,6 +2,7 @@
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using StudyRoomSystem.Core.Structs;
+using StudyRoomSystem.Core.Structs.Entity;
 
 namespace StudyRoomSystem.AvaloniaApp.Controls;
 

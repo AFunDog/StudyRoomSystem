@@ -4,23 +4,77 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:shadUi="clr-namespace:ShadUI;assembly=ShadUI"
              xmlns:controls="clr-namespace:StudyRoomSystem.AvaloniaApp.Controls"
-             mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="800"
+             xmlns:entity="clr-namespace:StudyRoomSystem.Core.Structs.Entity;assembly=StudyRoomSystem.Core"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="800"
              x:Class="StudyRoomSystem.AvaloniaApp.Controls.UserInfoSheet">
+    <Design.DesignStyle>
+        <Style Selector="controls|UserInfoSheet">
+            <Setter Property="IsOpen" Value="True"></Setter>
+            <Setter Property="User">
+                <Setter.Value>
+                    <entity:User DisplayName="DisplayName" CampusId="236001209" UserName="UserName" Role="User"></entity:User>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Design.DesignStyle>
     <UserControl.Styles>
         <Style Selector=":is(Control).Panel">
-            <Setter Property="RenderTransform" Value="{Binding Converter={x:Static }}"></Setter>
+            <!-- TODO px随宽度变化 -->
+            <Setter Property="RenderTransform" Value="translateX(300px)"></Setter>
+            <Setter Property="Transitions">
+                <Setter.Value>
+                    <Transitions>
+                        <TransformOperationsTransition Property="RenderTransform" Easing="ExponentialEaseOut" Duration="0:0:0.833" />
+                    </Transitions>
+                </Setter.Value>
+            </Setter>
         </Style>
+        <Style Selector=":is(controls|UserInfoSheet)[IsOpen=True] :is(Control).Panel">
+            <Setter Property="RenderTransform" Value="translateX(0px)"></Setter>
+        </Style>
+        <Style Selector=":is(Control).Mask">
+            <Setter Property="Opacity" Value="0"></Setter>
+            <Setter Property="Transitions">
+                <Setter.Value>
+                    <Transitions>
+                        <DoubleTransition Property="Opacity" Easing="ExponentialEaseOut" Duration="0:0:0.833" />
+                    </Transitions>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="IsHitTestVisible" Value="False"></Setter>
+        </Style>
+        <Style Selector=":is(Control).Mask[Opacity=0]">
+            <Setter Property="IsVisible" Value="False"></Setter>
+        </Style>
+        <Style Selector=":is(controls|UserInfoSheet)[IsOpen=True] :is(Control).Mask">
+            <Setter Property="Opacity" Value="0.5"></Setter>
+            <Setter Property="IsHitTestVisible" Value="True"></Setter>
+        </Style>
+
     </UserControl.Styles>
-    <Panel Classes="Panel">
-        <shadUi:Card CornerRadius="0">
-            <StackPanel Orientation="Vertical">
-                <StackPanel Orientation="Horizontal">
-                    <LucideIcon Kind="CircleUserRound" Size="48"></LucideIcon>
-                    <StackPanel Orientation="Vertical">
-                        <TextBlock Text="{Binding $parent[controls:UserInfoSheet].User.DisplayName,Mode=OneWay}"></TextBlock>
+    <Panel>
+        <Panel Background="Black" Classes="Mask">
+            <Interaction.Behaviors>
+                <PointerPressedEventTrigger RoutingStrategies="Bubble">
+                    <ChangeAvaloniaPropertyAction TargetProperty="{x:Static controls:UserInfoSheet.IsOpenProperty}" Value="False"
+                                                  TargetObject="{Binding $parent[controls:UserInfoSheet]}" />
+                </PointerPressedEventTrigger>
+            </Interaction.Behaviors>
+        </Panel>
+        <shadUi:Card HorizontalAlignment="Right" Classes="Panel" Width="300" CornerRadius="0">
+            <DockPanel LastChildFill="False">
+                <StackPanel Orientation="Vertical" DockPanel.Dock="Top">
+
+                    <StackPanel Orientation="Horizontal">
+                        <LucideIcon Kind="CircleUserRound" Size="48" VerticalAlignment="Center"></LucideIcon>
+                        <StackPanel Orientation="Vertical" Spacing="0">
+                            <TextBlock Classes="Large" Text="{Binding $parent[controls:UserInfoSheet].User.DisplayName,Mode=OneWay}"></TextBlock>
+                            <TextBlock Classes="Muted" Text="{Binding $parent[controls:UserInfoSheet].User.UserName}"></TextBlock>
+                        </StackPanel>
                     </StackPanel>
                 </StackPanel>
-            </StackPanel>
+                <Button DockPanel.Dock="Bottom" Classes="Destructive" HorizontalAlignment="Stretch" Content="退出登录"></Button>
+            </DockPanel>
         </shadUi:Card>
     </Panel>
 </UserControl>

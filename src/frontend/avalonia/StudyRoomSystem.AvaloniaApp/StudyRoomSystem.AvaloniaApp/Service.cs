@@ -8,6 +8,7 @@ using Serilog.Events;
 using Serilog.Formatting.Compact;
 using ShadUI;
 using StudyRoomSystem.AvaloniaApp.Contacts;
+using StudyRoomSystem.AvaloniaApp.Controls;
 using StudyRoomSystem.AvaloniaApp.Pages;
 using StudyRoomSystem.AvaloniaApp.Services;
 using StudyRoomSystem.AvaloniaApp.Services.Api;
@@ -16,13 +17,16 @@ using StudyRoomSystem.AvaloniaApp.Views;
 using Zeng.CoreLibrary.Toolkit.Extensions;
 using Zeng.CoreLibrary.Toolkit.Logging;
 using Zeng.CoreLibrary.Toolkit.Services.Navigate;
+using DialogManager = StudyRoomSystem.AvaloniaApp.Services.DialogManager;
 using Window = Avalonia.Controls.Window;
 
 namespace StudyRoomSystem.AvaloniaApp;
 
 public static class Service
 {
+    public static IServiceProvider ServiceProvider => App.ServiceProvider;
     public static ToastManager ToastManager => App.ServiceProvider.GetRequiredService<ToastManager>();
+    public static DialogManager DialogManager { get; } = new();
 
     public static IServiceProvider BuildServices()
     {
@@ -52,7 +56,7 @@ public static class Service
                 client =>
                 {
                     client.BaseAddress = new Uri("https://localhost:7175");
-                    client.Timeout = TimeSpan.FromSeconds(5);
+                    client.Timeout = TimeSpan.FromSeconds(10);
                     client.DefaultRequestHeaders.Add("Accept", "application/json");
                 }
             )
@@ -124,12 +128,14 @@ public static class Service
             .AddTransient<MainViewModel>()
             .AddTransient<LoginViewModel>()
             .AddTransient<RegisterViewModel>()
-            .AddTransient<HomeViewModel>();
+            .AddTransient<HomeViewModel>()
+            .AddTransient<SeatInfoContentViewModel>();
 
 
         var provider = services.BuildServiceProvider();
 
         RegisterRoutes(provider);
+        // RegisterDialogs(provider);
 
 
         Log.Logger.Trace().Information("服务配置完毕");
@@ -145,4 +151,10 @@ public static class Service
             .RegisterViewRoute("/register", () => provider.GetRequiredKeyedService<UserControl>("RegisterView"))
             .RegisterViewRoute("/home", () => provider.GetRequiredKeyedService<UserControl>("HomeView"));
     }
+
+    // private static void RegisterDialogs(IServiceProvider provider)
+    // {
+    //     var dialogManager = provider.GetRequiredService<DialogManager>();
+    //     dialogManager.Register<SeatInfoContent, SeatInfoContentViewModel>();
+    // }
 }

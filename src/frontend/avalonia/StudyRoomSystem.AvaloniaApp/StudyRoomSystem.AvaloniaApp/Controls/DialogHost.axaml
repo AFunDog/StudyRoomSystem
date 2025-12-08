@@ -1,0 +1,57 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:StudyRoomSystem.AvaloniaApp.Controls">
+    <Design.PreviewWith>
+        <controls:DialogHost IsOpen="True">
+            <TextBlock Text="Hello World"></TextBlock>
+        </controls:DialogHost>
+    </Design.PreviewWith>
+
+    <Style Selector="controls|DialogHost">
+        <!-- Set Defaults -->
+        <Style Selector="^ /template/ :is(Control)#RootPanel">
+            <Setter Property="Opacity" Value="0"></Setter>
+            <Setter Property="Transitions">
+                <Setter.Value>
+                    <Transitions>
+                        <DoubleTransition Property="Opacity" Duration="0:0:0.666" Easing="ExponentialEaseOut" />
+                    </Transitions>
+                </Setter.Value>
+            </Setter>
+            <Style Selector="^[Opacity=0]">
+                <Setter Property="IsVisible" Value="False"></Setter>
+            </Style>
+            <Style Selector="^ :is(Control)#PART_Overlay">
+                <Setter Property="IsHitTestVisible" Value="False"></Setter>
+            </Style>
+        </Style>
+        <Style Selector="^[IsOpen=False] /template/ :is(Control)#PART_ContentPresenter :is(InputElement)">
+            <Setter Property="IsEnabled" Value="False"></Setter>
+        </Style>
+        <Style Selector="^[IsOpen=True] /template/ :is(Control)#RootPanel">
+            <Setter Property="Opacity" Value="1"></Setter>
+            <Style Selector="^ :is(Control)#PART_Overlay">
+                <Setter Property="IsHitTestVisible" Value="True"></Setter>
+            </Style>
+        </Style>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Panel Name="RootPanel">
+                    <Rectangle Fill="Black" Opacity="0.5" Name="PART_Overlay">
+                        <Interaction.Behaviors>
+                            <PointerPressedEventTrigger RoutingStrategies="Bubble">
+                                <ChangeAvaloniaPropertyAction TargetProperty="{x:Static controls:DialogHost.IsOpenProperty}" Value="False"
+                                                              TargetObject="{Binding RelativeSource={RelativeSource AncestorType=controls:DialogHost}}">
+                                </ChangeAvaloniaPropertyAction>
+                            </PointerPressedEventTrigger>
+                        </Interaction.Behaviors>
+                    </Rectangle>
+                    <ContentPresenter Name="PART_ContentPresenter"
+                                      HorizontalContentAlignment="Center"
+                                      VerticalContentAlignment="Center"
+                                      Content="{TemplateBinding Content}" />
+                </Panel>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

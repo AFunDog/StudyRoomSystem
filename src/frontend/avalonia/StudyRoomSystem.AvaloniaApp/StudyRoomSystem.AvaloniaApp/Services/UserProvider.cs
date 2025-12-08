@@ -1,5 +1,6 @@
 ﻿using StudyRoomSystem.AvaloniaApp.Contacts;
 using StudyRoomSystem.Core.Structs;
+using StudyRoomSystem.Core.Structs.Entity;
 
 namespace StudyRoomSystem.AvaloniaApp.Services;
 

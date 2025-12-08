@@ -8,6 +8,7 @@ using Serilog;
 using StudyRoomSystem.AvaloniaApp.Contacts;
 using StudyRoomSystem.Core.Structs;
 using StudyRoomSystem.Core.Structs.Api;
+using StudyRoomSystem.Core.Structs.Entity;
 
 namespace StudyRoomSystem.AvaloniaApp.Services.Api;
 
@@ -27,7 +28,7 @@ internal sealed partial class HttpBookingApiService : IBookingApiService
         Func<HttpResponseMessage, ProblemDetails, Task>? onError = null)
     {
         var client = HttpClientFactory.CreateClient("API");
-        var res = await client.GetAsync($"/api/v1/booking");
+        var res = await client.GetAsync($"/api/v1/booking/my");
         if (res.IsSuccessStatusCode)
         {
             if (onOk is null)
@@ -112,7 +113,40 @@ internal sealed partial class HttpBookingApiService : IBookingApiService
     public async Task Create(
         CreateBookingRequest request,
         Func<HttpResponseMessage, Booking, Task>? onOk = null,
-        Func<HttpResponseMessage, ProblemDetails, Task>? onError = null) { }
+        Func<HttpResponseMessage, ProblemDetails, Task>? onError = null)
+    {
+        var client = HttpClientFactory.CreateClient("API");
+        var res = await client.PostAsync(
+            "/api/v1/booking",
+            new StringContent(
+                JsonSerializer.Serialize(request, AppJsonSerializerContext.Default.CreateBookingRequest),
+                Encoding.UTF8,
+                "application/json"
+            )
+        );
+        if (res.IsSuccessStatusCode)
+        {
+            if (onOk is null)
+                return;
+            var booking = JsonSerializer.Deserialize<Booking>(
+                await res.Content.ReadAsStringAsync(),
+                AppJsonSerializerContext.Default.Booking
+            );
+            ArgumentNullException.ThrowIfNull(booking);
+            await onOk(res, booking);
+        }
+        else
+        {
+            if (onError is null)
+                return;
+            var error = JsonSerializer.Deserialize<ProblemDetails>(
+                await res.Content.ReadAsStringAsync(),
+                AppJsonSerializerContext.Default.ProblemDetails
+            );
+            ArgumentNullException.ThrowIfNull(error);
+            await onError(res, error);
+        }
+    }
 
     public async Task Edit(
         EditBookingRequest request,

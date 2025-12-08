@@ -20,20 +20,24 @@
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
         </PackageReference>
         <PackageReference Include="CommunityToolkit.Mvvm"/>
+        <PackageReference Include="DynamicData" />
         <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
         <PackageReference Include="Microsoft.Extensions.Http" />
+        <PackageReference Include="ObservableCollections" />
         <PackageReference Include="Serilog.Formatting.Compact" />
         <PackageReference Include="Serilog.Sinks.Console" />
         <PackageReference Include="Serilog.Sinks.File" />
         <PackageReference Include="ShadUI"/>
         <PackageReference Include="Lucide.Avalonia"/>
+        <PackageReference Include="System.Reactive.Linq" />
         <PackageReference Include="Zeng.CoreLibrary.Toolkit.Avalonia"/>
         <PackageReference Include="Xaml.Behaviors.Avalonia"/>
     </ItemGroup>
 
     <ItemGroup>
       <Folder Include="Assets\Fonts\" />
+      <Folder Include="Extensions\" />
       <Folder Include="Structs\" />
     </ItemGroup>
 
