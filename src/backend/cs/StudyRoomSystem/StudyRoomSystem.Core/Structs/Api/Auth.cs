@@ -1,4 +1,6 @@
-﻿namespace StudyRoomSystem.Core.Structs.Api;
+﻿using StudyRoomSystem.Core.Structs.Entity;
+
+namespace StudyRoomSystem.Core.Structs.Api;
 
 public class LoginRequest
 {

@@ -10,6 +10,7 @@
     <Application.Styles>
         <FluentTheme />
         <shadUi:ShadTheme />
+        <StyleInclude Source="./Controls/DialogHost.axaml" />
         <!-- 默认样式 -->
         <Style Selector="StackPanel">
             <Setter Property="Spacing" Value="8"></Setter>
@@ -20,9 +21,55 @@
         <Style Selector="LucideIcon">
             <Setter Property="Size" Value="32"></Setter>
         </Style>
-        <Style Selector="Border.Card">
-            
+        <!-- <Style Selector="Button.Primary"> -->
+        <!--     <Setter Property="Height" Value="NaN"></Setter> -->
+        <!-- </Style> -->
+        <!-- <Style Selector="Button.Outline /template/ Viewbox"> -->
+        <!--     <Setter Property="Height" Value="NaN"></Setter> -->
+        <!-- </Style> -->
+        <!-- <Style Selector="Button.Ghost /template/ Viewbox"> -->
+        <!--     <Setter Property="Height" Value="NaN"></Setter> -->
+        <!-- </Style> -->
+        <Style Selector="Button /template/ Viewbox">
+            <Setter Property="Height" Value="NaN"></Setter>
         </Style>
+        <!-- 下面这两个样式是为了让 Outline 按钮的内容能充满按钮 -->
+        <Style Selector="Button /template/ StackPanel">
+            <Setter Property="Spacing" Value="0"></Setter>
+            <Setter Property="Orientation" Value="Horizontal"></Setter>
+            <Setter Property="HorizontalAlignment" Value="Stretch"></Setter>
+        </Style>
+        <Style Selector="Button /template/ ContentPresenter">
+            <Setter Property="HorizontalAlignment" Value="Stretch"></Setter>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter>
+        </Style>
+        <!-- <Style Selector="Button.Outline /template/ StackPanel"> -->
+        <!--     <Setter Property="Spacing" Value="0"></Setter> -->
+        <!--     <Setter Property="Orientation" Value="Horizontal"></Setter> -->
+        <!--     <Setter Property="HorizontalAlignment" Value="Stretch"></Setter> -->
+        <!-- </Style> -->
+        <!-- <Style Selector="Button.Outline /template/ ContentPresenter"> -->
+        <!--     <Setter Property="HorizontalAlignment" Value="Stretch"></Setter> -->
+        <!--     <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter> -->
+        <!-- </Style> -->
+        <!-- <Style Selector="Button.Primary /template/ StackPanel"> -->
+        <!--     <Setter Property="Spacing" Value="0"></Setter> -->
+        <!--     <Setter Property="Orientation" Value="Horizontal"></Setter> -->
+        <!--     <Setter Property="HorizontalAlignment" Value="Stretch"></Setter> -->
+        <!-- </Style> -->
+        <!-- <Style Selector="Button.Primary /template/ ContentPresenter"> -->
+        <!--     <Setter Property="HorizontalAlignment" Value="Stretch"></Setter> -->
+        <!--     <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter> -->
+        <!-- </Style> -->
+        <!-- <Style Selector="Button.Ghost /template/ StackPanel"> -->
+        <!--     <Setter Property="Spacing" Value="0"></Setter> -->
+        <!--     <Setter Property="Orientation" Value="Horizontal"></Setter> -->
+        <!--     <Setter Property="HorizontalAlignment" Value="Stretch"></Setter> -->
+        <!-- </Style> -->
+        <!-- <Style Selector="Button.Ghost /template/ ContentPresenter"> -->
+        <!--     <Setter Property="HorizontalAlignment" Value="Stretch"></Setter> -->
+        <!--     <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter> -->
+        <!-- </Style> -->
     </Application.Styles>
     <Application.Resources>
         <ResourceDictionary>
@@ -38,5 +85,22 @@
         <Color x:Key="DestructiveColor75">#BFE7000B</Color>
         <Color x:Key="DestructiveColor50">#80E7000B</Color>
         <Color x:Key="DestructiveColor10">#19E7000B</Color>
+        <!-- 翻译 -->
+        <!-- DatePicker -->
+        <!-- <x:String x:Key="StringDatePickerDayText">day</x:String> -->
+        <!-- <x:String x:Key="StringDatePickerMonthText">month</x:String> -->
+        <!-- <x:String x:Key="StringDatePickerYearText">year</x:String> -->
+        <!-- ~1~ TimePicker @1@ -->
+        <!-- <x:String x:Key="StringTimePickerHourText">hour</x:String> -->
+        <!-- <x:String x:Key="StringTimePickerMinuteText">minute</x:String> -->
+        <!-- <x:String x:Key="StringTimePickerSecondText">second</x:String> -->
+        <!-- DatePicker -->
+        <x:String x:Key="StringDatePickerDayText">日</x:String>
+        <x:String x:Key="StringDatePickerMonthText">月</x:String>
+        <x:String x:Key="StringDatePickerYearText">年</x:String>
+        <!-- TimePicker -->
+        <x:String x:Key="StringTimePickerHourText">时</x:String>
+        <x:String x:Key="StringTimePickerMinuteText">分</x:String>
+        <x:String x:Key="StringTimePickerSecondText">秒</x:String>
     </Application.Resources>
 </Application>

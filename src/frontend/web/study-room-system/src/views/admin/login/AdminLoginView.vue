@@ -22,6 +22,7 @@ import type { User } from '@/lib/types/User';
 import { LockKeyhole, Eye, EyeOff, UserStar } from 'lucide-vue-next';
 import { restartHubConnection } from '@/lib/api/hubConnection';
 import { authRequest } from '@/lib/api/authRequest';
+import { toast } from 'vue-sonner';
 
 const router = useRouter();
 const schema = z.object({
@@ -44,10 +45,15 @@ async function onSubmit(values: GenericObject) {
   try {
     console.log(values);
     isAdminLoginLoading.value = true; // 开始 loading
-    // var res = await authRequest.login({ username: values.userName, password: values.password });
+    const res = await authRequest.login({ username: values.userName, password: values.password });
 
     // const token = res.token;
-    // const user = res.user as User;
+    const user = res.user as User;
+        if (!user || user.role !== 'Admin') {
+      loginMessage.value = '登录失败，您不是管理员';
+      toast.error('权限不足，只有管理员可以登录');
+      return;
+    }
 
     //统一由后端返回错误信息
     // if (!user) {
@@ -56,6 +62,7 @@ async function onSubmit(values: GenericObject) {
     // }
 
     restartHubConnection();
+    toast.success('欢迎回来，管理员！');
     router.push('/admin');
 
   }

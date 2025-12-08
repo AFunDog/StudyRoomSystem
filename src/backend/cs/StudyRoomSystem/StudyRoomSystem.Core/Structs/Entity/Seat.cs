@@ -1,6 +1,4 @@
-﻿using StudyRoomSystem.Core.Structs.Entity;
-
-namespace StudyRoomSystem.Core.Structs;
+﻿namespace StudyRoomSystem.Core.Structs.Entity;
 
 public class Seat
 {

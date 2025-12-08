@@ -1,4 +1,4 @@
-﻿namespace StudyRoomSystem.Core.Structs;
+﻿namespace StudyRoomSystem.Core.Structs.Entity;
 
 /// <summary>
 /// 违规记录

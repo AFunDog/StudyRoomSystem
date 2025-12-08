@@ -19,7 +19,7 @@ const curIndex = ref(0);
 router.beforeEach(async (to, from, next) => {
   // if(to.path === '/login') return;
   console.log(to, from);
-  const allowUrls = ['/login', '/admin/login','/register','/privacy-policy','/user-agreement','/'];
+  const allowUrls = ['/login', '/admin/login','/register','/privacy-policy','/user-agreement'];
 
   if (allowUrls.includes(to.path)) return next();
 

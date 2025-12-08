@@ -6,6 +6,7 @@ import { clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { getCurrentInstance } from "vue"
 import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
+import { toast } from 'vue-sonner';
 
 
 function cn(...inputs: ClassValue[]) {
@@ -31,7 +32,9 @@ async function logout() {
     await http.post('/auth/logout'); // 后端负责清除 HttpOnly Cookie
   } catch (e) {
     console.error(e);
+    toast.error('登出失败', { description: '请检查网络或稍后再试' });
   }
+  toast.success('已登出');
   // 清理前端状态（非敏感信息）
   // store.user = null;
 }

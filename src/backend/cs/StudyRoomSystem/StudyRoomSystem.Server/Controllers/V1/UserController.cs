@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualBasic;
 using StudyRoomSystem.Core.Structs;
 using StudyRoomSystem.Core.Structs.Api;
+using StudyRoomSystem.Core.Structs.Entity;
 using StudyRoomSystem.Server.Database;
 using StudyRoomSystem.Server.Helpers;
 
