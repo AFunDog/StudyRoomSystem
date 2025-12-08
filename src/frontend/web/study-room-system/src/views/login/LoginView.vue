@@ -13,13 +13,11 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
 import { toTypedSchema } from '@vee-validate/zod';
-import z from 'zod';
-import { useForm, type GenericObject } from 'vee-validate';
-import { http } from '@/lib/utils';
+import { loginSchema } from "@/lib/validation";
+import { useForm, } from 'vee-validate';
 import { onMounted, onUnmounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import type { User } from '@/lib/types/user';
-import { LockKeyhole, Eye, EyeOff, Loader2, Info } from 'lucide-vue-next';
+import { LockKeyhole, Loader2, Info } from 'lucide-vue-next';
 import { restartHubConnection } from '@/lib/api/hubConnection';
 import { useConfig } from '@/lib/config';
 import { toast } from 'vue-sonner';
@@ -29,22 +27,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip'
 
 const router = useRouter();
-const schema = z.object({
-  userName: z.string({ required_error: '请输入用户名' })
-    .min(4, "用户名至少 4 位")
-    .max(20, "用户名不能超过 20 位")
-    .regex(/^[a-zA-Z0-9._]+$/, "用户名只能包含字母、数字、点或下划线"),
-  password: z.string({ required_error: '请输入密码' })
-    .min(8, "密码至少 8 位")
-    .max(32, "密码不能超过 32 位")
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).+$/, "密码必须包含大小写字母、数字和特殊字符"),
-  agreePolicy: z.preprocess(val => val === 'on' || val === true, z.boolean().refine(value => value, '请同意隐私政策')),
-  autoLogin: z.preprocess(val => val === 'on' || val === true, z.boolean()).optional(),
-});
-const formSchema = toTypedSchema(schema)
-// const isShowPassword = ref(false);
-const isLoginLoading = ref(false);
+
+//引入登录校验规则
+const formSchema = toTypedSchema(loginSchema);
 const form = useForm({ validationSchema: formSchema });
+
+const isLoginLoading = ref(false);
 const onSubmit = form.handleSubmit(async (values) => {
   try {
     isLoginLoading.value = true;
@@ -89,8 +77,8 @@ onUnmounted(() => {
   const config = useConfig();
   config.isBottomTagShow = true;
 });
-
 </script>
+
 <template>
   <div class="flex flex-col items-center justify-center h-full">
     <div class="w-5/6 max-w-120">

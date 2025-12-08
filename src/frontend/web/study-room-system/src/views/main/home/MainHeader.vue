@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
-import type { User } from '@/lib/types/user';
+import type { User } from '@/lib/types/User';
 
 import {
   Dialog,
@@ -39,23 +39,6 @@ const user = JSON.parse(localStorage.getItem('user')!) as User | null;
     <div>智慧自习室预约管理系统</div>
     <div class="ml-auto flex flex-row items-center gap-x-2 text-base">
       <div>{{ user?.displayName }}</div>
-      <!-- <Dialog key="userDialog">
-        <DialogTrigger as-child>
-          <UserRound class="hover:cursor-pointer"></UserRound>
-        </DialogTrigger>
-        <DialogContent class="sm:max-w-[425px]"> 
-          <DialogHeader>
-            <DialogTitle>用户信息</DialogTitle>
-            <DialogDescription>
-              <div>用户名：{{ user?.userName }}</div>
-              <div>用户角色：{{ user?.role }}</div>
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="destructive" @click="logout()">退出登录</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog> -->
       <Avatar class="hover:cursor-pointer" @click="isSheetOpen = true">
         <AvatarImage :src="user?.avatar ?? ''" />
         <AvatarFallback>

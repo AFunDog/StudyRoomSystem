@@ -11,31 +11,21 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-
 import { toTypedSchema } from '@vee-validate/zod';
-import z from 'zod';
+import { loginSchema } from "@/lib/validation/loginSchema";
 import type { GenericObject } from 'vee-validate';
-import { http } from '@/lib/utils';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import type { User } from '@/lib/types/user';
-import { LockKeyhole, Eye, EyeOff, UserStar } from 'lucide-vue-next';
+import type { User } from '@/lib/types/User';
+import { LockKeyhole, UserStar } from 'lucide-vue-next';
 import { restartHubConnection } from '@/lib/api/hubConnection';
 import { authRequest } from '@/lib/api/authRequest';
 import { toast } from 'vue-sonner';
 
 const router = useRouter();
-const schema = z.object({
-  userName: z.string({ required_error: '请输入用户名' })
-    .min(4, "用户名至少 4 位")
-    .max(20, "用户名不能超过 20 位")
-    .regex(/^[a-zA-Z0-9._]+$/, "用户名只能包含字母、数字、点或下划线"),
-  password: z.string({ required_error: '请输入密码' })
-    .min(8, "密码至少 8 位")
-    .max(32, "密码不能超过 32 位")
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).+$/, "密码必须包含大小写字母、数字和特殊字符"),
-});
-const formSchema = toTypedSchema(schema)
+
+//引入登录校验规则
+const formSchema = toTypedSchema(loginSchema);
 const loginMessage = ref('');
 
 // const isShowPassword = ref(false);

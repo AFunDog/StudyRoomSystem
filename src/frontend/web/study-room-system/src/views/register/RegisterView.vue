@@ -14,39 +14,19 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'vue-sonner';
 
 import { toTypedSchema } from '@vee-validate/zod';
-import z from 'zod';
-import { useField, useForm, type GenericObject } from 'vee-validate';
-import { http } from '@/lib/utils';
-import { onMounted, ref, watch } from 'vue';
+import { registerSchema } from "@/lib/validation";
+import { useForm } from 'vee-validate';
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import type { User } from '@/lib/types/user';
-import { LockKeyhole, Eye, EyeOff } from 'lucide-vue-next';
-import { email } from 'zod/v4';
+import { LockKeyhole } from 'lucide-vue-next';
 import { AxiosError } from 'axios';
 import { authRequest } from '@/lib/api/authRequest';
 import { Checkbox } from '@/components/ui/checkbox';
 
 const router = useRouter();
-const schema = z.object({
-  userName: z.string({ required_error: '请输入用户名' })
-    .min(4, "用户名至少 4 位")
-    .max(20, "用户名不能超过 20 位")
-    .regex(/^[a-zA-Z0-9._]+$/, "用户名只能包含字母、数字、点或下划线"),
-  campusId: z.string({ required_error: '请输入学号/工号' }),
-  // displayName: z.string().min(4,'请输入昵称').nullable(),
-  phone: z.string({ required_error: '请输入手机号' }).regex(/^1[3-9]\d{9}$/, '请输入有效的手机号'),
-  // email : z.string({ }).email('请输入有效的邮箱').nullable(),
-  password: z.string({ required_error: '请输入密码' })
-    .min(8, "密码至少 8 位")
-    .max(32, "密码不能超过 32 位")
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).+$/, "密码必须包含大小写字母、数字和特殊字符"),
-  confirmPassword: z.string({ required_error: '请输入确认密码' }),
-  agreePolicy: z.preprocess(val => val === 'on' || val === true, z.boolean().refine(value => value, '请同意隐私政策')),
-}).refine((data) => data.password === data.confirmPassword, {
-  path: ['confirmPassword'],
-  message: '确认密码与密码不一致'
-});
-const formSchema = toTypedSchema(schema)
+
+//引入注册校验规则
+const formSchema = toTypedSchema(registerSchema);
 const form = useForm({ validationSchema: formSchema });
 
 // const isShowPassword = ref(false);

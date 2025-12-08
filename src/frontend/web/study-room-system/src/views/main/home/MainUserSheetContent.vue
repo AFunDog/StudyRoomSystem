@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import type { User } from "@/lib/types/user";
+import type { User } from "@/lib/types/User";
 import { Menu, UserRound } from 'lucide-vue-next';
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { logout } from "@/lib/utils";
@@ -28,6 +28,12 @@ import { useRouter } from "vue-router";
 const router = useRouter();
 
 const user = JSON.parse(localStorage.getItem('user')!) as User | null;
+
+//登出逻辑
+async function handleLogout() {
+  await logout();        // 调用你封装好的登出逻辑
+  router.push("/login"); // 跳转到登录页
+}
 </script>
 <template>
   <SheetContent>
@@ -56,7 +62,7 @@ const user = JSON.parse(localStorage.getItem('user')!) as User | null;
       </SheetDescription>
     </SheetHeader>
     <SheetFooter class="">
-      <Button variant="destructive" @click="{ logout(); router.push('/login'); }">退出登录</Button>
+      <Button variant="destructive" @click="handleLogout">退出登录</Button>
     </SheetFooter>
   </SheetContent>
 </template>

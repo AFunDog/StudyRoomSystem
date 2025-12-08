@@ -2,37 +2,21 @@
 import { ref, onMounted } from "vue";
 import { cn } from "@/lib/utils";
 import { toast } from "vue-sonner";
+import type { Room,RoomEdit } from "@/lib/types/Room";
+import type { Seat,SeatState } from "@/lib/types/Seat";
 import { roomRequest } from "@/lib/api/roomRequest";
 import { seatRequest } from "@/lib/api/seatRequest";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectGroup, SelectItem, SelectLabel } from "@/components/ui/select";
-import { Eye, Edit, Trash, ClipboardList, Armchair } from "lucide-vue-next";
+import { Eye, Edit, Trash, ClipboardList, Armchair, Loader2 } from "lucide-vue-next";
 
-const rooms = ref<any[]>([]);
-const selectedRoom = ref<any | null>(null);
-const isAddDialogOpen = ref(false);
-const isEditDialogOpen = ref(false);
-const isConfirmDialogOpen = ref(false);
 
-const newRoom = ref({
-  name: "",
-  openHour: 8,
-  openMin: 0,
-  closeHour: 22,
-  closeMin: 0,
-  rows: 10,
-  cols: 10,
-  seatCount: 0,
-});
-const editRoom = ref<any | null>(null);
 
-// 座位管理
-const isSeatDialogOpen = ref(false);
-const currentRoomSeats = ref<any[]>([]);
-const currentRoomId = ref<string | null>(null);
-const editSeat = ref<any | null>(null);
+// 房间管理
+// 房间列表
+const rooms = ref<Room[]>([]);
 
 // 获取房间列表
 onMounted(async () => {
@@ -44,17 +28,18 @@ onMounted(async () => {
   }
 });
 
-// 查看房间详情
-async function viewRoom(room: any) {
-  try {
-    const res = await roomRequest.getRoom(room.id);
-    selectedRoom.value = res.data;
-  } catch {
-    toast.error("获取房间详情失败");
-  }
-}
-
 // 添加房间
+const isAddDialogOpen = ref(false);
+const newRoom = ref({
+  name: "",
+  openHour: 8,
+  openMin: 0,
+  closeHour: 22,
+  closeMin: 0,
+  rows: 6,
+  cols: 8,
+});
+// 提交创建
 async function handleAddRoom() {
   try {
     const payload = {
@@ -67,15 +52,9 @@ async function handleAddRoom() {
     const res = await roomRequest.createRoom(payload);
     const roomId = res.data.id;
 
-    // 根据 seatCount 创建座位
-    for (let i = 0; i < newRoom.value.seatCount; i++) {
-      const row = Math.floor(i / newRoom.value.cols);
-      const col = i % newRoom.value.cols;
-      await seatRequest.createSeat({ roomId, row, col });
-    }
-
     toast.success("房间和座位创建成功");
     isAddDialogOpen.value = false;
+
     const roomsRes = await roomRequest.getRooms();
     rooms.value = roomsRes.data;
   } catch {
@@ -83,38 +62,29 @@ async function handleAddRoom() {
   }
 }
 
+// 查看房间详情
+const selectedRoom = ref<Room | null>(null);
+const selectedRoomSeats = ref<SeatState[]>([]);
+
+async function viewRoom(room: Room) {
+  if (selectedRoom.value?.id === room.id) {
+    // 如果当前已展开的是同一个房间，再次点击则收起
+    selectedRoom.value = null;
+    selectedRoomSeats.value = [];
+    return;
+  }
+  try {
+    const res = await roomRequest.getRoom(room.id);
+    selectedRoom.value = res.data;
+    selectedRoomSeats.value = toSeatStateArray(res.data);
+  } catch {
+    toast.error("获取房间详情失败");
+  }
+}
+
 // 修改房间
-async function handleEditRoom() {
-  try {
-    const payload = {
-      id: editRoom.value.id,
-      name: editRoom.value.name,
-      openTime: `${editRoom.value.openHour.toString().padStart(2, "0")}:${editRoom.value.openMin.toString().padStart(2, "0")}:00`,
-      closeTime: `${editRoom.value.closeHour.toString().padStart(2, "0")}:${editRoom.value.closeMin.toString().padStart(2, "0")}:00`,
-      rows: editRoom.value.rows,
-      cols: editRoom.value.cols,
-    };
-    await roomRequest.updateRoom(payload);
-    toast.success("房间修改成功");
-    isEditDialogOpen.value = false;
-    const res = await roomRequest.getRooms();
-    rooms.value = res.data;
-  } catch {
-    toast.error("房间修改失败");
-  }
-}
-
-// 删除房间
-async function handleDeleteRoom(id: string) {
-  try {
-    await roomRequest.deleteRoom(id);
-    toast.success("房间已删除");
-    rooms.value = rooms.value.filter((r) => r.id !== id);
-  } catch {
-    toast.error("删除房间失败");
-  }
-}
-
+const editRoom = ref<RoomEdit | null>(null);
+const isEditDialogOpen = ref(false);
 // 打开编辑弹窗
 function openEdit(room: any) {
   const [openH, openM] = String(room.openTime).split(":");
@@ -128,8 +98,83 @@ function openEdit(room: any) {
   };
   isEditDialogOpen.value = true;
 }
+// 提交修改
+const isSavingEditRoom = ref(false); // 房间修改状态量
+async function handleEditRoom() {
+  if (!editRoom.value) return; // 判空
+  try {
+    isSavingEditRoom.value = true; // 开始加载动画
+    const toTimeString = (hour: number, min: number) =>
+      `${hour.toString().padStart(2, "0")}:${min.toString().padStart(2, "0")}:00`;
+
+    const payload = {
+      id: editRoom.value.id,
+      name: editRoom.value.name,
+      openTime: toTimeString(editRoom.value.openHour, editRoom.value.openMin),
+      closeTime: toTimeString(editRoom.value.closeHour, editRoom.value.closeMin),
+      rows: editRoom.value.rows,
+      cols: editRoom.value.cols,
+    };
+
+    await roomRequest.updateRoom(payload);
+    toast.success("房间修改成功");
+    isEditDialogOpen.value = false;
+
+    const res = await roomRequest.getRooms();
+    rooms.value = res.data;
+  } catch {
+    toast.error("房间修改失败");
+  } finally {
+    isSavingEditRoom.value = false; // 结束加载动画
+  }
+}
+// 确认修改弹窗
+const isConfirmDialogOpen = ref(false);
+// 自定义确认修改房间弹窗
+function openConfirmDialog() {
+  isConfirmDialogOpen.value = true;
+}
+async function confirmEditRoom() {
+  await handleEditRoom();
+  isConfirmDialogOpen.value = false;
+}
+
+// 删除房间
+const isDeleteDialogOpen = ref(false); // 控制删除确认弹窗
+const pendingDeleteRoomId = ref<string | null>(null); // 记录待删除的房间 ID
+const deletingRoomId = ref<string | null>(null); // 当前正在删除的房间 ID
+// 打开删除确认弹窗，记录删除id
+function openDeleteDialog(id: string) {
+  pendingDeleteRoomId.value = id;
+  isDeleteDialogOpen.value = true;
+}
+// 确认删除房间
+async function confirmDeleteRoom() {
+  if (!pendingDeleteRoomId.value) return;
+  deletingRoomId.value = pendingDeleteRoomId.value; // 设置加载状态
+  try {
+    await roomRequest.deleteRoom(pendingDeleteRoomId.value);
+    toast.success("房间已删除");
+    rooms.value = rooms.value.filter(r => r.id !== pendingDeleteRoomId.value);
+  } catch {
+    toast.error("删除房间失败");
+  } finally {
+    isDeleteDialogOpen.value = false;
+    deletingRoomId.value = null; // 清除加载状态
+    pendingDeleteRoomId.value = null;
+  }
+}
+
+
 
 // 座位管理
+// 当前房间的座位状态
+const currentRoomSeats = ref<SeatState[]>([]);
+// 当前正在管理的房间 ID
+const currentRoomId = ref<string | null>(null);
+// 控制座位管理弹窗（暂未使用）
+const isSeatDialogOpen = ref(false);
+//切换座位管理展开/收起状态
 function toggleSeatManagement(room: any) {
   if (currentRoomId.value === room.id) {
     currentRoomId.value = null; // 再次点击收起
@@ -139,46 +184,74 @@ function toggleSeatManagement(room: any) {
   }
 }
 
-async function loadSeats(roomId: string) {
-  const res = await roomRequest.getRoom(roomId);
-  // 初始化座位状态：没有的设为灰色
-  const seats = Array(res.data.rows * res.data.cols).fill(null).map((_, i) => {
-    const row = Math.floor(i / res.data.cols);
-    const col = i % res.data.cols;
-    const seat = res.data.seats?.find(s => s.row === row && s.col === col);
-    return { row, col, open: !!seat };
-  });
-  currentRoomSeats.value = seats;
-}
-
-function toggleSeat(index: number) {
-  const seat = currentRoomSeats.value[index];
-  seat.open = !seat.open; // 只切换状态，不直接调用 API
-}
-
-async function saveSeats() {
-  try {
-    for (const seat of currentRoomSeats.value) {
-      if (seat.open && !seat.id) {
-        await seatRequest.createSeat({ roomId: currentRoomId.value!, row: seat.row, col: seat.col });
-      } else if (!seat.open && seat.id) {
-        await seatRequest.deleteSeat(seat.id);
-      }
+// 将后端 Room 数据转换为 SeatState 数组，用于前端渲染和交互
+function toSeatStateArray(room: Room): SeatState[] {
+  const seats: SeatState[] = [];
+  for (let i = 0; i < room.rows; i++) {
+    for (let j = 0; j < room.cols; j++) {
+      const match = room.seats?.find(s => s.row === i && s.col === j);
+      seats.push({
+        row: i,
+        col: j,
+        id: match?.id ?? null,
+        open: !!match
+      });
     }
-    toast.success("座位设置已保存");
-    loadSeats(currentRoomId.value!); // 刷新状态
+  }
+  return seats;
+}
+
+// 加载指定房间的座位数据，并转换为 SeatState 格式
+async function loadSeats(roomId: string) {
+  try {
+    const res = await roomRequest.getRoom(roomId);
+    currentRoomSeats.value = toSeatStateArray(res.data);
   } catch {
-    toast.error("保存座位设置失败");
+    toast.error("加载座位数据失败");
   }
 }
 
-// 自定义确认修改房间弹窗
-function openConfirmDialog() {
-  isConfirmDialogOpen.value = true;
+// 切换某个座位的启用状态（不立即保存）
+function toggleSeat(index: number) {
+  const seat = currentRoomSeats.value[index];
+  if (!seat) return; // 防止越界
+  seat.open = !seat.open;
 }
-async function confirmEditRoom() {
-  await handleEditRoom();
-  isConfirmDialogOpen.value = false;
+
+// 保存当前座位设置
+const isSavingSeats = ref(false); // 保存按钮加载状态
+async function saveSeats() {
+  try {
+
+    isSavingSeats.value = true; // 开始加载动画
+
+    // 创建座位
+    const createTasks = currentRoomSeats.value
+      .filter(seat => seat.open && !seat.id)
+      .map(async seat => {
+        const res = await seatRequest.createSeat({
+          roomId: currentRoomId.value!,
+          row: seat.row,
+          col: seat.col
+        });
+        seat.id = res.data.id;
+      });
+    // 删除座位
+    const deleteTasks = currentRoomSeats.value
+      .filter(seat => !seat.open && seat.id)
+      .map(seat => seatRequest.deleteSeat(seat.id!).then(() => {
+        seat.id = null;
+      }));
+
+    await Promise.all([...createTasks, ...deleteTasks]);
+
+    toast.success("座位设置已保存");
+    await loadSeats(currentRoomId.value!);
+  } catch {
+    toast.error("保存座位设置失败");
+  } finally {
+    isSavingSeats.value = false; // 结束加载动画
+  }
 }
 </script>
 
@@ -186,7 +259,7 @@ async function confirmEditRoom() {
   <div>
     <h2 class="text-xl font-bold mb-4">房间管理</h2>
     <div class="flex justify-end mb-4">
-      <Button @click="isAddDialogOpen = true">添加房间</Button>
+      <Button class="hover:brightness-110" @click="isAddDialogOpen = true">添加房间</Button>
     </div>
 
     <table class="w-full border-collapse border border-gray-300">
@@ -212,19 +285,19 @@ async function confirmEditRoom() {
             <td class="border p-2">{{ room.seats?.length || 0 }}</td>
             <td class="border p-2 flex gap-x-2">
               <!-- 原有按钮保持不变 -->
-              <Button class="bg-green-500 text-white px-2 py-1 rounded flex items-center gap-x-1"
+              <Button class="bg-green-500 hover:bg-green-500 hover:brightness-110 text-white px-2 py-1 rounded flex items-center gap-x-1"
                       @click="viewRoom(room)">
                 <Eye class="size-4" /> 查看
               </Button>
-              <Button class="bg-yellow-500 text-white px-2 py-1 rounded flex items-center gap-x-1"
+              <Button class="bg-yellow-500 hover:bg-yellow-500 hover:brightness-110 text-white px-2 py-1 rounded flex items-center gap-x-1"
                       @click="openEdit(room)">
-                <Edit class="size-4" /> 修改
+                <Edit class="size-4" /> 编辑
               </Button>
-              <Button class="bg-red-500 text-white px-2 py-1 rounded flex items-center gap-x-1"
-                      @click="handleDeleteRoom(room.id)">
-                <Trash class="size-4" /> 删除
+              <Button class="bg-red-600 hover:bg-red-600 hover:brightness-110 text-white px-2 py-1 rounded flex items-center gap-x-1"
+                      @click="openDeleteDialog(room.id)">
+                <Trash class="size-4" />删除
               </Button>
-              <Button class="bg-primary text-white px-2 py-1 rounded flex items-center gap-x-1"
+              <Button class="bg-primary hover:brightness-110 text-white px-2 py-1 rounded flex items-center gap-x-1"
                       @click="toggleSeatManagement(room)">
                 <ClipboardList class="size-4" /> 座位管理
               </Button>
@@ -266,9 +339,9 @@ async function confirmEditRoom() {
                   
                     <!-- 保存按钮 -->
                     <div class="mt-4 flex justify-end">
-                      <Button class="bg-primary text-white px-4 py-2 rounded"
+                      <Button class="bg-primary hover:brightness-110 text-white px-4 py-2 rounded"
                               @click="saveSeats">
-                        保存座位设置
+                        <Loader2 v-if="isSavingSeats" class="size-4 animate-spin mr-2" />{{ isSavingSeats ? '保存中...' : '保存座位设置' }}
                       </Button>
                     </div>
                   </div>
@@ -280,17 +353,39 @@ async function confirmEditRoom() {
       </tbody>
     </table>
 
+
+    <!-- 房间管理 -->
     <!-- 查看房间详情 -->
     <div v-if="selectedRoom" class="mt-6 p-4 border rounded bg-muted">
       <h3 class="text-lg font-bold mb-2">房间详情：{{ selectedRoom.name }}</h3>
-      <p class="mb-2 text-sm text-muted-foreground">座位布局（{{ selectedRoom.rows }} x {{ selectedRoom.cols }}）：</p>
-      <div class="grid gap-1" :style="`grid-template-columns: repeat(${selectedRoom.cols}, minmax(20px, 1fr))`">
-        <div
-          v-for="seat in selectedRoom.seats"
-          :key="seat.id"
-          class="bg-primary text-white text-xs p-1 text-center rounded"
-        >
-          {{ seat.row }}-{{ seat.col }}
+      <p class="mb-2 text-sm text-muted-foreground">
+        座位布局（{{ selectedRoom.rows }} x {{ selectedRoom.cols }}）
+      </p>
+    
+      <!-- 座位网格，带最大高度和滚动条 -->
+      <div class="max-h-96 overflow-y-auto border rounded p-2 mt-2">
+        <div :class="cn('grid gap-1')"
+             :style="{ 'grid-template-columns': `repeat(${selectedRoom.cols},1fr)` }">
+          <div v-for="(seat, i) in selectedRoomSeats" :key="i">
+            <Armchair
+              class="size-12 transition-colors ease-in-out"
+              :class="seat.open ? 'text-green-500' : 'text-gray-400'"
+            />
+          </div>
+        </div>
+      </div>
+    
+      <!-- 图例说明 -->
+      <div class="mt-4 flex gap-x-6 text-sm text-muted-foreground">
+        <div class="flex items-center gap-x-2">
+          <Armchair class="size-6 text-gray-400" /> 未开放
+        </div>
+        <div class="flex items-center gap-x-2">
+          <Armchair class="size-6 text-green-500" /> 已开放
+        </div>
+        <!-- 未来预约状态 -->
+        <div class="flex items-center gap-x-2">
+          <Armchair class="size-6 text-red-500" /> 已预约
         </div>
       </div>
     </div>
@@ -327,7 +422,6 @@ async function confirmEditRoom() {
             </Select>
             <span>分</span>
           </div>
-        
           <!-- 截至时间 -->
           <div class="flex items-center gap-x-2">
             <span class="text-sm text-black">截至时间</span>
@@ -352,18 +446,12 @@ async function confirmEditRoom() {
             </Select>
             <span>分</span>
           </div>
-        
           <!-- 房间大小 -->
           <div class="flex items-center gap-x-2">
             <span class="text-sm text-black">房间大小</span>
             <Input v-model="newRoom.rows" type="number" placeholder="row" class="w-24" />
             <Input v-model="newRoom.cols" type="number" placeholder="col" class="w-24" />
           </div>  
-          <!-- 座位数量 -->
-          <div class="flex items-center gap-x-2 mt-2">
-            <span class="text-sm text-black">座位数量</span>
-            <Input v-model="newRoom.seatCount" type="number" placeholder="请输入座位数量" class="w-36" />
-          </div>
         </div>
         <DialogFooter>
           <Button @click="handleAddRoom">确认</Button>
@@ -438,7 +526,7 @@ async function confirmEditRoom() {
           </div>
         </div>
         <DialogFooter>
-          <Button @click="openConfirmDialog">保存</Button>
+          <Button class="hover:brightness-110" @click="openConfirmDialog">保存</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -451,32 +539,30 @@ async function confirmEditRoom() {
         </DialogHeader>
         <p class="text-sm text-muted-foreground">确定要保存修改吗？</p>
         <DialogFooter>
-          <Button variant="secondary" @click="isConfirmDialogOpen = false">取消</Button>
-          <Button class="bg-primary text-white" @click="confirmEditRoom">确认</Button>
+          <Button class="hover:brightness-90" variant="secondary" @click="isConfirmDialogOpen = false">取消</Button>
+          <Button class="bg-primary hover:brightness-90 text-white flex items-center gap-x-2"
+                  :disabled="isSavingEditRoom"
+                  @click="confirmEditRoom">
+            <Loader2 v-if="isSavingEditRoom" class="size-4 animate-spin" />
+            {{ isSavingEditRoom ? '保存中...' : '确定' }}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-
-    <!-- 座位管理弹窗 -->
-    <Dialog v-model:open="isSeatDialogOpen">
+    <!-- 删除确认弹窗 -->
+    <Dialog v-model:open="isDeleteDialogOpen">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>座位管理</DialogTitle>
+          <DialogTitle>确认删除</DialogTitle>
         </DialogHeader>
-      
-        <!-- 座位列表 -->
-        <div class="grid gap-1" :style="`grid-template-columns: repeat(${selectedRoom?.cols || 0}, minmax(20px, 1fr))`">
-          <div
-            v-for="seat in currentRoomSeats"
-            :key="seat.id"
-            class="border p-2 text-center rounded"
-          >
-            {{ seat.row }}-{{ seat.col }}
-          </div>
-        </div>
-      
+        <p class="text-sm text-muted-foreground">确定要删除这个房间吗？此操作不可恢复。</p>
         <DialogFooter>
-          <Button variant="secondary" @click="isSeatDialogOpen = false">关闭</Button>
+          <Button class="hover:brightness-90" variant="secondary" @click="isDeleteDialogOpen = false">取消</Button>
+          <Button class="bg-red-600 hover:bg-red-600 hover:brightness-90 text-white flex items-center gap-x-2"
+              :disabled="deletingRoomId === pendingDeleteRoomId"@click="confirmDeleteRoom">
+            <Loader2 v-if="deletingRoomId === pendingDeleteRoomId" class="size-4 animate-spin" />
+            {{ deletingRoomId === pendingDeleteRoomId ? '删除中...' : '确认删除' }}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

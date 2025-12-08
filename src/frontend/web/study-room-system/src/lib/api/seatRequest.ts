@@ -11,4 +11,7 @@ export const seatRequest = {
   // 修改座位信息
   updateSeat: (data: { id: string; roomId?: string; row?: number; col?: number }) =>
     http.put("/seat", data),
+
+  // 删除座位
+  deleteSeat: (id: string) => http.delete(`/seat/${id}`)
 };
