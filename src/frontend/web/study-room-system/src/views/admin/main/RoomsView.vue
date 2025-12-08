@@ -145,7 +145,7 @@ async function loadSeats(roomId: string) {
   const seats = Array(res.data.rows * res.data.cols).fill(null).map((_, i) => {
     const row = Math.floor(i / res.data.cols);
     const col = i % res.data.cols;
-    const seat = res.data.seats?.find(s => s.row === row && s.col === col);
+    const seat = res.data.seats?.find((s : any) => s.row === row && s.col === col);
     return { row, col, open: !!seat };
   });
   currentRoomSeats.value = seats;
@@ -162,7 +162,7 @@ async function saveSeats() {
       if (seat.open && !seat.id) {
         await seatRequest.createSeat({ roomId: currentRoomId.value!, row: seat.row, col: seat.col });
       } else if (!seat.open && seat.id) {
-        await seatRequest.deleteSeat(seat.id);
+        // await seatRequest.deleteSeat(seat.id);
       }
     }
     toast.success("座位设置已保存");

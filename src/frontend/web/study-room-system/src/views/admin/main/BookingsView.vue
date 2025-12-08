@@ -12,8 +12,8 @@ const isLoading = ref(false);
 async function loadBookings() {
   isLoading.value = true;
   try {
-    const res = await bookingRequest.getAllBookings();
-    bookings.value = res.data;
+    const res = await bookingRequest.getMyBookings();
+    bookings.value = res;
   } catch {
     toast.error("获取预约列表失败");
   } finally {
