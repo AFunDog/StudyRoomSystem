@@ -16,9 +16,7 @@ public class LoginRequest
     public required string Password { get; set; }
 }
 
-public abstract class LoginResponse;
-
-public sealed class LoginResponseOk : LoginResponse
+public sealed class LoginResponseOk 
 {
     public required DateTime Expiration { get; set; }
     public required User User { get; set; }
