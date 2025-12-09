@@ -138,12 +138,47 @@ public class UserController : ControllerBase
     [EndpointDescription("管理员需要使用该接口注册，注册成功之后需要使用用户名密码登录")]
     public async Task<IActionResult> RegisterAdmin([FromBody] RegisterRequest request)
     {
+        // 检查用户名是否已存在
         if ((await AppDbContext.Users.FirstOrDefaultAsync(x => x.UserName == request.UserName)) is not null)
         {
             return Conflict(
                 new ProblemDetails()
                 {
                     Title = "用户名已存在"
+                }
+            );
+        }
+
+        // 检查学号/工号是否已存在
+        if ((await AppDbContext.Users.FirstOrDefaultAsync(x => x.CampusId == request.CampusId)) is not null)
+        {
+            return Conflict(
+                new ProblemDetails()
+                {
+                    Title = "学号/工号已存在"
+                }
+            );
+        }
+
+        // 检查手机号是否已存在
+        if ((await AppDbContext.Users.FirstOrDefaultAsync(x => x.Phone == request.Phone)) is not null)
+        {
+            return Conflict(
+                new ProblemDetails()
+                {
+                    Title = "手机号已存在"
+                }
+            );
+        }
+
+        // 检查邮箱是否已存在
+        if ((await AppDbContext.Users.FirstOrDefaultAsync(x => string.IsNullOrEmpty(x.Email) && x.Email == request.Email
+            )) is not null)
+        {
+            return Conflict(
+                new ProblemDetails()
+                {
+                    Title = "邮箱已存在"
                 }
             );
         }
