@@ -88,7 +88,8 @@ public class UserController : ControllerBase
         }
 
         // 检查邮箱是否已存在
-        if ((await AppDbContext.Users.FirstOrDefaultAsync(x => !string.IsNullOrEmpty(x.Email) && x.Email == request.Email
+        if ((await AppDbContext.Users.FirstOrDefaultAsync(x =>
+                !string.IsNullOrEmpty(x.Email) && x.Email == request.Email
             )) is not null)
         {
             return Conflict(
@@ -172,7 +173,8 @@ public class UserController : ControllerBase
         }
 
         // 检查邮箱是否已存在
-        if ((await AppDbContext.Users.FirstOrDefaultAsync(x => !string.IsNullOrEmpty(x.Email) && x.Email == request.Email
+        if ((await AppDbContext.Users.FirstOrDefaultAsync(x =>
+                !string.IsNullOrEmpty(x.Email) && x.Email == request.Email
             )) is not null)
         {
             return Conflict(
@@ -209,16 +211,10 @@ public class UserController : ControllerBase
     public class EditRequestNormal
     {
         public required Guid Id { get; set; }
-        [MaxLength(128)]
-        public required string DisplayName { get; set; }
-        [MaxLength(64)]
-        public required string CampusId { get; set; }
-        [MaxLength(64)]
-        [Phone]
-        public required string Phone { get; set; }
-        [MaxLength(64)]
-        [EmailAddress]
-        public string? Email { get; set; }
+        [MaxLength(128)] public required string DisplayName { get; set; }
+        [MaxLength(64)] public required string CampusId { get; set; }
+        [MaxLength(64)] [Phone] public required string Phone { get; set; }
+        [MaxLength(64)] [EmailAddress] public string? Email { get; set; }
     }
 
     // TODO
@@ -245,12 +241,8 @@ public class UserController : ControllerBase
     public class EditRequestPassword
     {
         public required Guid Id { get; set; }
-        [MaxLength(64)]
-        [MinLength(8)]
-        public required string OldPassword { get; set; }
-        [MaxLength(64)]
-        [MinLength(8)]
-        public required string NewPassword { get; set; }
+        [MaxLength(64)] [MinLength(8)] public required string OldPassword { get; set; }
+        [MaxLength(64)] [MinLength(8)] public required string NewPassword { get; set; }
     }
 
     [HttpPut("password")]
@@ -276,8 +268,7 @@ public class UserController : ControllerBase
     public class EditRequestRole
     {
         public required Guid Id { get; set; }
-        [Required]
-        public required string Role { get; set; }
+        [Required] public required string Role { get; set; }
     }
 
     [HttpPut("role")]
@@ -302,11 +293,28 @@ public class UserController : ControllerBase
     #region Delete
 
     // 用户不能自己注销
-    [HttpDelete]
-    [Authorize(AuthorizationHelper.Policy.Admin)]
+    [HttpDelete("{id:guid}")]
+    // [Authorize(AuthorizationHelper.Policy.Admin)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [EndpointSummary("管理员删除用户")]
     public async Task<IActionResult> DeleteUser([FromQuery]Guid id)
     {
+        var user = await AppDbContext.Users.SingleOrDefaultAsync(x => x.Id == id);
+        if (user is null)
+            return NotFound(new ProblemDetails() { Title = "用户不存在" });
+        var complaints = AppDbContext.Complaints.Where(x => x.SendUserId == id);
+        AppDbContext.Complaints.RemoveRange(complaints);
+        complaints = AppDbContext.Complaints.Where(x => x.ReceiveUserId == id);
+        AppDbContext.Complaints.RemoveRange(complaints);
+        complaints = AppDbContext.Complaints.Where(x => x.HandleUserId == id);
+        AppDbContext.Complaints.RemoveRange(complaints);
+        var violation = AppDbContext.Violations.Where(x => x.UserId == id);
+        AppDbContext.Violations.RemoveRange(violation);
+        var booking = AppDbContext.Bookings.Where(x => x.UserId == id);
+        AppDbContext.Bookings.RemoveRange(booking);
+        AppDbContext.Users.Remove(user);
+        await AppDbContext.SaveChangesAsync();
         return Ok();
     }
 
@@ -335,7 +343,7 @@ public class UserController : ControllerBase
     [Authorize(AuthorizationHelper.Policy.Admin)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [EndpointSummary("管理员获取所有用户")]
-    public async Task<IActionResult> GetAllUsers([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    public async Task<IActionResult> GetAllUsers([FromQuery] int page=1 , [FromQuery] int pageSize = 20)
     {
         if (page < 1)
             page = 1;
