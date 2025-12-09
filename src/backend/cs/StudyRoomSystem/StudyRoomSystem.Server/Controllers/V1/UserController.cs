@@ -88,7 +88,7 @@ public class UserController : ControllerBase
         }
 
         // 检查邮箱是否已存在
-        if ((await AppDbContext.Users.FirstOrDefaultAsync(x => string.IsNullOrEmpty(x.Email) && x.Email == request.Email
+        if ((await AppDbContext.Users.FirstOrDefaultAsync(x => !string.IsNullOrEmpty(x.Email) && x.Email == request.Email
             )) is not null)
         {
             return Conflict(
@@ -172,7 +172,7 @@ public class UserController : ControllerBase
         }
 
         // 检查邮箱是否已存在
-        if ((await AppDbContext.Users.FirstOrDefaultAsync(x => string.IsNullOrEmpty(x.Email) && x.Email == request.Email
+        if ((await AppDbContext.Users.FirstOrDefaultAsync(x => !string.IsNullOrEmpty(x.Email) && x.Email == request.Email
             )) is not null)
         {
             return Conflict(
