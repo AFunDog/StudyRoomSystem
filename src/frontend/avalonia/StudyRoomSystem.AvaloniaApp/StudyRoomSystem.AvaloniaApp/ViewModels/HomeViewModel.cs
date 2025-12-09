@@ -25,13 +25,17 @@ public sealed partial class HomeViewModel : ViewModelBase
     public partial bool IsUserSheetOpen { get; set; }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SelectedRoomWidth), nameof(SelectedRoomHeight))]
     public partial Room? SelectedRoom { get; set; }
+    public int SelectedRoomWidth => SelectedRoom?.Cols * 32 ?? 0;
+    public int SelectedRoomHeight => SelectedRoom?.Rows * 32 ?? 0;
 
-    public AvaloniaList<Seat> SelectedRoomSeats { get; set; } = [];
+    private SourceCache<Seat,Guid> SelectedRoomSeatCache { get; } = new(x => x.Id);
+    public IReadOnlyCollection<Seat> SelectedRoomSeats { get; }
+
+
     [ObservableProperty]
-    public partial int SelectedRoomWidth { get; set; }
-    [ObservableProperty]
-    public partial int SelectedRoomHeight { get; set; }
+    public partial User? User { get; set; }
 
     // public AvaloniaDictionary<Guid, Booking> MyBookings { get; set; } = new()
     // {
@@ -118,6 +122,9 @@ public sealed partial class HomeViewModel : ViewModelBase
 
         RoomCache.Connect().Bind(out var rooms).Subscribe();
         Rooms = rooms;
+        
+        SelectedRoomSeatCache.Connect().Bind(out var selectedRoomSeats).Subscribe();
+        SelectedRoomSeats = selectedRoomSeats;
 
         #endregion
     }
@@ -133,6 +140,9 @@ public sealed partial class HomeViewModel : ViewModelBase
 
         RoomCache.Connect().Bind(out var rooms).Subscribe();
         Rooms = rooms;
+        
+        SelectedRoomSeatCache.Connect().Bind(out var selectedRoomSeats).Subscribe();
+        SelectedRoomSeats = selectedRoomSeats;
 
         InitDataCommand.Execute(null);
     }
@@ -156,10 +166,7 @@ public sealed partial class HomeViewModel : ViewModelBase
     private void SelectRoom(Room room)
     {
         SelectedRoom = room;
-        SelectedRoomSeats.Clear();
-        SelectedRoomSeats.AddRange(room.Seats);
-        SelectedRoomWidth = room.Rows * 32;
-        SelectedRoomHeight = room.Cols * 32;
+        SelectedRoomSeatCache.Refresh(room.Seats);
     }
 
     [RelayCommand]

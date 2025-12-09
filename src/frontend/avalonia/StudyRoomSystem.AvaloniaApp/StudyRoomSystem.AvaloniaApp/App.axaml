@@ -11,6 +11,7 @@
         <FluentTheme />
         <shadUi:ShadTheme />
         <StyleInclude Source="./Controls/DialogHost.axaml" />
+        <StyleInclude Source="./Controls/SheetHost.axaml" />
         <!-- 默认样式 -->
         <Style Selector="StackPanel">
             <Setter Property="Spacing" Value="8"></Setter>

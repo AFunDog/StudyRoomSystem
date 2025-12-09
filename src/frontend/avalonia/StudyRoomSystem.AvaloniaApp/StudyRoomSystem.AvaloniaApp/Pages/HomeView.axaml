@@ -178,10 +178,27 @@
             </Panel>
         </Grid>
         <!-- 抽屉 -->
-        <controls:UserInfoSheet HorizontalAlignment="Stretch" IsOpen="{Binding IsUserSheetOpen,Mode=TwoWay}">
-            <controls:UserInfoSheet.User>
-                <entity:User DisplayName="123" />
-            </controls:UserInfoSheet.User>
-        </controls:UserInfoSheet>
+        <controls:SheetHost HorizontalAlignment="Stretch" IsOpen="{Binding IsUserSheetOpen,Mode=TwoWay}">
+            <shadUi:Card CornerRadius="0">
+                <DockPanel LastChildFill="False">
+                    <StackPanel Orientation="Vertical" DockPanel.Dock="Top">
+
+                        <StackPanel Orientation="Horizontal">
+                            <LucideIcon Kind="CircleUserRound" Size="48" VerticalAlignment="Center"></LucideIcon>
+                            <StackPanel Orientation="Vertical" Spacing="0">
+                                <TextBlock Classes="Large" Text="{Binding User.DisplayName,Mode=OneWay}"></TextBlock>
+                                <TextBlock Classes="Muted" Text="{Binding User.UserName}"></TextBlock>
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                    <Button DockPanel.Dock="Bottom" Classes="Destructive" HorizontalAlignment="Stretch" Content="退出登录"></Button>
+                </DockPanel>
+            </shadUi:Card>
+        </controls:SheetHost>
+        <!-- <controls:UserInfoSheet HorizontalAlignment="Stretch" IsOpen="{Binding IsUserSheetOpen,Mode=TwoWay}"> -->
+        <!--     <controls:UserInfoSheet.User> -->
+        <!--         <entity:User DisplayName="123" /> -->
+        <!--     </controls:UserInfoSheet.User> -->
+        <!-- </controls:UserInfoSheet> -->
     </Panel>
 </UserControl>
