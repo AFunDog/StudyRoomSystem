@@ -151,6 +151,11 @@ public static class Service
             .RegisterViewRoute("/register", () => provider.GetRequiredKeyedService<UserControl>("RegisterView"))
             .RegisterViewRoute("/home", () => provider.GetRequiredKeyedService<UserControl>("HomeView"));
     }
+    
+    private static void InitHttpApi(IServiceProvider provider)
+    {
+        var httpApi = provider.GetRequiredService<IHttpClientFactory>().CreateClient("API");
+    }
 
     // private static void RegisterDialogs(IServiceProvider provider)
     // {

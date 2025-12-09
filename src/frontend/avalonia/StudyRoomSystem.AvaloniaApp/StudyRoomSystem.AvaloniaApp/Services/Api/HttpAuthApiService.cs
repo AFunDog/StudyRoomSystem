@@ -64,18 +64,12 @@ internal sealed partial class HttpAuthApiService : IAuthApiService
     }
 
     public async Task Logout(
-        RegisterRequest request,
         Func<HttpResponseMessage, Task>? onOk = null,
         Func<HttpResponseMessage, ProblemDetails, Task>? onError = null)
     {
         var client = HttpClientFactory.CreateClient("API");
         var res = await client.PostAsync(
-            "/api/v1/auth/logout",
-            new StringContent(
-                JsonSerializer.Serialize(request, AppJsonSerializerContext.Default.LoginRequest),
-                Encoding.UTF8,
-                "application/json"
-            )
+            "/api/v1/auth/logout",null
         );
         if (res.IsSuccessStatusCode)
         {

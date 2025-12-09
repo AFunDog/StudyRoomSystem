@@ -2,12 +2,16 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="using:StudyRoomSystem.AvaloniaApp.Controls">
     <Design.PreviewWith>
-        <controls:SheetHost />
+        <Panel Width="450" Height="800">
+            <controls:SheetHost IsOpen="True">
+                <Border  Background="AntiqueWhite"></Border>
+            </controls:SheetHost>
+        </Panel>
     </Design.PreviewWith>
 
     <Style Selector="controls|SheetHost">
         <!-- Set Defaults -->
-        <Style Selector=":is(Control)#PART_Content">
+        <Style Selector="^ :is(Control)#PART_Content">
             <!-- TODO px随宽度变化 -->
             <Setter Property="RenderTransform" Value="translateX(300px)"></Setter>
             <Setter Property="Transitions">
@@ -18,10 +22,10 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        <Style Selector=":is(controls|SheetHost)[IsOpen=True] :is(Control)#PART_Content">
+        <Style Selector="^[IsOpen=True] :is(Control)#PART_Content">
             <Setter Property="RenderTransform" Value="translateX(0px)"></Setter>
         </Style>
-        <Style Selector=":is(Control)#PART_Mask">
+        <Style Selector="^ :is(Control)#PART_Mask">
             <Setter Property="Opacity" Value="0"></Setter>
             <Setter Property="Transitions">
                 <Setter.Value>
@@ -32,10 +36,10 @@
             </Setter>
             <Setter Property="IsHitTestVisible" Value="False"></Setter>
         </Style>
-        <Style Selector=":is(Control)#PART_Mask[Opacity=0]">
+        <Style Selector="^ :is(Control)#PART_Mask[Opacity=0]">
             <Setter Property="IsVisible" Value="False"></Setter>
         </Style>
-        <Style Selector=":is(controls|SheetHost)[IsOpen=True] :is(Control)#PART_Mask">
+        <Style Selector="^[IsOpen=True] :is(Control)#PART_Mask">
             <Setter Property="Opacity" Value="0.5"></Setter>
             <Setter Property="IsHitTestVisible" Value="True"></Setter>
         </Style>
@@ -45,13 +49,13 @@
                     <Panel Name="PART_Mask" Background="Black">
                         <Interaction.Behaviors>
                             <PointerPressedEventTrigger RoutingStrategies="Bubble">
-                                <ChangeAvaloniaPropertyAction TargetProperty="{x:Static controls:UserInfoSheet.IsOpenProperty}"
+                                <ChangeAvaloniaPropertyAction TargetProperty="{x:Static controls:SheetHost.IsOpenProperty}"
                                                               Value="False"
-                                                              TargetObject="{Binding $parent[controls:UserInfoSheet]}" />
+                                                              TargetObject="{Binding $parent[controls:SheetHost]}" />
                             </PointerPressedEventTrigger>
                         </Interaction.Behaviors>
                     </Panel>
-                    <Panel Name="PART_Content">
+                    <Panel Name="PART_Content"  Width="300" HorizontalAlignment="Right">
                         <ContentPresenter ContentTemplate="{TemplateBinding ContentTemplate}" Content="{TemplateBinding Content}"></ContentPresenter>
                     </Panel>
                 </Panel>
