@@ -12,12 +12,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toTypedSchema } from '@vee-validate/zod';
-import { loginSchema } from "@/lib/validation/loginSchema";
-import type { GenericObject } from 'vee-validate';
+import { adminLoginSchema } from "@/lib/validation/loginSchema";
+import { useForm, } from 'vee-validate';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import type { User } from '@/lib/types/User';
-import { LockKeyhole, UserStar } from 'lucide-vue-next';
+import { LockKeyhole, UserStar, Loader2 } from 'lucide-vue-next';
 import { restartHubConnection } from '@/lib/api/hubConnection';
 import { authRequest } from '@/lib/api/authRequest';
 import { toast } from 'vue-sonner';
@@ -25,13 +25,16 @@ import { toast } from 'vue-sonner';
 const router = useRouter();
 
 //引入登录校验规则
-const formSchema = toTypedSchema(loginSchema);
+const formSchema = toTypedSchema(adminLoginSchema);
+const form = useForm({ validationSchema: formSchema });
+
 const loginMessage = ref('');
 
 // const isShowPassword = ref(false);
+
 const isAdminLoginLoading = ref(false); // 管理员登录按钮 loading 状态
 
-async function onSubmit(values: GenericObject) {
+const onSubmit = form.handleSubmit(async (values) => {
   try {
     console.log(values);
     isAdminLoginLoading.value = true; // 开始 loading
@@ -63,8 +66,7 @@ async function onSubmit(values: GenericObject) {
   finally {
     isAdminLoginLoading.value = false; // 结束 loading
   }
-}
-
+});
 </script>
 <template>
   <div class="flex flex-col items-center justify-center h-screen">
@@ -78,7 +80,7 @@ async function onSubmit(values: GenericObject) {
           <div class="text-sm text-muted-foreground">欢迎来到智慧自习室预约管理系统</div>
         </CardHeader>
         <CardContent>
-          <Form class="flex flex-col gap-y-4" :validation-schema="formSchema" @submit="onSubmit">
+          <form class="flex flex-col gap-y-4" @submit="onSubmit">
             <FormField v-slot="{ componentField }" name="userName">
               <FormItem>
                 <FormLabel>用户名</FormLabel>
@@ -120,7 +122,7 @@ async function onSubmit(values: GenericObject) {
               <!-- <Button class="hover:cursor-pointer" type="button" variant="secondary"
                 @click="router.push('/register')">注册</Button> -->
             </div>
-          </Form>
+          </form>
         </CardContent>
       </Card>
     </div>

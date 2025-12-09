@@ -5,7 +5,7 @@ import { userRequest } from '@/lib/api/userRequest';
 import { authRequest } from '@/lib/api/authRequest';
 import { toast } from 'vue-sonner';
 import { Button } from '@/components/ui/button';
-import { Edit, Trash } from "lucide-vue-next";
+import { Edit, Trash, Loader2 } from "lucide-vue-next";
 import type { User, UserCreateInput } from "@/lib/types/User";
 
 // 表单相关
@@ -13,7 +13,7 @@ import {
   Form, FormField, FormItem, FormLabel, FormControl, FormMessage
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toTypedSchema } from '@vee-validate/zod';
 import { useForm } from 'vee-validate';
 import { adminAddUserSchema } from '@/lib/validation/userSchema';
@@ -57,29 +57,38 @@ function openAdd(role: 'user' | 'admin') {
 }
 
 // 提交逻辑
-const onAddSubmit = async (values: UserCreateInput) => {
-  try {
-    const payload = {
-      userName: values.userName,
-      password: values.password,
-      campusId: values.campusId,
-      phone: values.phone,
-      email: values.email,
-      displayName: values.displayName
-    };
-    // 根据角色调用不同接口
-    if (addRole.value === 'user') {
-      await authRequest.register(payload);
-    } else {
-      await authRequest.registerAdmin(payload);
-    }
+const onAddSubmit = form.handleSubmit(async (values: UserCreateInput) => {
+  console.log('开始执行添加用户逻辑，角色：', addRole.value);
+  console.log('提交的表单数据：', values);
+
+  const payload = {
+    userName: values.userName,
+    password: values.password,
+    campusId: values.campusId,
+    phone: values.phone,
+    email: values.email,
+    displayName: values.displayName
+  };
+  console.log('准备发送的请求参数：', payload);
+
+  let res;
+  if (addRole.value === 'user') {
+    console.log('调用普通用户注册接口 /user/register');
+    res = await authRequest.register(payload);
+  } else {
+    console.log('调用管理员注册接口 /user/registerAdmin');
+    res = await authRequest.registerAdmin(payload);
+  }
+
+  // 根据返回结果直接判断
+  if (res?.status === 409) {
+    toast.error(`添加失败：${res.title}`);
+  } else {
     toast.success('用户添加成功');
     showAddDialog.value = false;
-    loadUsers();
-  } catch {
-    toast.error('添加失败');
+    await loadUsers();
   }
-};
+});
 
 // 编辑弹窗状态
 const editingUser = ref<any | null>(null);
@@ -101,14 +110,32 @@ async function saveEdit() {
   }
 }
 
-// 删除用户
-async function handleDelete(id: string) {
+// 删除相关状态
+const isDeleteDialogOpen = ref(false);          // 删除确认弹窗显隐
+const pendingDeleteUserId = ref<string | null>(null); // 待删除的用户ID
+const deletingUserId = ref<string | null>(null);      // 当前正在删除的用户ID
+// 打开删除确认弹窗
+function openDeleteDialog(id: string) {
+  pendingDeleteUserId.value = id;
+  isDeleteDialogOpen.value = true;
+}
+// 确认删除
+async function confirmDeleteUser() {
+  if (!pendingDeleteUserId.value) return;
+  deletingUserId.value = pendingDeleteUserId.value;
   try {
-    await userRequest.deleteUser(id);
-    users.value = users.value.filter(u => u.id !== id);
-    toast.success('用户已删除');
-  } catch {
+    const res = await userRequest.deleteUser(pendingDeleteUserId.value);
+    if (res.status === 200 || res.status === 204) {
+      users.value = users.value.filter(u => u.id !== pendingDeleteUserId.value);
+      toast.success('用户已删除');
+    } 
+  } catch (err) {
+    console.error('删除失败:', err);
     toast.error('删除失败');
+  } finally {
+    deletingUserId.value = null;
+    pendingDeleteUserId.value = null;
+    isDeleteDialogOpen.value = false;
   }
 }
 </script>
@@ -116,7 +143,7 @@ async function handleDelete(id: string) {
 <template>
   <div>
     <h2 class="text-xl font-bold mb-4">用户管理</h2>
-    <div class="flex justify-end mb-4">
+    <div class="flex justify-end gap-x-6 mb-4">
       <Button class="hover:brightness-110" @click="openAdd('user')">添加普通用户</Button>
       <Button class="hover:brightness-110" @click="openAdd('admin')">添加管理员</Button>
     </div>
@@ -145,8 +172,12 @@ async function handleDelete(id: string) {
           <td class="border p-2 flex gap-x-2">
             <Button class="bg-yellow-500 hover:bg-yellow-500 hover:brightness-110 text-white px-2 py-1 rounded flex items-center gap-x-1"
                   @click="handleEdit(user)"><Edit class="size-4" />编辑</Button>
-            <Button class="bg-red-600 hover:bg-red-600 hover:brightness-110 text-white px-2 py-1 rounded flex items-center gap-x-1"
-                  @click="handleDelete(user.id)"><Trash class="size-4" />删除</Button>
+            <Button
+              class="bg-red-600 hover:bg-red-600 hover:brightness-110 text-white px-2 py-1 rounded flex items-center gap-x-1"
+              @click="openDeleteDialog(user.id)"
+            >
+              <Trash class="size-4" />删除
+            </Button>
           </td>
         </tr>
       </tbody>
@@ -183,7 +214,7 @@ async function handleDelete(id: string) {
         <DialogHeader>
           <DialogTitle>添加{{ addRole === 'user' ? '普通用户' : '管理员' }}</DialogTitle>
         </DialogHeader>
-        <Form :form="form" class="flex flex-col gap-y-4" @submit="form.handleSubmit(onAddSubmit)">
+        <form class="flex flex-col gap-y-4" @submit="onAddSubmit">
 
           <!-- 用户名 -->
           <FormField name="userName" v-slot="{ componentField }" validate-on-blur validate-on-input>
@@ -264,13 +295,33 @@ async function handleDelete(id: string) {
 
           <!-- 提交按钮 -->
           <div class="flex justify-end gap-2 mt-4">
-            <Button type="button" variant="secondary" @click="showAddDialog = false">取消</Button>
-            <Button type="submit">提交</Button>
+            <Button type="button" class="hover:brightness-90" variant="secondary" @click="showAddDialog = false">取消</Button>
+            <Button type="submit" class="hover:brightness-90">添加</Button>
           </div>
-        </Form>
+        </form>
       </DialogContent>
     </Dialog>
 
+    <!-- 删除确认弹窗 -->
+    <Dialog v-model:open="isDeleteDialogOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>确认删除</DialogTitle>
+        </DialogHeader>
+        <p class="text-sm text-muted-foreground">确定要删除这个用户吗？此操作不可恢复。</p>
+        <DialogFooter>
+          <Button class="hover:brightness-90" variant="secondary" @click="isDeleteDialogOpen = false">取消</Button>
+          <Button
+            class="bg-red-600 hover:bg-red-600 hover:brightness-90 text-white flex items-center gap-x-2"
+            :disabled="deletingUserId === pendingDeleteUserId"
+            @click="confirmDeleteUser"
+          >
+            <Loader2 v-if="deletingUserId === pendingDeleteUserId" class="size-4 animate-spin" />
+            {{ deletingUserId === pendingDeleteUserId ? '删除中...' : '确认删除' }}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
     
   </div>
 </template>

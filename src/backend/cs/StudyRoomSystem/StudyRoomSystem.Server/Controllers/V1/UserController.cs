@@ -305,7 +305,7 @@ public class UserController : ControllerBase
     [HttpDelete]
     [Authorize(AuthorizationHelper.Policy.Admin)]
     [EndpointSummary("管理员删除用户")]
-    public async Task<IActionResult> DeleteUser(Guid id)
+    public async Task<IActionResult> DeleteUser([FromQuery]Guid id)
     {
         return Ok();
     }
