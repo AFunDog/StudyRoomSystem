@@ -42,11 +42,9 @@ public class UserController : ControllerBase
 
         return Ok(await AppDbContext.Users.SingleOrDefaultAsync(x => x.Id == userId));
     }
-    
-    
+
+
     #region Register
-
-
 
     [HttpPost("register")]
     [AllowAnonymous]
@@ -90,7 +88,7 @@ public class UserController : ControllerBase
         }
 
         // 检查邮箱是否已存在
-        if ((await AppDbContext.Users.FirstOrDefaultAsync(x => string.IsNullOrEmpty(x.Email) && x.Email == request.Email
+        if ((await AppDbContext.Users.FirstOrDefaultAsync(x => !string.IsNullOrEmpty(x.Email) && x.Email == request.Email
             )) is not null)
         {
             return Conflict(
@@ -174,7 +172,7 @@ public class UserController : ControllerBase
         }
 
         // 检查邮箱是否已存在
-        if ((await AppDbContext.Users.FirstOrDefaultAsync(x => string.IsNullOrEmpty(x.Email) && x.Email == request.Email
+        if ((await AppDbContext.Users.FirstOrDefaultAsync(x => !string.IsNullOrEmpty(x.Email) && x.Email == request.Email
             )) is not null)
         {
             return Conflict(
@@ -204,7 +202,7 @@ public class UserController : ControllerBase
     }
 
     #endregion
-    
+
 
     #region Edit
 
@@ -221,7 +219,6 @@ public class UserController : ControllerBase
         [MaxLength(64)]
         [EmailAddress]
         public string? Email { get; set; }
-        
     }
 
     // TODO
@@ -230,21 +227,21 @@ public class UserController : ControllerBase
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     [ProducesResponseType<User>(StatusCodes.Status200OK)]
     [EndpointSummary("用户更新基本信息")]
-    public async Task<IActionResult>EditUserNormal([FromBody] EditRequestNormal request)
+    public async Task<IActionResult> EditUserNormal([FromBody] EditRequestNormal request)
     {
         var userId = this.GetLoginUserId();
         var loginUser = await AppDbContext.Users.SingleOrDefaultAsync(b => b.Id == request.Id);
-        if (loginUser is null) 
-            return NotFound(new ProblemDetails() { Title = "用户不存在" }); 
-        loginUser.DisplayName=request.DisplayName;
-        loginUser.CampusId=request.CampusId;
-        loginUser.Phone=request.Phone;
-        loginUser.Email=request.Email??loginUser.Email;
+        if (loginUser is null)
+            return NotFound(new ProblemDetails() { Title = "用户不存在" });
+        loginUser.DisplayName = request.DisplayName;
+        loginUser.CampusId = request.CampusId;
+        loginUser.Phone = request.Phone;
+        loginUser.Email = request.Email ?? loginUser.Email;
         await AppDbContext.SaveChangesAsync();
         var track = AppDbContext.Users.Update(loginUser);
         return Ok(track.Entity);
     }
-    
+
     public class EditRequestPassword
     {
         public required Guid Id { get; set; }
@@ -254,7 +251,6 @@ public class UserController : ControllerBase
         [MaxLength(64)]
         [MinLength(8)]
         public required string NewPassword { get; set; }
-        
     }
 
     [HttpPut("password")]
@@ -263,7 +259,7 @@ public class UserController : ControllerBase
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
     [ProducesResponseType<User>(StatusCodes.Status200OK)]
     [EndpointSummary("用户更新密码")]
-    public async Task<IActionResult>EditUserPassword([FromBody] EditRequestPassword request)
+    public async Task<IActionResult> EditUserPassword([FromBody] EditRequestPassword request)
     {
         var userId = this.GetLoginUserId();
         var loginUser = await AppDbContext.Users.SingleOrDefaultAsync(b => b.Id == request.Id);
@@ -271,40 +267,40 @@ public class UserController : ControllerBase
             return NotFound(new ProblemDetails() { Title = "用户不存在" });
         if (!PasswordHelper.CheckPassword(request.OldPassword, loginUser.Password))
             return Conflict(new ProblemDetails() { Title = "旧密码错误" });
-        loginUser.Password=PasswordHelper.HashPassword(request.NewPassword);
+        loginUser.Password = PasswordHelper.HashPassword(request.NewPassword);
         await AppDbContext.SaveChangesAsync();
         var track = AppDbContext.Users.Update(loginUser);
         return Ok(track.Entity);
     }
-    
+
     public class EditRequestRole
     {
         public required Guid Id { get; set; }
         [Required]
         public required string Role { get; set; }
     }
-    
+
     [HttpPut("role")]
     [Authorize(AuthorizationHelper.Policy.Admin)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     [ProducesResponseType<User>(StatusCodes.Status200OK)]
     [EndpointSummary("管理员修改用户角色")]
-    public async Task<IActionResult>EditUserRole([FromBody] EditRequestRole request)
+    public async Task<IActionResult> EditUserRole([FromBody] EditRequestRole request)
     {
         var userId = this.GetLoginUserId();
         var loginUser = await AppDbContext.Users.SingleOrDefaultAsync(b => b.Id == request.Id);
         if (loginUser is null)
             return NotFound(new ProblemDetails() { Title = "用户不存在" });
-        loginUser.Role=request.Role;
+        loginUser.Role = request.Role;
         await AppDbContext.SaveChangesAsync();
         var track = AppDbContext.Users.Update(loginUser);
         return Ok(track.Entity);
     }
-    
+
     #endregion
 
     #region Delete
-    
+
     // 用户不能自己注销
     [HttpDelete]
     [Authorize(AuthorizationHelper.Policy.Admin)]
@@ -313,7 +309,7 @@ public class UserController : ControllerBase
     {
         return Ok();
     }
-    
+
     #endregion
 
     // #region 锁定用户
@@ -332,18 +328,21 @@ public class UserController : ControllerBase
     //
     //
     // #endregion
-    
+
     #region Get
-    
+
     [HttpGet("all")]
     [Authorize(AuthorizationHelper.Policy.Admin)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [EndpointSummary("管理员获取所有用户")]
     public async Task<IActionResult> GetAllUsers([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
-        if (page < 1) page = 1;
-        if (pageSize < 1) pageSize = 1;
-        if (pageSize > 100) pageSize = 100; // 限制最大页大小
+        if (page < 1)
+            page = 1;
+        if (pageSize < 1)
+            pageSize = 1;
+        if (pageSize > 100)
+            pageSize = 100; // 限制最大页大小
 
         var query = AppDbContext.Users.AsQueryable();
 
@@ -355,18 +354,16 @@ public class UserController : ControllerBase
             .Take(pageSize)
             .ToArrayAsync();
 
-        return Ok(new
-        {
-            total,
-            page,
-            pageSize,
-            items
-        });
+        return Ok(
+            new
+            {
+                total,
+                page,
+                pageSize,
+                items
+            }
+        );
     }
 
-    
-    
-    
-    
     #endregion
 }
