@@ -3,6 +3,7 @@
              x:Class="StudyRoomSystem.AvaloniaApp.App"
              xmlns:shadUi="clr-namespace:ShadUI;assembly=ShadUI"
              xmlns:avalonia="clr-namespace:Zeng.CoreLibrary.Toolkit.Avalonia;assembly=CoreLibrary.Toolkit.Avalonia"
+             xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
              RequestedThemeVariant="Default">
 
     <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
@@ -10,6 +11,7 @@
     <Application.Styles>
         <FluentTheme />
         <shadUi:ShadTheme />
+        <labs:ControlThemes/>
         <StyleInclude Source="./Controls/DialogHost.axaml" />
         <StyleInclude Source="./Controls/SheetHost.axaml" />
         <!-- 默认样式 -->
