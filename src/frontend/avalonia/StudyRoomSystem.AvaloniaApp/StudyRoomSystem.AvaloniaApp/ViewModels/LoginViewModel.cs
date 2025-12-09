@@ -59,20 +59,20 @@ public partial class LoginViewModel : ViewModelBase
                 {
                     UserProvider.User = loginResponse.User;
                     Logger.Trace().Information("登录成功 {@Res}", loginResponse);
-                    Service.ToastManager.CreateToast("登录成功").ShowSuccess();
+                    Service.ToastManager.CreateToast("登录成功").DismissOnClick().ShowSuccess();
                     NavigateService.Navigate("/home");
                 },
                 async (res, error) =>
                 {
                     Logger.Trace().Error("登录失败 {@Error}", error);
-                    Service.ToastManager.CreateToast("登录失败").WithContent(error.Title).ShowError();
+                    Service.ToastManager.CreateToast("登录失败").DismissOnClick().WithContent(error.Title).ShowError();
                 }
             );
         }
         catch (Exception e)
         {
             Logger.Trace().Error(e, "登录");
-            Service.ToastManager.CreateToast("登录失败").ShowError();
+            Service.ToastManager.CreateToast("登录失败").DismissOnClick().ShowError();
         }
     }
 

@@ -11,11 +11,15 @@
              xmlns:converters="clr-namespace:StudyRoomSystem.AvaloniaApp.Converters"
              xmlns:generic="using:System.Collections.Generic"
              xmlns:system="using:System"
+             xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
              mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="800"
              x:Class="StudyRoomSystem.AvaloniaApp.Pages.HomeView"
              x:DataType="vm:HomeViewModel">
     <Design.DataContext>
         <vm:HomeViewModel>
+            <vm:HomeViewModel.User>
+                <entity:User DisplayName="DisplayName" UserName="UserName" Avatar="avares://StudyRoomSystem.AvaloniaApp/Assets/avalonia-logo.ico"></entity:User>
+            </vm:HomeViewModel.User>
         </vm:HomeViewModel>
     </Design.DataContext>
     <Panel>
@@ -184,7 +188,18 @@
                     <StackPanel Orientation="Vertical" DockPanel.Dock="Top">
 
                         <StackPanel Orientation="Horizontal">
-                            <LucideIcon Kind="CircleUserRound" Size="48" VerticalAlignment="Center"></LucideIcon>
+                            <Panel Width="64" Height="64">
+                                <labs:AsyncImage RenderOptions.BitmapInterpolationMode="HighQuality" CornerRadius="999" IsCacheEnabled="True" Name="SheetUserAvatar" Source="{Binding UserAvatarUrl}" />
+                                <Viewbox>
+                                    <LucideIcon Kind="CircleUserRound" IsVisible="{Binding #SheetUserAvatar.State,Mode=OneWay,Converter={x:Static ObjectConverters.NotEqual},ConverterParameter={x:Static labs:AsyncImageState.Loaded}}" VerticalAlignment="Center">
+                                        <!-- <LucideIcon.Styles> -->
+                                        <!--     <Style Selector="LucideIcon"> -->
+                                        <!--          -->
+                                        <!--     </Style> -->
+                                        <!-- </LucideIcon.Styles> -->
+                                    </LucideIcon>
+                                </Viewbox>
+                            </Panel>
                             <StackPanel Orientation="Vertical" Spacing="0">
                                 <TextBlock Classes="Large" Text="{Binding User.DisplayName,Mode=OneWay}"></TextBlock>
                                 <TextBlock Classes="Muted" Text="{Binding User.UserName}"></TextBlock>

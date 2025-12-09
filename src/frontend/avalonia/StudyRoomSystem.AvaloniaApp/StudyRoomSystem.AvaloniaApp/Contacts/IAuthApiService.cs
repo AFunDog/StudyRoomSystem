@@ -14,7 +14,6 @@ public interface IAuthApiService
         Func<HttpResponseMessage, ProblemDetails, Task>? onError = null);
 
     Task Logout(
-        RegisterRequest request,
         Func<HttpResponseMessage, Task>? onOk = null,
         Func<HttpResponseMessage, ProblemDetails, Task>? onError = null);
 

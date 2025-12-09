@@ -13,6 +13,7 @@ using StudyRoomSystem.AvaloniaApp.Controls;
 using StudyRoomSystem.Core.Structs;
 using StudyRoomSystem.Core.Structs.Entity;
 using Zeng.CoreLibrary.Toolkit.Logging;
+using Zeng.CoreLibrary.Toolkit.Services.Navigate;
 
 namespace StudyRoomSystem.AvaloniaApp.ViewModels;
 
@@ -20,6 +21,8 @@ public sealed partial class HomeViewModel : ViewModelBase
 {
     private IRoomApiService RoomApiService { get; }
     private IBookingApiService BookingApiService { get; }
+    private IAuthApiService AuthApiService { get; }
+    private INavigateService NavigateService { get; }
 
     [ObservableProperty]
     public partial bool IsUserSheetOpen { get; set; }
@@ -30,12 +33,15 @@ public sealed partial class HomeViewModel : ViewModelBase
     public int SelectedRoomWidth => SelectedRoom?.Cols * 32 ?? 0;
     public int SelectedRoomHeight => SelectedRoom?.Rows * 32 ?? 0;
 
-    private SourceCache<Seat,Guid> SelectedRoomSeatCache { get; } = new(x => x.Id);
+    private SourceCache<Seat, Guid> SelectedRoomSeatCache { get; } = new(x => x.Id);
     public IReadOnlyCollection<Seat> SelectedRoomSeats { get; }
 
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(UserAvatarUrl))]
     public partial User? User { get; set; }
+
+    public Uri? UserAvatarUrl => User?.Avatar is null ? null : new Uri(new Uri("https://localhost:7175"), User.Avatar);
 
     // public AvaloniaDictionary<Guid, Booking> MyBookings { get; set; } = new()
     // {
@@ -122,7 +128,7 @@ public sealed partial class HomeViewModel : ViewModelBase
 
         RoomCache.Connect().Bind(out var rooms).Subscribe();
         Rooms = rooms;
-        
+
         SelectedRoomSeatCache.Connect().Bind(out var selectedRoomSeats).Subscribe();
         SelectedRoomSeats = selectedRoomSeats;
 
@@ -130,19 +136,28 @@ public sealed partial class HomeViewModel : ViewModelBase
     }
 #pragma warning restore CS8618 // 在退出构造函数时，不可为 null 的字段必须包含非 null 值。请考虑添加 'required' 修饰符或声明为可以为 null。
 
-    public HomeViewModel(IRoomApiService roomApiService, IBookingApiService bookingApiService)
+    public HomeViewModel(
+        IRoomApiService roomApiService,
+        IBookingApiService bookingApiService,
+        IUserProvider userProvider,
+        IAuthApiService authApiService,
+        INavigateService navigateService)
     {
         RoomApiService = roomApiService;
         BookingApiService = bookingApiService;
+        AuthApiService = authApiService;
+        NavigateService = navigateService;
 
         MyBookingCache.Connect().Bind(out var myBookings).Subscribe();
         MyBookings = myBookings;
 
         RoomCache.Connect().Bind(out var rooms).Subscribe();
         Rooms = rooms;
-        
+
         SelectedRoomSeatCache.Connect().Bind(out var selectedRoomSeats).Subscribe();
         SelectedRoomSeats = selectedRoomSeats;
+
+        User = userProvider.User;
 
         InitDataCommand.Execute(null);
     }
@@ -166,7 +181,11 @@ public sealed partial class HomeViewModel : ViewModelBase
     private void SelectRoom(Room room)
     {
         SelectedRoom = room;
-        SelectedRoomSeatCache.Refresh(room.Seats);
+        SelectedRoomSeatCache.Edit(x =>
+        {
+            x.Clear();
+            x.AddOrUpdate(SelectedRoom.Seats);
+        });
     }
 
     [RelayCommand]
@@ -181,6 +200,10 @@ public sealed partial class HomeViewModel : ViewModelBase
             }
         );
         Log.Logger.Trace().Information("Show Dialog {@Res}", res);
+        if (res is not null)
+        {
+            MyBookingCache.AddOrUpdate(res);
+        }
         // var res = await DialogHost.Show(
         //     new SeatInfoContent()
         //     {
@@ -198,5 +221,16 @@ public sealed partial class HomeViewModel : ViewModelBase
         //     .WithSuccessCallback(() => { })
         //     .Show();
         // Log.Logger.Trace().Information("OpenSeatDialog {Seat}", seat);
+    }
+
+    [RelayCommand]
+    private async Task Logout()
+    {
+        await AuthApiService.Logout(async (s) =>
+            {
+                Service.ToastManager.CreateToast("退出登录").DismissOnClick().ShowSuccess();
+                NavigateService.Navigate("/login");
+            }
+        );
     }
 }
