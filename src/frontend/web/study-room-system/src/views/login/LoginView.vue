@@ -11,7 +11,6 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-
 import { toTypedSchema } from '@vee-validate/zod';
 import { loginSchema } from "@/lib/validation";
 import { useForm, } from 'vee-validate';
@@ -35,6 +34,7 @@ const form = useForm({ validationSchema: formSchema });
 const isLoginLoading = ref(false);
 const onSubmit = form.handleSubmit(async (values) => {
   try {
+    console.log(values);
     isLoginLoading.value = true;
     var res = await authRequest.login({ username: values.userName, password: values.password });
 

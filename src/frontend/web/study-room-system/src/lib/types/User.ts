@@ -1,5 +1,3 @@
-
-
 export interface User {
     id: string;
     createTime: string;

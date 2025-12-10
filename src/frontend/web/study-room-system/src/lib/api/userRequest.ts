@@ -9,7 +9,7 @@ export const userRequest = {
     http.put('/user/information', data),
 
   // 删除用户
-  deleteUser: (id: string) => http.delete(`/user?id=${id}`),
+  deleteUser: (id: string) => http.delete(`/user/${id}`),
 
   // 用户更新密码
   updatePassword: (data: { id: string; oldPassword: string; newPassword: string }) => 
