@@ -19,6 +19,6 @@
       POSTGRES_DB: study_room_system
     volumes:
       - ./src/database/pgsql/initdb:/docker-entrypoint-initdb.d
-      - pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql
 volumes:
   pgdata:
