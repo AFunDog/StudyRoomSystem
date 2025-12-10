@@ -25,17 +25,12 @@ public class SeatController : ControllerBase
         AppDbContext = appDbContext;
     }
 
-    // [HttpGet]
-    // [AllowAnonymous]
-    // public async Task<IActionResult> GetAll()
-    // {
-    //     return Ok(await AppDbContext.Seats.AsNoTracking().Include(x => x.Room).ToListAsync());
-    // }
-
     [HttpGet("{id:guid}")]
     [AllowAnonymous]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<Seat>(StatusCodes.Status200OK)]
     [EndpointSummary("获取指定座位信息")]
-    [EndpointDescription("获取座位信息时会附带所在房间信息和该座位的历史预约信息")]
+    [EndpointDescription("获取座位信息时会附带所在房间信息")]
     public async Task<IActionResult> Get(Guid id)
     {
         var seat = await AppDbContext.Seats.AsNoTracking().Include(x => x.Room).SingleOrDefaultAsync(x => x.Id == id);
