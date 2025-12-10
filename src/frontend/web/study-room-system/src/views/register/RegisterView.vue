@@ -18,7 +18,7 @@ import { registerSchema } from "@/lib/validation";
 import { useForm } from 'vee-validate';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { LockKeyhole } from 'lucide-vue-next';
+import { LockKeyhole, Loader2 } from 'lucide-vue-next';
 import { AxiosError } from 'axios';
 import { authRequest } from '@/lib/api/authRequest';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -189,9 +189,9 @@ function handleBack() {
                       </Checkbox>
                       <div class="text-sm [&>a]:text-primary">
                         我已阅读并同意
-                        <a href="">《隐私政策》</a>
+                        <a href="/privacy-policy" target="_blank">《隐私政策》</a>
                         和
-                        <a href="">《用户协议》</a>
+                        <a href="/user-agreement" target="_blank">《用户协议》</a>
                       </div>
                     </div>
                   </div>

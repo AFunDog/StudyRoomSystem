@@ -298,7 +298,7 @@ public class UserController : ControllerBase
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [EndpointSummary("管理员删除用户")]
-    public async Task<IActionResult> DeleteUser([FromQuery]Guid id)
+    public async Task<IActionResult> DeleteUser(Guid id)
     {
         var user = await AppDbContext.Users.SingleOrDefaultAsync(x => x.Id == id);
         if (user is null)

@@ -36,7 +36,7 @@ const onSubmit = form.handleSubmit(async (values) => {
   try {
     console.log(values);
     isLoginLoading.value = true;
-    var res = await authRequest.login({ username: values.userName, password: values.password });
+    var res = await authRequest.login({ userName: values.userName, password: values.password });
 
     //改成 HttpOnly Cookie 后，后端依然会生成token，但不会再通过 res.token 返回给前端
     //前端 JS 无法访问这个 Cookie，但浏览器会自动在请求时带上它
@@ -49,20 +49,31 @@ const onSubmit = form.handleSubmit(async (values) => {
     //   return;
     // }
 
-    restartHubConnection();
-    //登录成功信息
-    toast.success(`欢迎回来，${res.user.displayName}`)
-    router.push('/');
+    // 登录成功（200）
+    console.log('登录成功1');
+    if (res.status === 200) {
+      console.log('登录成功2');
+      restartHubConnection();
+      toast.success(`欢迎回来,${res.data.user.userName}!`);
+      router.push('/');
+    }
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      const status = error.response?.status;
+      console.log('登录失败，状态码：', status);
 
-  }
-  catch (error) {
-    if (error instanceof AxiosError)
-      toast.error('登录失败', { description: error.response?.data.message });
-    else
-      toast.error('登录失败');
-    console.log(error);
-  }
-  finally {
+      if (status === 401) {
+        toast.error('登录失败：用户名或密码错误');
+      } else if (status === 500) {
+        toast.error('登录失败：服务器内部错误，请稍后再试');
+      } else {
+        toast.error('登录失败：请检查网络并稍后重试');
+      }
+    } else {
+      toast.error('登录失败：发生未知错误');
+    }
+    console.error(error);
+  } finally {
     isLoginLoading.value = false;
   }
 });

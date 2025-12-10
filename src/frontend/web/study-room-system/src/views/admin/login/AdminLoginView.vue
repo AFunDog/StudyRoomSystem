@@ -21,14 +21,13 @@ import { LockKeyhole, UserStar, Loader2 } from 'lucide-vue-next';
 import { restartHubConnection } from '@/lib/api/hubConnection';
 import { authRequest } from '@/lib/api/authRequest';
 import { toast } from 'vue-sonner';
+import { AxiosError } from 'axios';
 
 const router = useRouter();
 
 //引入登录校验规则
 const formSchema = toTypedSchema(adminLoginSchema);
 const form = useForm({ validationSchema: formSchema });
-
-const loginMessage = ref('');
 
 // const isShowPassword = ref(false);
 
@@ -38,12 +37,11 @@ const onSubmit = form.handleSubmit(async (values) => {
   try {
     console.log(values);
     isAdminLoginLoading.value = true; // 开始 loading
-    const res = await authRequest.login({ username: values.userName, password: values.password });
+    const res = await authRequest.login({ userName: values.userName, password: values.password });
 
     // const token = res.token;
-    const user = res.user as User;
+    const user = res.data.user as User;
         if (!user || user.role !== 'Admin') {
-      loginMessage.value = '登录失败，您不是管理员';
       toast.error('权限不足，只有管理员可以登录');
       return;
     }
@@ -60,8 +58,21 @@ const onSubmit = form.handleSubmit(async (values) => {
 
   }
   catch (error) {
-    loginMessage.value = '登录失败，请检查用户名或密码';
-    console.log(error);
+    if (error instanceof AxiosError) {
+      const status = error.response?.status;
+      console.log('登录失败，状态码：', status);
+
+      if (status === 401) {
+        toast.error('登录失败：用户名或密码错误');
+      } else if (status === 500) {
+        toast.error('登录失败：服务器内部错误，请稍后再试');
+      } else {
+        toast.error('登录失败：请检查网络并稍后重试');
+      }
+    } else {
+      toast.error('登录失败：发生未知错误');
+    }
+    console.error(error);
   }
   finally {
     isAdminLoginLoading.value = false; // 结束 loading
@@ -113,7 +124,6 @@ const onSubmit = form.handleSubmit(async (values) => {
                 <FormMessage />
               </FormItem>
             </FormField>
-            <div>{{ loginMessage }}</div>
             <div class="flex flex-row justify-center items-center gap-x-4">
               <Button class="hover:cursor-pointer" type="submit" :disabled="isAdminLoginLoading">
                 <Loader2 v-if="isAdminLoginLoading" class="size-4 animate-spin mr-2" />

@@ -29,6 +29,7 @@ onMounted(async () => {
 });
 
 // 添加房间
+const isAddingRoom = ref(false); // 添加房间加载状态
 const isAddDialogOpen = ref(false);
 const newRoom = ref({
   name: "",
@@ -42,6 +43,7 @@ const newRoom = ref({
 // 提交创建
 async function handleAddRoom() {
   try {
+    isAddingRoom.value = true; // 开始加载动画
     const payload = {
       name: newRoom.value.name,
       openTime: `${newRoom.value.openHour.toString().padStart(2, "0")}:${newRoom.value.openMin.toString().padStart(2, "0")}:00`,
@@ -52,13 +54,15 @@ async function handleAddRoom() {
     const res = await roomRequest.createRoom(payload);
     const roomId = res.data.id;
 
-    toast.success("房间和座位创建成功");
+    toast.success("房间创建成功");
     isAddDialogOpen.value = false;
 
     const roomsRes = await roomRequest.getRooms();
     rooms.value = roomsRes.data;
   } catch {
-    toast.error("房间或座位创建失败");
+    toast.error("房间创建失败");
+  } finally {
+    isAddingRoom.value = false; // 结束加载动画
   }
 }
 
@@ -356,39 +360,41 @@ async function saveSeats() {
 
     <!-- 房间管理 -->
     <!-- 查看房间详情 -->
-    <div v-if="selectedRoom" class="mt-6 p-4 border rounded bg-muted">
-      <h3 class="text-lg font-bold mb-2">房间详情：{{ selectedRoom.name }}</h3>
-      <p class="mb-2 text-sm text-muted-foreground">
-        座位布局（{{ selectedRoom.rows }} x {{ selectedRoom.cols }}）
-      </p>
-    
-      <!-- 座位网格，带最大高度和滚动条 -->
-      <div class="max-h-96 overflow-y-auto border rounded p-2 mt-2">
-        <div :class="cn('grid gap-1')"
-             :style="{ 'grid-template-columns': `repeat(${selectedRoom.cols},1fr)` }">
-          <div v-for="(seat, i) in selectedRoomSeats" :key="i">
-            <Armchair
-              class="size-12 transition-colors ease-in-out"
-              :class="seat.open ? 'text-green-500' : 'text-gray-400'"
-            />
+    <transition name="slide-fade">
+      <div v-if="selectedRoom" class="mt-6 p-4 border rounded bg-muted slide-fade-transition">
+        <h3 class="text-lg font-bold mb-2">房间详情：{{ selectedRoom.name }}</h3>
+        <p class="mb-2 text-sm text-muted-foreground">
+          座位布局（{{ selectedRoom.rows }} x {{ selectedRoom.cols }}）
+        </p>
+      
+        <!-- 座位网格，带最大高度和滚动条 -->
+        <div class="max-h-96 overflow-y-auto border rounded p-2 mt-2">
+          <div :class="cn('grid gap-1')"
+                :style="{ 'grid-template-columns': `repeat(${selectedRoom.cols},1fr)` }">
+            <div v-for="(seat, i) in selectedRoomSeats" :key="i">
+              <Armchair
+                class="size-12 transition-colors ease-in-out"
+                :class="seat.open ? 'text-green-500' : 'text-gray-400'"
+              />
+            </div>
+          </div>
+        </div>
+      
+        <!-- 图例说明 -->
+        <div class="mt-4 flex gap-x-6 text-sm text-muted-foreground">
+          <div class="flex items-center gap-x-2">
+            <Armchair class="size-6 text-gray-400" /> 未开放
+          </div>
+          <div class="flex items-center gap-x-2">
+            <Armchair class="size-6 text-green-500" /> 已开放
+          </div>
+          <!-- 未来预约状态 -->
+          <div class="flex items-center gap-x-2">
+            <Armchair class="size-6 text-red-500" /> 已预约
           </div>
         </div>
       </div>
-    
-      <!-- 图例说明 -->
-      <div class="mt-4 flex gap-x-6 text-sm text-muted-foreground">
-        <div class="flex items-center gap-x-2">
-          <Armchair class="size-6 text-gray-400" /> 未开放
-        </div>
-        <div class="flex items-center gap-x-2">
-          <Armchair class="size-6 text-green-500" /> 已开放
-        </div>
-        <!-- 未来预约状态 -->
-        <div class="flex items-center gap-x-2">
-          <Armchair class="size-6 text-red-500" /> 已预约
-        </div>
-      </div>
-    </div>
+    </transition>
 
     <!-- 添加房间弹窗 -->
     <Dialog v-model:open="isAddDialogOpen">
@@ -454,7 +460,13 @@ async function saveSeats() {
           </div>  
         </div>
         <DialogFooter>
-          <Button @click="handleAddRoom">确认</Button>
+          <Button class="hover:brightness-90" variant="secondary" @click="isConfirmDialogOpen = false">取消</Button>
+          <Button class="bg-primary hover:brightness-90 text-white flex items-center gap-x-2" 
+                  :disabled="isAddingRoom"
+                  @click="handleAddRoom">
+            <Loader2 v-if="isAddingRoom" class="size-4 animate-spin" />
+            {{ isAddingRoom ? '创建中...' : '创建' }}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>  

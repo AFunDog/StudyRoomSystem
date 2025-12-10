@@ -2,9 +2,10 @@ import { AxiosError } from "axios";
 import { http } from "../utils";
 
 class AuthRequest {
-    public async login(request: { username: string, password: string }) {
+    public async login(request: { userName: string, password: string }) {
         const res = await http.post("/auth/login", request);
-        return res.data;
+        console.log(res);
+        return res;
     }
     public async logout() {
         try {

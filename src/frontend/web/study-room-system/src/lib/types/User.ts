@@ -19,3 +19,12 @@ export interface UserCreateInput {
     email?: string;       // 可选字段
     displayName?: string; // 可选字段
 }
+
+export interface UserEditInput {
+    id: string;
+    displayName: string;
+    campusId: string;
+    phone: string;
+    email?: string;
+    role: "User" | "Admin";
+}
