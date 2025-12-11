@@ -314,9 +314,16 @@ public class UserController : ControllerBase
     // 用户不能自己注销
     [HttpDelete]
     [Authorize(AuthorizationHelper.Policy.Admin)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [EndpointSummary("管理员删除用户")]
     public async Task<IActionResult> DeleteUser(Guid id)
     {
+        var user = await AppDbContext.Users.SingleOrDefaultAsync(x => x.Id == id);
+        if (user is null)
+            return NotFound(new ProblemDetails() { Title = "用户不存在" });
+        AppDbContext.Users.Remove(user);
+        await AppDbContext.SaveChangesAsync();
         return Ok();
     }
 
