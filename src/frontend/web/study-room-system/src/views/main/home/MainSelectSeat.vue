@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { inject, ref, watch } from 'vue';
-import { SELECT_ROOM } from '../define';
+import { SELECT_ROOM } from './define';
 import { cn, http } from '@/lib/utils';
 import { Armchair, Dot } from 'lucide-vue-next';
 import {
@@ -44,6 +44,7 @@ import type { GenericObject } from 'vee-validate';
 import type { DateValue } from 'reka-ui';
 import { parseDate, CalendarDate } from '@internationalized/date';
 import dayjs from 'dayjs';
+import { toast } from 'vue-sonner';
 import ViewBox from '@/components/ui/view-box/ViewBox.vue';
 import { bookingRequest } from '@/lib/api/bookingRequest';
 
@@ -81,31 +82,68 @@ function onSeatClick(seat: Seat) {
   isSelectDialogOpen.value = true;
   selectSeat.value = seat;
 }
+
+// async function onSubmit(values: GenericObject) {
+//   try {
+//     if (values.date instanceof CalendarDate)
+//       console.log({
+//         seatId: selectSeat.value?.id,
+//         startTime: dayjs(values.date.toString()).add(values.startHour, 'h').add(values.startMin, 'm').toISOString(),
+//         endTime: dayjs(values.date.toString()).add(values.endHour, 'h').add(values.endMin, 'm').toISOString(),
+//       });
+//     // const res = await http.post('/api/v1/booking', {
+//     //   seatId: selectSeat.value?.id,
+//     //   startTime: dayjs(values.date.toString()).add(values.startHour, 'h').add(values.startMin, 'm').toISOString(),
+//     //   endTime: dayjs(values.date.toString()).add(values.endHour, 'h').add(values.endMin, 'm').toISOString(),
+//     // })
+//     const res = bookingRequest.createBooking({
+//       seatId: selectSeat.value?.id!,
+//       startTime: dayjs(values.date.toString()).add(values.startHour, 'h').add(values.startMin, 'm').toISOString(),
+//       endTime: dayjs(values.date.toString()).add(values.endHour, 'h').add(values.endMin, 'm').toISOString(),
+//     });
+//     console.log(res);
+//     isSelectDialogOpen.value = false;
+//   }
+//   catch (error) {
+//     console.log(error);
+//   }
+// }
+
 async function onSubmit(values: GenericObject) {
   try {
-    if (values.date instanceof CalendarDate)
-      console.log({
-        seatId: selectSeat.value?.id,
-        startTime: dayjs(values.date.toString()).add(values.startHour, 'h').add(values.startMin, 'm').toISOString(),
-        endTime: dayjs(values.date.toString()).add(values.endHour, 'h').add(values.endMin, 'm').toISOString(),
-      });
-    // const res = await http.post('/api/v1/booking', {
-    //   seatId: selectSeat.value?.id,
-    //   startTime: dayjs(values.date.toString()).add(values.startHour, 'h').add(values.startMin, 'm').toISOString(),
-    //   endTime: dayjs(values.date.toString()).add(values.endHour, 'h').add(values.endMin, 'm').toISOString(),
-    // })
-    const res = bookingRequest.createBooking({
-      seatId: selectSeat.value?.id!,
-      startTime: dayjs(values.date.toString()).add(values.startHour, 'h').add(values.startMin, 'm').toISOString(),
-      endTime: dayjs(values.date.toString()).add(values.endHour, 'h').add(values.endMin, 'm').toISOString(),
-    });
-    console.log(res);
-    isSelectDialogOpen.value = false;
-  }
-  catch (error) {
-    console.log(error);
+    if (!(values.date instanceof CalendarDate) || !selectSeat.value) {
+      toast.error('请选择座位和预约日期')
+      return
+    }
+
+    const startTime = dayjs(values.date.toString())
+      .add(values.startHour, 'h')
+      .add(values.startMin, 'm')
+      .toISOString()
+
+    const endTime = dayjs(values.date.toString())
+      .add(values.endHour, 'h')
+      .add(values.endMin, 'm')
+      .toISOString()
+
+    const res = await bookingRequest.createBooking({
+      seatId: selectSeat.value.id,
+      startTime,
+      endTime,
+    })
+
+    if (res) {
+      toast.success('预约成功')
+      isSelectDialogOpen.value = false
+    } else {
+      toast.error('预约失败，请稍后重试')
+    }
+  } catch (error) {
+    console.log(error)
+    toast.error('预约失败，请稍后重试')
   }
 }
+
 
 // const value = ref<DateValue>();
 
@@ -258,8 +296,10 @@ async function onSubmit(values: GenericObject) {
             </Form>
           </div>
           <DialogFooter>
-            <div class="flex flex-row items-center justify-center gap-x-2">
-              <DialogClose>取消</DialogClose>
+            <div class="flex flex-row justify-end gap-x-3 w-full">
+              <DialogClose as-child>
+                <Button variant="outline">返回</Button>
+              </DialogClose>
               <Button variant="default" type="submit" form="bookseat-form">确认</Button>
             </div>
           </DialogFooter>

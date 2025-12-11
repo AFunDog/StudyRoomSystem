@@ -3,13 +3,16 @@
     build:
       context: .
       dockerfile: ./scripts/server.Dockerfile
-    ports:
-      - "80:8080"
+    # ports:
+      # - "80:8080"
     depends_on:
       - postgres
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=study_room_system;Username=postgres;Password=159241
+    networks:
+    - studyroomsystem-network
+  
   postgres:
     image: postgres:18
     restart: always
@@ -20,5 +23,24 @@
     volumes:
       - ./src/database/pgsql/initdb:/docker-entrypoint-initdb.d
       - pgdata:/var/lib/postgresql
+    networks:
+      - studyroomsystem-network
+  
+  nginx:
+    image: nginx:alpine
+    restart: always
+    ports:
+      - "80:80"     # http
+      - "443:443"   # https
+    volumes:
+      - ./scripts/nginx/conf.d:/etc/nginx/conf.d
+      - ./scripts/nginx/certs:/etc/nginx/certs
+    depends_on:
+      - studyroomsystem.server
+    networks:
+      - studyroomsystem-network
+networks:
+  studyroomsystem-network:
+    driver: bridge
 volumes:
   pgdata:
