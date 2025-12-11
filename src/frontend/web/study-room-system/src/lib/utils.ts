@@ -30,18 +30,27 @@ http.interceptors.request.use(config => {
 http.interceptors.response.use(
   res => res,
   err => {
-    if (err.response?.status === 401) {
+    const status = err.response?.status;
+    const requestUrl = err.config?.url;
+
+    if (status === 401) {
+      // 如果是登录接口返回的401，说明是账号密码错误，不提示“登录过期”
+      if (requestUrl?.includes("/auth/login")) {
+        // 交给登录页的catch去处理，不在拦截器里提示
+        return Promise.reject(err);
+      }
+
+      // 其他接口返回401，说明登录过期
       toast.error("登录已过期，请重新登录");
 
-      // 从后端响应里取角色信息
       const role = err.response?.data?.role;
-
       if (role === "Admin") {
         router.push("/admin/login");
       } else {
         router.push("/login");
       }
     }
+
     return Promise.reject(err);
   }
 );

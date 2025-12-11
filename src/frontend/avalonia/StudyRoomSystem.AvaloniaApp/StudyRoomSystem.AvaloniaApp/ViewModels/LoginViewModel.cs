@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
@@ -27,10 +28,22 @@ public partial class LoginViewModel : ViewModelBase
 #pragma warning restore CS8618 // 在退出构造函数时，不可为 null 的字段必须包含非 null 值。请考虑添加 'required' 修饰符或声明为可以为 null。
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(LoginCommand))]
+    [MinLength(4,ErrorMessage = "用户名至少4位")]
+    [MaxLength(20,ErrorMessage = "用户名不能超过20位")]
+    // TODO 用户名应该可以中文
+    [RegularExpression("^[a-zA-Z0-9._]+$",ErrorMessage = "用户名只能包含字母、数字、点或下划线")]
     public partial string UserName { get; set; } = string.Empty;
 
+    partial void OnUserNameChanged(string value) => ValidateProperty(value,nameof(UserName));
+    
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(LoginCommand))]
+    [MinLength(8,ErrorMessage = "密码至少8位")]
+    [MaxLength(32,ErrorMessage = "密码不能超过32位")]
     public partial string Password { get; set; } = string.Empty;
+
+    partial void OnPasswordChanged(string value) => ValidateProperty(value,nameof(Password));
 
     public LoginViewModel(
         ILogger logger,
@@ -44,9 +57,17 @@ public partial class LoginViewModel : ViewModelBase
         NavigateService = navigateService;
     }
 
-    [RelayCommand]
+    private bool CanLogin => !HasErrors;
+    
+    [RelayCommand(CanExecute = nameof(CanLogin))]
     private async Task Login()
     {
+        ClearErrors();
+        ValidateAllProperties();
+        
+        if(HasErrors)
+            return;
+        
         try
         {
             await AuthApiService.Login(

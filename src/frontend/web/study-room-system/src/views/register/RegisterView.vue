@@ -18,7 +18,7 @@ import { registerSchema } from "@/lib/validation";
 import { useForm } from 'vee-validate';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { LockKeyhole } from 'lucide-vue-next';
+import { LockKeyhole, Loader2 } from 'lucide-vue-next';
 import { AxiosError } from 'axios';
 import { authRequest } from '@/lib/api/authRequest';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -36,38 +36,47 @@ const isRegisterLoading = ref(false); //注册按钮状态
 const onSubmit = form.handleSubmit(async (values) => {
   try {
     console.log(values);
-    isRegisterLoading.value = true; //开始注册，设置按钮为加载状态
-    var res = await authRequest.register({
+    isRegisterLoading.value = true;
+
+    const res = await authRequest.register({
       userName: values.userName,
       password: values.password,
       campusId: values.campusId,
       phone: values.phone
-    })
+    });
 
-    // const user = res.data.user as User;
+    console.log('注册返回：', res);
 
-    //统一由后端返回错误信息
-    // if (!user) {
-    //   toast.error('注册失败');
-    //   return;
-    // }
+    // 注册成功（200）
+    console.log('注册成功1');
+    if (res.status === 200) {
+      console.log('注册成功2');
+      toast.success('注册成功，请登录');
+      router.push('/login');
+      return;
+    }
 
-    //注册成功信息
-    toast.success('注册成功，请登录')
-    router.push('/login');
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      const status = error.response?.status;
+      console.log('注册失败，状态码：', status);
 
-  }
-  catch (error) {
-    if (error instanceof AxiosError)
-      toast.error('注册失败', {
-        description: error.response?.data.message,
-      });
-    else
-      toast.error('注册失败');
-    console.log(error);
-  }
-  finally {
-    isRegisterLoading.value = false; //注册完成，恢复按钮状态
+      if (status === 400) {
+        toast.error('注册失败：请求参数错误');
+      } else if (status === 409) {
+        toast.error(`注册失败：${error.response?.data.title}`);
+      } else if (status === 500) {
+        toast.error('注册失败：服务器内部错误，请稍后再试');
+      } else {
+        toast.error('注册失败：请检查网络并稍后重试');
+      }
+    } else {
+      toast.error('注册失败：发生未知错误');
+    }
+
+    console.error(error);
+  } finally {
+    isRegisterLoading.value = false;
   }
 });
 
@@ -185,13 +194,15 @@ function handleBack() {
                 <FormControl>
                   <div>
                     <div class="flex flex-row gap-x-2 items-center">
-                      <Checkbox v-bind="componentField">
-                      </Checkbox>
+                      <Checkbox
+                        :checked="componentField.modelValue" 
+                        @update:model-value="componentField.onChange"
+                      />
                       <div class="text-sm [&>a]:text-primary">
                         我已阅读并同意
-                        <a href="">《隐私政策》</a>
+                        <a href="/privacy-policy" target="_blank">《隐私政策》</a>
                         和
-                        <a href="">《用户协议》</a>
+                        <a href="/user-agreement" target="_blank">《用户协议》</a>
                       </div>
                     </div>
                   </div>

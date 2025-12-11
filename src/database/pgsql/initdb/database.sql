@@ -2,17 +2,15 @@
 -- PostgreSQL database dump
 --
 
-\restrict J1VvD4okSVehEfMsUJFb9sb1I79j6AG4qeAeXg6FNAPRh3BuilVux6ar3Yoa4bP
+\restrict zmlMVJEBjhKnOs0wimW2RzNdaRde1KGsJRxMZKCKujA3d0adnTTb9M6wNy3exnT
 
--- Dumped from database version 16.9
--- Dumped by pg_dump version 18.0
-
--- Started on 2025-11-28 13:24:25
+-- Dumped from database version 18.1 (Ubuntu 18.1-1.pgdg22.04+2)
+-- Dumped by pg_dump version 18.1 (Ubuntu 18.1-1.pgdg22.04+2)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
--- SET transaction_timeout = 0;
+SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
@@ -22,7 +20,6 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- TOC entry 221 (class 1255 OID 17833)
 -- Name: notify_data_change(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -50,7 +47,6 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
--- TOC entry 218 (class 1259 OID 17811)
 -- Name: bookings; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -70,7 +66,6 @@ CREATE TABLE public.bookings (
 ALTER TABLE public.bookings OWNER TO postgres;
 
 --
--- TOC entry 220 (class 1259 OID 17871)
 -- Name: complaints; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -90,7 +85,6 @@ CREATE TABLE public.complaints (
 ALTER TABLE public.complaints OWNER TO postgres;
 
 --
--- TOC entry 216 (class 1259 OID 17794)
 -- Name: rooms; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -107,7 +101,6 @@ CREATE TABLE public.rooms (
 ALTER TABLE public.rooms OWNER TO postgres;
 
 --
--- TOC entry 217 (class 1259 OID 17801)
 -- Name: seats; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -122,7 +115,6 @@ CREATE TABLE public.seats (
 ALTER TABLE public.seats OWNER TO postgres;
 
 --
--- TOC entry 215 (class 1259 OID 17787)
 -- Name: users; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -143,7 +135,6 @@ CREATE TABLE public.users (
 ALTER TABLE public.users OWNER TO postgres;
 
 --
--- TOC entry 219 (class 1259 OID 17858)
 -- Name: violations; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -159,8 +150,6 @@ CREATE TABLE public.violations (
 ALTER TABLE public.violations OWNER TO postgres;
 
 --
--- TOC entry 4880 (class 0 OID 17811)
--- Dependencies: 218
 -- Data for Name: bookings; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -168,12 +157,14 @@ COPY public.bookings (id, user_id, seat_id, create_time, start_time, end_time, c
 019a4cd3-4750-e38a-9e5d-8f824d042851	019a1b60-de17-ead2-3902-26fb51efc5bf	019a1e1b-2c7a-fcdb-6ebe-8e70904583a8	2025-11-04 11:05:06.133175+08	2025-11-05 04:25:00+08	2025-11-05 05:40:00+08	\N	\N	Canceled
 019a4cd3-4750-e38a-9e5d-8f824d042852	019a1b60-de17-ead2-3902-26fb51efc5bf	019a1e1b-2c7a-fcdb-6ebe-8e70904583a8	2025-11-04 11:05:06.133175+08	2025-11-05 04:25:00+08	2025-11-05 05:40:00+08	\N	\N	Canceled
 019a7ba6-0a1a-ccd3-56d1-e7f6b4da47f0	019a1b60-de17-ead2-3902-26fb51efc5bf	019a1e1b-2c7a-fcdb-6ebe-8e70904583a8	2025-11-13 13:17:50.496151+08	2025-11-19 06:30:00+08	2025-11-19 11:40:00+08	\N	\N	Canceled
+019afbd2-28db-c438-69bd-021b3fd06b63	019a1b60-de17-ead2-3902-26fb51efc5bf	019a1e1b-2c7a-fcdb-6ebe-8e70904583a8	2025-12-08 10:37:25.60505+08	2025-12-08 22:14:14.873824+08	2025-12-08 23:14:14.873824+08	\N	\N	Booking
+019afbd6-8723-d5e2-11ff-9ff5fab254c2	019a1b60-de17-ead2-3902-26fb51efc5bf	019a1e1b-2c7a-fcdb-6ebe-8e70904583a8	2025-12-08 10:42:11.882352+08	2025-12-08 20:22:54.336911+08	2025-12-08 21:22:54.336911+08	\N	\N	Booking
+019b0121-61b5-3455-d340-09fd8f8bf6bd	019b00ec-6869-76e3-5ad7-f4fbea686fc4	019a1e1b-2c7a-fcdb-6ebe-8e70904583a8	2025-12-09 11:22:03.581858+08	2025-12-10 00:42:50.001222+08	2025-12-10 03:42:50.001222+08	\N	\N	Booking
+019b07ea-968c-4138-4d88-18066a779be8	019b02b2-5a66-1a39-409c-3cc84569706d	019a1e1b-2c7a-fcdb-6ebe-8e70904583a8	2025-12-10 18:59:33.13445+08	2025-12-11 16:58:22.303866+08	2025-12-11 18:58:22.303866+08	\N	\N	Booking
 \.
 
 
 --
--- TOC entry 4882 (class 0 OID 17871)
--- Dependencies: 220
 -- Data for Name: complaints; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -182,8 +173,6 @@ COPY public.complaints (id, send_user_id, receive_user_id, state, type, content,
 
 
 --
--- TOC entry 4878 (class 0 OID 17794)
--- Dependencies: 216
 -- Data for Name: rooms; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -194,8 +183,6 @@ COPY public.rooms (id, name, open_time, close_time, rows, cols) FROM stdin;
 
 
 --
--- TOC entry 4879 (class 0 OID 17801)
--- Dependencies: 217
 -- Data for Name: seats; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -207,19 +194,23 @@ COPY public.seats (id, room_id, "row", col) FROM stdin;
 
 
 --
--- TOC entry 4877 (class 0 OID 17787)
--- Dependencies: 215
 -- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
 COPY public.users (id, create_time, user_name, display_name, password, campus_id, phone, email, role, avatar) FROM stdin;
-019a1b60-de17-ead2-3902-26fb51efc5bf	2025-10-25 20:38:44.50294+08	zengkun	ZengKun	$2a$11$whcOhV3mebB7dS/b1zad3eyEasRM0gRR3KtbnELfNU5X9DLpAWJAi	236001209	15336567166	1489782679@qq.com	User	/api/v1/file/019a7aa9-27e7-2607-6c94-d2a3946fd8d6.png
+019a1b60-de17-ead2-3902-26fb51efc5bf	2025-10-25 20:38:44.50294+08	zengkun	ZengKun	$2a$11$whcOhV3mebB7dS/b1zad3eyEasRM0gRR3KtbnELfNU5X9DLpAWJAi	236001209	15336567166	1489782679@qq.com	Admin	/api/v1/file/019a7aa9-27e7-2607-6c94-d2a3946fd8d6.png
+019b00ec-6869-76e3-5ad7-f4fbea686fc4	2025-12-09 10:24:11.88121+08	zengkun2	zengkun2	$2a$11$W9wEDOP572wojWDtfQ1UuuEuXhB.5l0j.Kb4WrD8ZQL3c7Qwa0zf6	236001208	123456	1489782672@qq.com	User	/api/v1/file/019a7aa9-27e7-2607-6c94-d2a3946fd8d6.png
+019b02aa-3286-29a3-b200-86be59bb04c7	2025-12-09 18:31:07.141937+08	Mr.Zhao	Mr.Zhao	$2a$11$xt0aIjl0X0CMRq96et8Ew.zohRknOzCk./vYwNtg8Oei8NabVdGOa	236001111	16611111111	\N	User	\N
+019b02b2-5a66-1a39-409c-3cc84569706d	2025-12-09 18:40:01.638211+08	admin	admin	$2a$11$NPmEUDEst1olao8..eOIq.wn03/3Z1jApValKlMsat7A1SBgeKS2W	236006666	16666666666	\N	Admin	\N
+019b0818-6889-9081-34a3-d1da36233462	2025-12-10 19:49:36.008974+08	testuser001	testuser001	$2a$11$c454T7Yqi29ScYOQYESJg.iJKlrJD5C58xXpAOdkNRMj/jzyeFq32	236003921	17843030218	\N	User	\N
+019b0814-12d4-17c7-3189-c81dc3e2247e	2025-12-10 19:44:51.924105+08	aord	Aord	$2a$11$drugRKxrprmkzLBR/ryln.W6DPXTScm4p4ZCtI0XmSWWvP07Fea8y	234001112	14511111112	123457@123.com	User	\N
+019b0838-8501-4f16-57ea-e8b816d3f87d	2025-12-10 20:24:40.449605+08	tsetuser021	tsetuser021	$2a$11$Rc///j.8hxMyL7aC4hMvgOcs1NS.XNqGZnlgsg8GY85tPwMKgfgya	226003921	17843030211	\N	User	\N
+019b0848-9852-e8d8-becd-d852a322e439	2025-12-10 20:42:13.970791+08	testuser0022	testuser0022	$2a$11$bw1d3oncq8ysAkNYQSM8wuUA4N7oZBSiMrXCayk/hXF/WSiBIBc2q	236003928	17843020218	\N	User	\N
+019b084a-35f1-502c-d286-578e2894e468	2025-12-10 20:43:59.857946+08	testuser0023	testuser0023	$2a$11$QF/h/Wv7d3jlIxKuyKeoGO1BI9wlXl9ZfxvOdrfE5/rgHPaR9gC0u	225003921	17845030218	\N	User	\N
 \.
 
 
 --
--- TOC entry 4881 (class 0 OID 17858)
--- Dependencies: 219
 -- Data for Name: violations; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -228,7 +219,6 @@ COPY public.violations (id, user_id, state, type, content) FROM stdin;
 
 
 --
--- TOC entry 4721 (class 2606 OID 17815)
 -- Name: bookings bookings_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -237,7 +227,6 @@ ALTER TABLE ONLY public.bookings
 
 
 --
--- TOC entry 4725 (class 2606 OID 17877)
 -- Name: complaints complaints_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -246,7 +235,6 @@ ALTER TABLE ONLY public.complaints
 
 
 --
--- TOC entry 4717 (class 2606 OID 17798)
 -- Name: rooms rooms_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -255,7 +243,6 @@ ALTER TABLE ONLY public.rooms
 
 
 --
--- TOC entry 4719 (class 2606 OID 17805)
 -- Name: seats seats_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -264,7 +251,6 @@ ALTER TABLE ONLY public.seats
 
 
 --
--- TOC entry 4709 (class 2606 OID 17845)
 -- Name: users users_campus_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -273,7 +259,14 @@ ALTER TABLE ONLY public.users
 
 
 --
--- TOC entry 4711 (class 2606 OID 17847)
+-- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_email_key UNIQUE (email);
+
+
+--
 -- Name: users users_phone_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -282,7 +275,6 @@ ALTER TABLE ONLY public.users
 
 
 --
--- TOC entry 4713 (class 2606 OID 17793)
 -- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -291,7 +283,6 @@ ALTER TABLE ONLY public.users
 
 
 --
--- TOC entry 4715 (class 2606 OID 17843)
 -- Name: users users_user_name_key; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -300,7 +291,6 @@ ALTER TABLE ONLY public.users
 
 
 --
--- TOC entry 4723 (class 2606 OID 17864)
 -- Name: violations violations_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -309,7 +299,6 @@ ALTER TABLE ONLY public.violations
 
 
 --
--- TOC entry 4733 (class 2620 OID 17835)
 -- Name: bookings on_data_change; Type: TRIGGER; Schema: public; Owner: postgres
 --
 
@@ -317,7 +306,6 @@ CREATE TRIGGER on_data_change AFTER INSERT OR DELETE OR UPDATE ON public.booking
 
 
 --
--- TOC entry 4727 (class 2606 OID 17853)
 -- Name: bookings bookings_seat_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -326,7 +314,6 @@ ALTER TABLE ONLY public.bookings
 
 
 --
--- TOC entry 4728 (class 2606 OID 17848)
 -- Name: bookings bookings_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -335,7 +322,6 @@ ALTER TABLE ONLY public.bookings
 
 
 --
--- TOC entry 4730 (class 2606 OID 17888)
 -- Name: complaints complaints_handle_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -344,7 +330,6 @@ ALTER TABLE ONLY public.complaints
 
 
 --
--- TOC entry 4731 (class 2606 OID 17878)
 -- Name: complaints complaints_send_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -353,7 +338,6 @@ ALTER TABLE ONLY public.complaints
 
 
 --
--- TOC entry 4732 (class 2606 OID 17883)
 -- Name: complaints complaints_send_user_id_fkey1; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -362,7 +346,6 @@ ALTER TABLE ONLY public.complaints
 
 
 --
--- TOC entry 4726 (class 2606 OID 17806)
 -- Name: seats seats_roomId_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -371,7 +354,6 @@ ALTER TABLE ONLY public.seats
 
 
 --
--- TOC entry 4729 (class 2606 OID 17865)
 -- Name: violations violations_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -379,11 +361,9 @@ ALTER TABLE ONLY public.violations
     ADD CONSTRAINT violations_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
 
 
--- Completed on 2025-11-28 13:24:25
-
 --
 -- PostgreSQL database dump complete
 --
 
-\unrestrict J1VvD4okSVehEfMsUJFb9sb1I79j6AG4qeAeXg6FNAPRh3BuilVux6ar3Yoa4bP
+\unrestrict zmlMVJEBjhKnOs0wimW2RzNdaRde1KGsJRxMZKCKujA3d0adnTTb9M6wNy3exnT
 
