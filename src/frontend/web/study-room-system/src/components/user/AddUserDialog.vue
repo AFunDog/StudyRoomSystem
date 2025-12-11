@@ -59,7 +59,7 @@ const onAddSubmit = AddForm.handleSubmit(async (values) => {
 
         // 根据返回结果直接判断
         if (res?.status === 409) {
-            toast.error(`添加失败：${res.title}`)
+            toast.error(`添加失败：${res.data.title}`)
         } else {
             toast.success('用户添加成功')
             emit('update:show', false)
