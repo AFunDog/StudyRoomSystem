@@ -6,6 +6,8 @@ import type { User } from '@/lib/types/User'
 import { ref } from 'vue'
 import MainUserSheetContent from '../home/MainUserSheetContent.vue'
 
+// 本地分支测试
+
 const user = JSON.parse(localStorage.getItem('user') || 'null') as User | null
 
 const isSheetOpen = ref(false)
