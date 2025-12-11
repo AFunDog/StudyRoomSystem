@@ -113,13 +113,19 @@ public class BookingController : ControllerBase
         if (userId == Guid.Empty)
             return Unauthorized();
 
+        // 寻找座位
         var seat = await AppDbContext.Seats.FirstOrDefaultAsync(x => x.Id == request.SeatId);
         if (seat is null)
             return NotFound(new ProblemDetails() { Title = "找不到座位" });
 
+        // 检查输入时间是否合法
         if (request.StartTime >= request.EndTime)
             return BadRequest(new ProblemDetails() { Title = "开始时间不能大于结束时间" });
 
+        // 不允许创建过去的预约
+        if (request.StartTime <= DateTime.UtcNow)
+            return BadRequest(new ProblemDetails() { Title = "不允许创建过去的预约" });
+        
         // 检查座位是否在时间段内被占用
         var booking = await AppDbContext.Bookings.FirstOrDefaultAsync(x
             => x.SeatId == request.SeatId
