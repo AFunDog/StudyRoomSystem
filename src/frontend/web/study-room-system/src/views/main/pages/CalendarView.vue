@@ -32,13 +32,20 @@ const selectBooking = ref<Booking | null>(null)
 
 const canCancel = computed(() => selectBooking.value?.state === 'Booking')
 
-const filteredBookings = computed(() =>
-  showOnlyActive.value
+// 修改列表显示顺序：按创建时间倒序，最新预约在前
+const filteredBookings = computed<Booking[]>(() => {
+  const list = showOnlyActive.value
     ? bookings.value.filter(
         (b) => b.state === 'Booking' || b.state === 'CheckIn'
       )
     : bookings.value
-)
+
+  return list
+    .slice()
+    .sort(
+      (a, b) => dayjs(b.createTime).valueOf() - dayjs(a.createTime).valueOf()
+    )
+})
 
 /**
  * 拉取当前登录用户的所有预约
