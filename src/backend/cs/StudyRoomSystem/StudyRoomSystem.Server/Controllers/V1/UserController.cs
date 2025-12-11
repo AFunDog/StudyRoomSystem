@@ -312,11 +312,28 @@ public class UserController : ControllerBase
     #region Delete
 
     // 用户不能自己注销
-    [HttpDelete]
-    [Authorize(AuthorizationHelper.Policy.Admin)]
+    [HttpDelete("{id:guid}")]
+    // [Authorize(AuthorizationHelper.Policy.Admin)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [EndpointSummary("管理员删除用户")]
     public async Task<IActionResult> DeleteUser(Guid id)
     {
+        var user = await AppDbContext.Users.SingleOrDefaultAsync(x => x.Id == id);
+        if (user is null)
+            return NotFound(new ProblemDetails() { Title = "用户不存在" });
+        var complaints = AppDbContext.Complaints.Where(x => x.SendUserId == id);
+        AppDbContext.Complaints.RemoveRange(complaints);
+        complaints = AppDbContext.Complaints.Where(x => x.ReceiveUserId == id);
+        AppDbContext.Complaints.RemoveRange(complaints);
+        complaints = AppDbContext.Complaints.Where(x => x.HandleUserId == id);
+        AppDbContext.Complaints.RemoveRange(complaints);
+        var violation = AppDbContext.Violations.Where(x => x.UserId == id);
+        AppDbContext.Violations.RemoveRange(violation);
+        var booking = AppDbContext.Bookings.Where(x => x.UserId == id);
+        AppDbContext.Bookings.RemoveRange(booking);
+        AppDbContext.Users.Remove(user);
+        await AppDbContext.SaveChangesAsync();
         return Ok();
     }
 
