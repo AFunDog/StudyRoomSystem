@@ -61,7 +61,7 @@ public class UserController : ControllerBase
         
         
         // 检查用户
-        if(request.Role == AuthorizationHelper.Role.Admin && user?.Role != AuthorizationHelper.Role.Admin)
+        if(request.Role == UserRoleEnum.Admin && user?.Role != UserRoleEnum.Admin)
             return Unauthorized(new ProblemDetails(){ Title = "用户权限不足" });
         
         // 检查用户名是否已存在
@@ -286,8 +286,7 @@ public class UserController : ControllerBase
     public class EditRequestRole
     {
         public required Guid Id { get; set; }
-        [Required]
-        public required string Role { get; set; }
+        public required UserRoleEnum Role { get; set; }
     }
 
     [HttpPut("role")]
@@ -312,8 +311,8 @@ public class UserController : ControllerBase
     #region Delete
 
     // 用户不能自己注销
-    [HttpDelete("{id:guid}")]
-    // [Authorize(AuthorizationHelper.Policy.Admin)]
+    [HttpDelete]
+    [Authorize(AuthorizationHelper.Policy.Admin)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [EndpointSummary("管理员删除用户")]

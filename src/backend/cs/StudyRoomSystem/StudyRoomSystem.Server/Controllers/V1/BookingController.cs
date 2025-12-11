@@ -131,7 +131,7 @@ public class BookingController : ControllerBase
             => x.SeatId == request.SeatId
                && ((x.StartTime <= request.StartTime && request.StartTime <= x.EndTime)
                    || (x.StartTime <= request.EndTime && request.EndTime <= x.EndTime))
-               && (x.State == (BookingStateEnum.Booking) || x.State == (BookingStateEnum.CheckIn))
+               && (x.State == (BookingStateEnum.Booked) || x.State == (BookingStateEnum.CheckIn))
         );
         if (booking is not null)
             return Conflict(new { message = "座位在时间范围内已被用户预约" });
@@ -145,7 +145,7 @@ public class BookingController : ControllerBase
                 StartTime = request.StartTime,
                 EndTime = request.EndTime,
                 CreateTime = DateTime.UtcNow,
-                State = BookingStateEnum.Booking
+                State = BookingStateEnum.Booked
             }
         );
         await AppDbContext.SaveChangesAsync();
@@ -168,7 +168,7 @@ public class BookingController : ControllerBase
         if (booking.UserId != userId)
             return Forbid();
 
-        if (booking.State != BookingStateEnum.Booking)
+        if (booking.State != BookingStateEnum.Booked)
             return BadRequest(new ProblemDetails() { Title = "必须在预约中的才能取消预约" });
 
         booking.State = BookingStateEnum.Canceled;
@@ -203,7 +203,7 @@ public class BookingController : ControllerBase
             return Forbid();
         if (request.StartTime >= request.EndTime)
             return BadRequest(new ProblemDetails() { Title = "开始时间不能大于结束时间" });
-        if (booking.State != BookingStateEnum.Booking)
+        if (booking.State != BookingStateEnum.Booked)
             return BadRequest(new ProblemDetails() { Title = "必须在预约中的才能修改预约" });
 
         // 修改后的起始时间距离预约小于3小时
@@ -218,7 +218,7 @@ public class BookingController : ControllerBase
             => x.SeatId == booking.SeatId
                && ((x.StartTime <= request.StartTime && request.StartTime <= x.EndTime)
                    || (x.StartTime <= request.EndTime && request.EndTime <= x.EndTime))
-               && (x.State == (BookingStateEnum.Booking) || x.State == (BookingStateEnum.CheckIn))
+               && (x.State == (BookingStateEnum.Booked) || x.State == (BookingStateEnum.CheckIn))
         );
         if (existBooking is not null)
             return Conflict(new ProblemDetails(){ Title = "座位在时间范围内已被用户预约" });
@@ -246,7 +246,7 @@ public class BookingController : ControllerBase
         if (booking.UserId != userId)
             return Forbid();
 
-        if (booking.State is not (BookingStateEnum.Booking))
+        if (booking.State is not (BookingStateEnum.Booked))
             return BadRequest(new ProblemDetails(){ Title = "当前状态不能签到" });
 
         // TODO 由于定时系统自动清理逾期预约，所以可以不检查预约时间
