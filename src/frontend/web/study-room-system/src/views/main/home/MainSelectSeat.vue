@@ -242,7 +242,7 @@ async function onSubmit(values: GenericObject) {
                         <SelectContent>
                           <SelectGroup>
                             <SelectLabel>分</SelectLabel>
-                            <SelectItem v-for="v in Array(12).fill(0).map((_, i) => i * 5)" :value="v">{{
+                            <SelectItem v-for="v in Array(2).fill(0).map((_, i) => i * 30)" :value="v">{{
                               v.toString().padStart(2, '0') }}</SelectItem>
                           </SelectGroup>
                         </SelectContent>
@@ -284,7 +284,7 @@ async function onSubmit(values: GenericObject) {
                         <SelectContent>
                           <SelectGroup>
                             <SelectLabel>分</SelectLabel>
-                            <SelectItem v-for="v in Array(12).fill(0).map((_, i) => i * 5)" :value="v">{{
+                            <SelectItem v-for="v in Array(2).fill(0).map((_, i) => i * 30)" :value="v">{{
                               v.toString().padStart(2, '0') }}</SelectItem>
                           </SelectGroup>
                         </SelectContent>
