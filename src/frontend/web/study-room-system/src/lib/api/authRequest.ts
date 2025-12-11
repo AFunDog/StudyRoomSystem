@@ -40,7 +40,7 @@ class AuthRequest {
     public async registerAdmin(request: {
         userName: string, password: string, displayName?: string | null, campusId: string, phone: string, email?: string
     }) {
-        const res = await http.post("/user/admin/register", request);
+        const res = await http.post("/user/registerAdmin", request);
         console.log(res);
         return res;
     }
