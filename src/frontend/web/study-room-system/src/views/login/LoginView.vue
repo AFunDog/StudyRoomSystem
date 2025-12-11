@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
+  Form,
   FormControl,
   FormDescription,
   FormField,
@@ -29,13 +30,6 @@ const router = useRouter();
 //引入登录校验规则
 const formSchema = toTypedSchema(loginSchema);
 const form = useForm({ validationSchema: formSchema });
-watch(
-  () => form.values.agreePolicy,
-  (val) => {
-    console.log('表单里的 agreePolicy = ', val)
-  },
-  { immediate: true }
-);
 
 const isLoginLoading = ref(false);
 const onSubmit = form.handleSubmit(async (values) => {
@@ -158,6 +152,7 @@ onUnmounted(() => {
                     </div>
                   </div>
                 </FormControl>
+                <!-- <FormDescription>登录密码</FormDescription> -->
                 <FormMessage />
               </FormItem>
             </FormField>
