@@ -23,4 +23,7 @@ public class RegisterRequest
 
     [EmailAddress]
     public string? Email { get; set; }
+    
+    [MaxLength(64)]
+    public required string Role { get; set; }
 }
