@@ -185,8 +185,10 @@ function handleBack() {
                 <FormControl>
                   <div>
                     <div class="flex flex-row gap-x-2 items-center">
-                      <Checkbox v-bind="componentField">
-                      </Checkbox>
+                      <Checkbox
+                        :checked="componentField.modelValue" 
+                        @update:model-value="componentField.onChange"
+                      />
                       <div class="text-sm [&>a]:text-primary">
                         我已阅读并同意
                         <a href="/privacy-policy" target="_blank">《隐私政策》</a>

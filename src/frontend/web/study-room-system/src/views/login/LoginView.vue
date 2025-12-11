@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
-  Form,
   FormControl,
   FormDescription,
   FormField,
@@ -14,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { toTypedSchema } from '@vee-validate/zod';
 import { loginSchema } from "@/lib/validation";
 import { useForm, } from 'vee-validate';
-import { onMounted, onUnmounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { LockKeyhole, Loader2, Info } from 'lucide-vue-next';
 import { restartHubConnection } from '@/lib/api/hubConnection';
@@ -30,6 +29,13 @@ const router = useRouter();
 //引入登录校验规则
 const formSchema = toTypedSchema(loginSchema);
 const form = useForm({ validationSchema: formSchema });
+watch(
+  () => form.values.agreePolicy,
+  (val) => {
+    console.log('表单里的 agreePolicy = ', val)
+  },
+  { immediate: true }
+);
 
 const isLoginLoading = ref(false);
 const onSubmit = form.handleSubmit(async (values) => {
@@ -132,23 +138,26 @@ onUnmounted(() => {
                 <FormMessage />
               </FormItem>
             </FormField>
-            <FormField v-slot="{ componentField }" name="agreePolicy">
+            <FormField 
+              name="agreePolicy" 
+              v-slot="{ componentField }"
+              validation-trigger="onSubmit"
+            >
               <FormItem>
                 <FormControl>
-                  <div>
-                    <div class="flex flex-row gap-x-2 items-center">
-                      <Checkbox v-bind="componentField">
-                      </Checkbox>
-                      <div class="text-sm [&>a]:text-primary">
-                        我已阅读并同意
-                        <a href="/privacy-policy" target="_blank">《隐私政策》</a>
-                        和
-                        <a href="/user-agreement" target="_blank">《用户协议》</a>
-                      </div>
+                  <div class="flex flex-row gap-x-2 items-center">
+                    <Checkbox
+                      :checked="componentField.modelValue" 
+                      @update:model-value="componentField.onChange"
+                    />
+                    <div class="text-sm [&>a]:text-primary">
+                      我已阅读并同意
+                      <a href="/privacy-policy" target="_blank">《隐私政策》</a>
+                      和
+                      <a href="/user-agreement" target="_blank">《用户协议》</a>
                     </div>
                   </div>
                 </FormControl>
-                <!-- <FormDescription>登录密码</FormDescription> -->
                 <FormMessage />
               </FormItem>
             </FormField>

@@ -9,10 +9,10 @@ export const loginSchema = z.object({
   password: z.string({ required_error: '请输入密码' })
     .min(8, "密码至少 8 位")
     .max(32, "密码不能超过 32 位"),
-  agreePolicy: z.preprocess(
-    val => val === 'on' || val === true,
-    z.boolean().refine(value => value, '请同意隐私政策')
-  ),
+  agreePolicy: z.boolean().refine(val => {
+  console.log("agreePolicy 校验值：", val)
+  return val
+}, '请同意隐私政策'),
   autoLogin: z.boolean().optional()
 });
 
