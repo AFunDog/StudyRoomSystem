@@ -49,6 +49,15 @@ class BookingRequest {
         }
         return null;
     }
+    public async checkIn(request: { id: string }) {
+        // 异常交由调用者处理
+        const res = await http.post("/booking/check-in", request);
+        return res.data as Booking;
+    }
+    public async checkOut(request: { id: string }) {
+        const res = await http.post("/booking/check-out", request);
+        return res.data as Booking;
+    }
 }
 
 const bookingRequest = new BookingRequest();
