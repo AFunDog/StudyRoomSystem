@@ -11,12 +11,6 @@ public static class AuthorizationHelper
         public const string Admin = nameof(Admin);
         public const string User = nameof(User);
     }
-
-    public static class Role
-    {
-        public const string Admin = nameof(Admin);
-        public const string User = nameof(User);
-    }
     
     public static Guid GetLoginUserId(this ClaimsPrincipal user)
     {

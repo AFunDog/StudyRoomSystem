@@ -10,6 +10,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using Serilog;
+using StudyRoomSystem.Core.Structs.Entity;
 using StudyRoomSystem.Server.Controllers.V1;
 using StudyRoomSystem.Server.Converters;
 using StudyRoomSystem.Server.Database;
@@ -214,9 +215,9 @@ builder
     .Services.AddAuthorizationBuilder()
     .AddPolicy(
         AuthorizationHelper.Policy.User,
-        policy => policy.RequireRole(AuthorizationHelper.Role.User, AuthorizationHelper.Role.Admin)
+        policy => policy.RequireRole(nameof(UserRoleEnum.User), nameof(UserRoleEnum.Admin))
     )
-    .AddPolicy(AuthorizationHelper.Policy.Admin, policy => policy.RequireRole(AuthorizationHelper.Role.Admin));
+    .AddPolicy(AuthorizationHelper.Policy.Admin, policy => policy.RequireRole(nameof(UserRoleEnum.Admin)));
 
 // SignalR
 builder

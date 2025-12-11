@@ -1,6 +1,13 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace StudyRoomSystem.Core.Structs.Entity;
+
+[JsonConverter(typeof(JsonStringEnumConverter<UserRoleEnum>))]
+public enum UserRoleEnum
+{
+    User,Admin
+}
 
 public class User
 {
@@ -34,8 +41,7 @@ public class User
     [EmailAddress]
     public string? Email { get; set; }
     
-    [MaxLength(64)]
-    public required string Role { get; set; }
+    public required UserRoleEnum Role { get; set; }
     
     [Url]
     public string? Avatar { get; set; }
