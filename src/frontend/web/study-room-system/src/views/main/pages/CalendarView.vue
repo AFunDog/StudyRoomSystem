@@ -78,6 +78,7 @@ async function confirmCancelBooking() {
     return
   }
 
+  // 状态不是 Booking 禁止取消预约按钮
   if (b.state !== 'Booking') {
     toast.error('当前预约状态不可取消')
     isCancelDialogOpen.value = false
@@ -87,14 +88,24 @@ async function confirmCancelBooking() {
   try {
     const res = await bookingRequest.cancelBooking(b.id, false)
     console.log(res)
-    toast.success('取消预约成功')
-    await getBookings()
+
+    // 根据返回 message 判断是否真正取消成功
+    if (res.message === '预约已取消') {
+      // 成功
+      toast.success(res.message)
+      await getBookings()
+      // 关掉详情弹窗
+      isDetailDialogOpen.value = false
+    } else {
+      // 后端返回了失败原因
+      toast.error(res.message || '取消预约失败')
+    }
   } catch (err) {
     console.error('取消预约时发生错误', err)
     toast.error('取消预约失败，请稍后重试')
   } finally {
+    // 只关掉“确认取消”的弹窗
     isCancelDialogOpen.value = false
-    isDetailDialogOpen.value = false
   }
 }
 

@@ -21,8 +21,20 @@ class BookingRequest {
         }
         catch (err) {
             console.error(err);
-            if(err instanceof AxiosError){
-                return err.response?.data as { message: string };
+            // if(err instanceof AxiosError){
+            //     return err.response?.data as { message: string };
+            // }
+            //修改错误信息返回策略,返回错误中的title作为message
+            if (err instanceof AxiosError) {
+                const data = err.response?.data as any
+
+                if (data && typeof data.title === "string") {
+                    return { message: data.title };
+                }
+                
+                if (data && typeof data.message === "string") {
+                    return { message: data.message };
+                }
             }
         }
         return { message : "取消预约失败"  };
