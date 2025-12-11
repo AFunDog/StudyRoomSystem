@@ -19,7 +19,8 @@ import { Button } from "@/components/ui/button"
 import { toast } from 'vue-sonner'
 
 import { bookingRequest } from '@/lib/api/bookingRequest'
-import type { Booking } from '@/lib/types/Booking'
+import { localizeState, type Booking } from '@/lib/types/Booking'
+import { CornerDownRight } from 'lucide-vue-next'
 
 const showOnlyActive = ref(false)
 
@@ -30,13 +31,16 @@ const isDetailDialogOpen = ref(false)
 const isCancelDialogOpen = ref(false)
 const selectBooking = ref<Booking | null>(null)
 
-const canCancel = computed(() => selectBooking.value?.state === 'Booking')
+const canCheckIn = computed(() => selectBooking.value?.state === 'Booked')
+const canCheckOut = computed(() => selectBooking.value?.state === 'CheckIn')
+const canCancel = computed(() => selectBooking.value?.state === 'Booked')
+
 
 const filteredBookings = computed(() =>
   showOnlyActive.value
     ? bookings.value.filter(
-        (b) => b.state === 'Booking' || b.state === 'CheckIn'
-      )
+      (b) => b.state === 'Booked' || b.state === 'CheckIn'
+    )
     : bookings.value
 )
 
@@ -78,7 +82,7 @@ async function confirmCancelBooking() {
     return
   }
 
-  if (b.state !== 'Booking') {
+  if (b.state !== 'Booked') {
     toast.error('当前预约状态不可取消')
     isCancelDialogOpen.value = false
     return
@@ -95,6 +99,48 @@ async function confirmCancelBooking() {
   } finally {
     isCancelDialogOpen.value = false
     isDetailDialogOpen.value = false
+  }
+}
+
+// 签到
+async function checkInBooking() {
+  if (selectBooking.value === null)
+    return;
+
+  if (canCheckIn.value === false) {
+    toast.error('当前预约状态不可签到');
+    return;
+  }
+
+  try {
+    const res = await bookingRequest.checkIn({ id: selectBooking.value.id })
+    console.log(res)
+    toast.success('签到成功')
+    await getBookings()
+  } catch (err) {
+    console.error('签到时发生错误', err)
+    toast.error('签到失败，请稍后重试')
+  }
+}
+
+// 签退
+async function checkOutBooking() {
+  if (selectBooking.value === null)
+    return;
+
+  if (canCheckOut.value === false) {
+    toast.error('当前预约状态不可签退');
+    return;
+  }
+
+  try {
+    const res = await bookingRequest.checkOut({ id: selectBooking.value.id })
+    console.log(res)
+    toast.success('签退成功')
+    await getBookings()
+  } catch (err) {
+    console.error('签退时发生错误', err)
+    toast.error('签退失败，请稍后重试')
   }
 }
 
@@ -128,7 +174,7 @@ onMounted(() => {
               <div>
                 {{
                   (selectBooking?.seat?.row ?? 0) *
-                    (selectBooking?.seat?.room?.cols ?? 0) +
+                  (selectBooking?.seat?.room?.cols ?? 0) +
                   (selectBooking?.seat?.col ?? 0)
                 }}
               </div>
@@ -146,14 +192,18 @@ onMounted(() => {
         <DialogFooter>
           <div class="flex flex-row items-center justify-center gap-x-2">
             <Button variant="outline" @click="isDetailDialogOpen = false">
-              返回
+              <CornerDownRight></CornerDownRight>
+              <span>
+                返回
+              </span>
             </Button>
-            <Button
-              variant="destructive"
-              :disabled="!canCancel"
-              :class="[!canCancel && 'opacity-50 cursor-not-allowed']"
-              @click="() => { if (canCancel) openCancelDialog() }"
-            >
+            <Button variant="default" :disabled="!canCheckIn" @click="checkInBooking">
+              签到
+            </Button>
+            <Button variant="secondary" :disabled="!canCheckOut" @click="checkOutBooking">
+              签退
+            </Button>
+            <Button variant="destructive" :disabled="!canCancel" @click="() => { if (canCancel) openCancelDialog() }">
               取消预约
             </Button>
           </div>
@@ -191,40 +241,26 @@ onMounted(() => {
 
           <div class="flex items-center gap-x-2 text-sm text-muted-foreground">
             <span>只看有效预约</span>
-            <input
-              type="checkbox"
-              :checked="showOnlyActive"
-              @change="
-                showOnlyActive = ($event.target as HTMLInputElement).checked
-              "
-              class="h-4 w-4 accent-orange-500"
-            />
+            <input type="checkbox" :checked="showOnlyActive" @change="
+              showOnlyActive = ($event.target as HTMLInputElement).checked
+              " class="h-4 w-4 accent-orange-500" />
           </div>
         </CardHeader>
 
         <CardContent class="px-2 flex-1 min-h-0">
           <!-- 加载中 -->
-          <div
-            v-if="loading"
-            class="text-center py-4 text-sm text-gray-500"
-          >
+          <div v-if="loading" class="text-center py-4 text-sm text-gray-500">
             加载中...
           </div>
 
           <!-- 没有任何预约 -->
-          <div
-            v-else-if="filteredBookings.length === 0"
-            class="text-center py-4 text-sm text-gray-500"
-          >
+          <div v-else-if="filteredBookings.length === 0" class="text-center py-4 text-sm text-gray-500">
             暂无预约记录
           </div>
 
           <!-- 有预约列表 -->
-          <div
-            v-else
-            class="mt-2 flex flex-col min-w-0 gap-y-2 max-w-full flex-nowrap gap-x-2
-                  overflow-x-hidden overflow-y-auto h-full rounded-md"
-          >
+          <div v-else class="mt-2 flex flex-col min-w-0 gap-y-2 max-w-full flex-nowrap gap-x-2
+                  overflow-x-hidden overflow-y-auto h-full rounded-md">
             <TransitionGroup name="bookings">
               <div v-for="b in filteredBookings" :key="b.id">
                 <Card class="py-2" @click="openDetailDialog(b)">
@@ -242,10 +278,8 @@ onMounted(() => {
                       </div>
 
                       <!-- 右侧只展示状态 -->
-                      <div
-                        class="flex flex-row items-center justify-center ml-auto text-sm text-muted-foreground"
-                      >
-                        <div>{{ b.state }}</div>
+                      <div class="flex flex-row items-center justify-center ml-auto text-sm text-muted-foreground">
+                        <div>{{ localizeState(b.state) }}</div>
                       </div>
                     </div>
 

@@ -14,18 +14,18 @@ class BookingRequest {
         return [];
     }
 
-    public async cancelBooking(id: string,isForce: boolean) {
+    public async cancelBooking(id: string, isForce: boolean) {
         try {
             const res = await http.delete(`/booking/${id}?isForce=${isForce}`);
-            return { message : "预约已取消" };
+            return { message: "预约已取消" };
         }
         catch (err) {
             console.error(err);
-            if(err instanceof AxiosError){
+            if (err instanceof AxiosError) {
                 return err.response?.data as { message: string };
             }
         }
-        return { message : "取消预约失败"  };
+        return { message: "取消预约失败" };
     }
     public async createBooking(request: { seatId: string, startTime: string, endTime: string }) {
         try {
@@ -36,6 +36,15 @@ class BookingRequest {
             console.error(err);
         }
         return null;
+    }
+    public async checkIn(request: { id: string }) {
+        // 异常交由调用者处理
+        const res = await http.post("/booking/check-in", request);
+        return res.data as Booking;
+    }
+    public async checkOut(request: { id: string }) {
+        const res = await http.post("/booking/check-out", request);
+        return res.data as Booking;
     }
 }
 
