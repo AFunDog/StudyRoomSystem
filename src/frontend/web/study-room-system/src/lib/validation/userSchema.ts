@@ -17,7 +17,7 @@ export const registerSchema = z.object({
     .max(32, "密码不能超过 32 位")
     .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).+$/, "密码必须包含大小写字母、数字和特殊字符"),
   confirmPassword: z.string({ required_error: '请输入确认密码' }),
-  agreePolicy: z.boolean().refine(val => val, '请同意隐私政策'),
+  agreePolicy: z.boolean({required_error : '请同意隐私政策'}).refine(val => val, '请同意隐私政策'),
 }).refine((data) => data.password === data.confirmPassword, {
   path: ['confirmPassword'],
   message: '确认密码与密码不一致'
