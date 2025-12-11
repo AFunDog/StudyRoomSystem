@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
 import { House, CalendarDays, UserRound} from 'lucide-vue-next'
+import { Button } from '@/components/ui/button'
 
 const router = useRouter()
 const route = useRoute()
@@ -21,22 +22,23 @@ function goTo(path: string) {
 <template>
   <div class="h-full">
     <nav
-      class="h-full bg-slate-50 border-r flex flex-col items-center py-4
+      class="h-full bg-accent border-r flex flex-col items-center py-4
              w-14 md:w-48 transition-all duration-200"
     >
-      <button
+      <Button
         v-for="item in navItems"
         :key="item.path"
         @click="goTo(item.path)"
-        class="flex items-center gap-3 px-3 py-2 w-full hover:bg-slate-100 text-slate-700"
-        :class="route.path === item.path ? 'bg-slate-100 font-medium' : ''"
+        variant="ghost"
+        class="flex items-center gap-3 px-3 py-2 w-full "
+        :class="route.path === item.path ? 'font-medium' : ''"
       >
         <component :is="item.icon" class="w-5 h-5 shrink-0" />
 
         <span class="hidden md:inline-block whitespace-nowrap text-sm">
           {{ item.label }}
         </span>
-      </button>
+      </Button>
     </nav>
   </div>
 </template>
