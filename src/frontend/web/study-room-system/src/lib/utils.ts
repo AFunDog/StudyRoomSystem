@@ -14,7 +14,7 @@ function cn(...inputs: ClassValue[]) {
 }
 
 const http: AxiosInstance = axios.create({
-  timeout: 5000,
+  timeout: 10000,
   headers: { "Content-Type": "application/json" },
   baseURL: `/api/v1`,
   withCredentials: true, // 让请求自动带上 HttpOnly Cookie
@@ -71,5 +71,7 @@ async function logout() {
   // 清理前端状态（非敏感信息）
   // store.user = null;
 }
+
+
 
 export { http, cn,logout };

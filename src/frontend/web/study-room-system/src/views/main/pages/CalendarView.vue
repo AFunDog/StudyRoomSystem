@@ -19,7 +19,8 @@ import { Button } from "@/components/ui/button"
 import { toast } from 'vue-sonner'
 
 import { bookingRequest } from '@/lib/api/bookingRequest'
-import type { Booking } from '@/lib/types/Booking'
+import { localizeState, type Booking } from '@/lib/types/Booking'
+import { CornerDownRight } from 'lucide-vue-next'
 
 const showOnlyActive = ref(false)
 
@@ -30,15 +31,24 @@ const isDetailDialogOpen = ref(false)
 const isCancelDialogOpen = ref(false)
 const selectBooking = ref<Booking | null>(null)
 
-const canCancel = computed(() => selectBooking.value?.state === 'Booking')
+const canCheckIn = computed(() => selectBooking.value?.state === 'Booked')
+const canCheckOut = computed(() => selectBooking.value?.state === 'CheckIn')
+const canCancel = computed(() => selectBooking.value?.state === 'Booked')
 
-const filteredBookings = computed(() =>
-  showOnlyActive.value
+// 修改列表显示顺序：按创建时间倒序，最新预约在前
+const filteredBookings = computed<Booking[]>(() => {
+  const list = showOnlyActive.value
     ? bookings.value.filter(
-        (b) => b.state === 'Booking' || b.state === 'CheckIn'
+        (b) => b.state === 'Booked' || b.state === 'CheckIn'
       )
     : bookings.value
-)
+
+  return list
+    .slice()
+    .sort(
+      (a, b) => dayjs(b.createTime).valueOf() - dayjs(a.createTime).valueOf()
+    )
+})
 
 /**
  * 拉取当前登录用户的所有预约
@@ -79,7 +89,7 @@ async function confirmCancelBooking() {
   }
 
   // 状态不是 Booking 禁止取消预约按钮
-  if (b.state !== 'Booking') {
+  if (b.state !== 'Booked') {
     toast.error('当前预约状态不可取消')
     isCancelDialogOpen.value = false
     return
@@ -106,6 +116,49 @@ async function confirmCancelBooking() {
   } finally {
     // 只关掉“确认取消”的弹窗
     isCancelDialogOpen.value = false
+    isDetailDialogOpen.value = false
+  }
+}
+
+// 签到
+async function checkInBooking() {
+  if (selectBooking.value === null)
+    return;
+
+  if (canCheckIn.value === false) {
+    toast.error('当前预约状态不可签到');
+    return;
+  }
+
+  try {
+    const res = await bookingRequest.checkIn({ id: selectBooking.value.id })
+    console.log(res)
+    toast.success('签到成功')
+    await getBookings()
+  } catch (err) {
+    console.error('签到时发生错误', err)
+    toast.error('签到失败，请稍后重试')
+  }
+}
+
+// 签退
+async function checkOutBooking() {
+  if (selectBooking.value === null)
+    return;
+
+  if (canCheckOut.value === false) {
+    toast.error('当前预约状态不可签退');
+    return;
+  }
+
+  try {
+    const res = await bookingRequest.checkOut({ id: selectBooking.value.id })
+    console.log(res)
+    toast.success('签退成功')
+    await getBookings()
+  } catch (err) {
+    console.error('签退时发生错误', err)
+    toast.error('签退失败，请稍后重试')
   }
 }
 
@@ -157,14 +210,18 @@ onMounted(() => {
         <DialogFooter>
           <div class="flex flex-row items-center justify-center gap-x-2">
             <Button variant="outline" @click="isDetailDialogOpen = false">
-              返回
+              <CornerDownRight></CornerDownRight>
+              <span>
+                返回
+              </span>
             </Button>
-            <Button
-              variant="destructive"
-              :disabled="!canCancel"
-              :class="[!canCancel && 'opacity-50 cursor-not-allowed']"
-              @click="() => { if (canCancel) openCancelDialog() }"
-            >
+            <Button variant="default" :disabled="!canCheckIn" @click="checkInBooking">
+              签到
+            </Button>
+            <Button variant="secondary" :disabled="!canCheckOut" @click="checkOutBooking">
+              签退
+            </Button>
+            <Button variant="destructive" :disabled="!canCancel" @click="() => { if (canCancel) openCancelDialog() }">
               取消预约
             </Button>
           </div>
@@ -253,10 +310,8 @@ onMounted(() => {
                       </div>
 
                       <!-- 右侧只展示状态 -->
-                      <div
-                        class="flex flex-row items-center justify-center ml-auto text-sm text-muted-foreground"
-                      >
-                        <div>{{ b.state }}</div>
+                      <div class="flex flex-row items-center justify-center ml-auto text-sm text-muted-foreground">
+                        <div>{{ localizeState(b.state) }}</div>
                       </div>
                     </div>
 

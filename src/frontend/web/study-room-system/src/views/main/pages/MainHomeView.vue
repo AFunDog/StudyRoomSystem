@@ -16,7 +16,7 @@ provide(SELECT_ROOM, selectRoom)
 
 <template>
   <div class="flex flex-col md:flex-row w-full h-full gap-4 px-4 py-4 *:min-w-0">
-    <div class="w-full md:w-56 md:min-w-[12rem]">
+    <div class="w-full md:w-56 md:min-w-48">
       <MainSelectRoom />
     </div>
 
