@@ -18,7 +18,8 @@ public class AppDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         #region 数据关联
-
+        // User Role 枚举转换
+        modelBuilder.Entity<User>().Property(u => u.Role).HasConversion<string>();
         // Seat 关联 Room
         modelBuilder
             .Entity<Seat>()

@@ -74,7 +74,7 @@ public class AuthController : ControllerBase
         var claims = new List<Claim>()
         {
             new Claim(ClaimExtendTypes.Id, user.Id.ToString()), new Claim(ClaimTypes.Name, request.UserName),
-            new Claim(ClaimTypes.Role, user.Role)
+            new Claim(ClaimTypes.Role, user.Role.ToString())
         };
 
         var key = Encoding.UTF8.GetBytes(Configuration["Jwt:Key"]!);

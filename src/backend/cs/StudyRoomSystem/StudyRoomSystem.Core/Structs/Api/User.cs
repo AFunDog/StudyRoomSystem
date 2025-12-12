@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using StudyRoomSystem.Core.Structs.Entity;
 
 namespace StudyRoomSystem.Core.Structs.Api;
 
@@ -24,6 +25,5 @@ public class RegisterRequest
     [EmailAddress]
     public string? Email { get; set; }
     
-    [MaxLength(64)]
-    public required string Role { get; set; }
+    public required UserRoleEnum Role { get; set; }
 }
