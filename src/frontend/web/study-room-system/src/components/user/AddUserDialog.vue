@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { toTypedSchema } from '@vee-validate/zod'
 import { useForm } from 'vee-validate'
 import { adminAddUserSchema } from '@/lib/validation/userSchema';
-import { authRequest } from '@/lib/api/authRequest';
+import { userRequest } from '@/lib/api/userRequest';
 import { toast } from 'vue-sonner'
 import { Loader2 } from "lucide-vue-next";
 
@@ -42,19 +42,20 @@ const onAddSubmit = AddForm.handleSubmit(async (values) => {
     isAddingUser.value = true; // 开始加载
     try {
         const payload = {
+        role: props.role === 'user' ? 'User' : 'Admin',
         userName: values.userName,
         password: values.password,
         campusId: values.campusId,
         phone: values.phone,
         email: values.email,
-        displayName: values.displayName,
+        displayName: values.displayName?.trim() || values.userName
     }
+        console.log("添加用户参数：", payload);
+        const res = await userRequest.register(payload)
+        console.log("添加用户返回：", res);
 
-        let res
-        if (props.role === 'user') {
-            res = await authRequest.register(payload)
-        } else {
-            res = await authRequest.registerAdmin(payload)
+        if (res.status === 200) {
+          toast.success('用户添加成功')
         }
 
         // 根据返回结果直接判断

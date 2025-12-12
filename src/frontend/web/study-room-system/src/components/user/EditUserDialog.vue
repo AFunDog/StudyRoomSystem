@@ -50,9 +50,16 @@ const isEditingUser = ref(false); //加载动画状态
 // 提交逻辑：更新用户信息和角色
 const onEditSubmit = EditForm.handleSubmit(async (values) => {
     try {
-        isEditingUser.value = true; // 开始加载
-        await userRequest.updateUser(values)
-        await userRequest.updateUserRole({ id: values.id, role: values.role })
+        const payload = {
+            id: values.id,
+            displayName: values.displayName?.trim() || props.user!.displayName,  
+            campusId: values.campusId,
+            phone: values.phone,
+            email: values.email,
+            role: values.role
+        };
+        await userRequest.updateUser(payload);
+        await userRequest.updateUserRole({ id: values.id, role: values.role });
         toast.success('用户信息已更新')
         emit('update:show', false) // 关闭弹窗
         emit('success')            // 通知父组件刷新列表

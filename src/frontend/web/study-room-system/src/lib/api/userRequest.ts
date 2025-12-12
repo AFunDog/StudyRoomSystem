@@ -1,6 +1,18 @@
 import { http } from '@/lib/utils';
 
 export const userRequest = {
+
+  // 用户注册(也可以管理员注册)
+  register: (data: {
+    role: string;
+    userName: string;
+    password: string;
+    displayName?: string | null;
+    campusId: string;
+    phone: string;
+    email?: string;
+  }) => http.post('/user/register', data),
+
   // 获取登录用户信息
   getUser: () => http.get('/user'),
 

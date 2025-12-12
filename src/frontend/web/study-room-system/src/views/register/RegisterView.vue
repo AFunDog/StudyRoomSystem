@@ -20,7 +20,7 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { LockKeyhole, Loader2 } from 'lucide-vue-next';
 import { AxiosError } from 'axios';
-import { authRequest } from '@/lib/api/authRequest';
+import { userRequest } from '@/lib/api/userRequest';
 import { Checkbox } from '@/components/ui/checkbox';
 
 const router = useRouter();
@@ -38,7 +38,8 @@ const onSubmit = form.handleSubmit(async (values) => {
     console.log(values);
     isRegisterLoading.value = true;
 
-    const res = await authRequest.register({
+    const res = await userRequest.register({
+      role: 'User',
       userName: values.userName,
       password: values.password,
       campusId: values.campusId,
