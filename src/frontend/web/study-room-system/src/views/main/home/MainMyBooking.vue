@@ -10,7 +10,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Button } from '@/components/ui/button';
-import type { Booking } from '@/lib/types/Booking';
+import { localizeState, type Booking } from '@/lib/types/Booking';
 import { http } from '@/lib/utils';
 import dayjs from 'dayjs';
 import { Trash2 } from 'lucide-vue-next';
@@ -47,9 +47,9 @@ const selectBooking = ref<Booking | null>(null);
 
 onMounted(async () => {
   bookings.value = await bookingRequest.getMyBookings();
-  getHubConnection().on('bookings-my-update', (data : Booking[]) => {
-    console.log('bookings-my-update',data);
-    bookings.value = data.filter(x => x.state == "Booking" || x.state == "CheckIn");
+  getHubConnection().on('bookings-my-update', (data: Booking[]) => {
+    console.log('bookings-my-update', data);
+    bookings.value = data.filter(x => x.state == "Booked" || x.state == "CheckIn");
   });
 })
 
@@ -119,7 +119,7 @@ onUnmounted(() => {
                     {{ (b.seat?.row ?? 0) * (b.seat?.room?.cols ?? 0) + (b.seat?.col ?? 0) }}
                   </div>
                   <div class="flex flex-row items-center justify-center ml-auto">
-                    <div>{{ b.state }}</div>
+                    <div>{{ localizeState(b.state) }}</div>
                     <Trash2 class="text-red-500"></Trash2>
                   </div>
                 </div>
