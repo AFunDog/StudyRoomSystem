@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Asp.Versioning;
@@ -6,7 +7,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using StudyRoomSystem.Core.Helpers;
 using StudyRoomSystem.Core.Structs;
+using StudyRoomSystem.Core.Structs.Api;
 using StudyRoomSystem.Core.Structs.Entity;
 using StudyRoomSystem.Server.Database;
 using StudyRoomSystem.Server.Helpers;
@@ -25,6 +28,7 @@ public class SeatController : ControllerBase
         AppDbContext = appDbContext;
     }
 
+    [ApiVersion(1.0)]
     [HttpGet("{id:guid}")]
     [AllowAnonymous]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
@@ -37,6 +41,74 @@ public class SeatController : ControllerBase
         if (seat is null)
             return NotFound();
         return Ok(seat);
+    }
+    
+    [ApiVersion(2.0)]
+    [HttpGet("{id:guid}")]
+    [AllowAnonymous]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<GetSeatResponseOk>(StatusCodes.Status200OK)]
+    [EndpointSummary("获取指定座位信息")]
+    [EndpointDescription(
+        """
+        获取座位信息时会附带所在房间信息和座位的占用时间信息
+        """
+    )]
+    public async Task<IActionResult> Get(
+        Guid id,
+        [FromQuery] [Description("查询可用时间段的起点时间")] DateTime? start = null,
+        [FromQuery] [Description("查询可用时间段的结束时间")]DateTime? end = null)
+    {
+        var seat = await AppDbContext
+            .Seats.AsNoTracking()
+            .Include(x => x.Room)
+            // .Include(x => x.Bookings)
+            .SingleOrDefaultAsync(x => x.Id == id);
+        if (seat is null)
+            return NotFound();
+
+
+        var response = new GetSeatResponseOk()
+        {
+            Seat = seat,
+        };
+
+        if (start is not null && end is not null)
+        {
+            if (start.Value.Kind != DateTimeKind.Utc || end.Value.Kind != DateTimeKind.Utc)
+                return BadRequest(new ProblemDetails() { Title = "时间必须是Utc时间" });
+
+            response.OpenTimes = (await AppDbContext
+                    .Bookings.AsNoTracking()
+                    .Where(x => x.SeatId == id)
+                    .Where(x => (start.Value <= x.EndTime && x.StartTime <= end.Value))
+                    .Select(x => new KeyValuePair<DateTime, DateTime>(x.StartTime, x.EndTime))
+                    .ToListAsync())
+                .ToOpenTimes(start.Value, end.Value)
+                .ToArray();
+
+
+            // var openTimes = new List<KeyValuePair<TimeOnly, TimeOnly>>();
+            //
+            // var startTime = seat.Room.OpenTime;
+            // foreach (var (start,end) in fillTimes)
+            // {
+            //     if (startTime < start.ToTimeOnly())
+            //     {
+            //         openTimes.Add(new(startTime, start.ToTimeOnly()));
+            //         startTime = end.ToTimeOnly();
+            //     }
+            // }
+            //
+            // if (startTime < seat.Room.CloseTime)
+            // {
+            //     openTimes.Add(new(startTime, seat.Room.CloseTime));
+            // }
+        }
+
+
+        return Ok(response);
     }
 
     public class CreateSeatRequest
@@ -67,7 +139,7 @@ public class SeatController : ControllerBase
         );
         if (seat is not null)
             return Conflict(new { message = "该位置座位已存在" });
-        
+
         var newSeat = new Seat()
             { RoomId = request.RoomId, Id = Ulid.NewUlid().ToGuid(), Row = request.Row, Col = request.Col };
         await AppDbContext.Seats.AddAsync(newSeat);
@@ -83,7 +155,7 @@ public class SeatController : ControllerBase
     {
         return Ok();
     }
-    
+
 
     [HttpDelete("{id:guid}")]
     [Authorize(AuthorizationHelper.Policy.Admin)]

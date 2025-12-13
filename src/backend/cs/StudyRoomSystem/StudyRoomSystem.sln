@@ -9,6 +9,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionFolder", "SolutionF
 		..\..\..\..\scripts\Dockerfile = ..\..\..\..\scripts\Dockerfile
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StudyRoomSystem.Core.Test", "StudyRoomSystem.Core.Test\StudyRoomSystem.Core.Test.csproj", "{53B6AB37-8BF6-42A4-BF6D-4CB3A99A2BE4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,5 +25,9 @@ Global
 		{8C28D3D5-BFC8-413C-99F7-C6ECDC3C727D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8C28D3D5-BFC8-413C-99F7-C6ECDC3C727D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8C28D3D5-BFC8-413C-99F7-C6ECDC3C727D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{53B6AB37-8BF6-42A4-BF6D-4CB3A99A2BE4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53B6AB37-8BF6-42A4-BF6D-4CB3A99A2BE4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53B6AB37-8BF6-42A4-BF6D-4CB3A99A2BE4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53B6AB37-8BF6-42A4-BF6D-4CB3A99A2BE4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
