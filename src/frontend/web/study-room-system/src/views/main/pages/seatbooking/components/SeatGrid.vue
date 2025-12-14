@@ -83,49 +83,54 @@ watch(
   { immediate: true }
 )
 
-// ========= 时间变化时，调用 v2 接口刷新状态 =========
+// 根据当前房间 + 时间段刷新座位状态
+async function refreshSeatStatus(
+  rangeOverride?: { start: string; end: string } | null
+) {
+  const room = props.room
+  const range = rangeOverride ?? props.timeRange
+
+  if (!room || !range) {
+    return
+  }
+
+  try {
+    const res = await roomRequest.getRoomWithTime({
+      id: room.id,
+      start: range.start,
+      end: range.end,
+    })
+
+    const data = res.data as {
+      room: Room
+      seats?: string[] | null
+    }
+
+    const openSeatIds = new Set<string>(data.seats ?? [])
+
+    const status: Record<string, 'free' | 'busy' | 'disabled'> = {}
+    room.seats?.forEach((s) => {
+      status[s.id] = openSeatIds.has(s.id) ? 'free' : 'busy'
+    })
+    seatStatusMap.value = status
+  } catch (err) {
+    console.error('获取房间可用座位失败', err)
+    const status: Record<string, 'free' | 'busy' | 'disabled'> = {}
+    room.seats?.forEach((s) => {
+      status[s.id] = 'free'
+    })
+    seatStatusMap.value = status
+    toast.error('获取座位状态失败，将暂时按全部可用处理')
+  }
+}
+
+// 时间变化时刷新座位状态
 watch(
   () => props.timeRange,
-  async (range) => {
-    const room = props.room
-    if (!room || !range) {
-      return
-    }
-
-    try {
-      const res = await roomRequest.getRoomWithTime({
-        id: room.id,
-        start: range.start,   // ISO UTC 字符串
-        end: range.end,
-      })
-
-      // axios.get<RoomAvailabilityResponse> 返回的是 AxiosResponse
-      const data = res.data as {
-        room: Room
-        seats?: string[] | null
-      }
-
-      const openSeatIds = new Set<string>(data.seats ?? [])
-
-      const status: Record<string, 'free' | 'busy' | 'disabled'> = {}
-      room.seats?.forEach((s) => {
-        // 在 seats 里的就是空闲座位
-        status[s.id] = openSeatIds.has(s.id) ? 'free' : 'busy'
-      })
-      seatStatusMap.value = status
-    } catch (err) {
-      console.error('获取房间可用座位失败', err)
-      // 兜底：全部当 free，让后端创建预约时再做最终校验
-      const status: Record<string, 'free' | 'busy' | 'disabled'> = {}
-      room.seats?.forEach((s) => {
-        status[s.id] = 'free'
-      })
-      seatStatusMap.value = status
-      toast.error('获取座位状态失败，将暂时按全部可用处理')
-    }
+  async () => {
+    await refreshSeatStatus(null)
   }
 )
-
 
 // ========= 样式 & 交互 =========
 
@@ -140,7 +145,7 @@ function seatClass(seat: Seat | null) {
     return 'text-gray-300 opacity-30 cursor-not-allowed'
   }
 
-  // 3) 有 seat，根据状态来
+  // 3) 有 seat
   const status = seatStatusMap.value[seat.id] ?? 'free'
   if (status === 'disabled') {
     return 'text-gray-300 opacity-60 cursor-not-allowed'
@@ -198,6 +203,7 @@ async function confirmBooking() {
     if (res) {
       toast.success('预约成功')
       dialogOpen.value = false
+      await refreshSeatStatus(range)
     } else {
       toast.error('预约失败，请稍后重试')
     }
@@ -210,11 +216,20 @@ async function confirmBooking() {
 
 <template>
   <div class="bg-accent p-4 rounded-xl w-full h-full grid grid-rows-[auto_1fr]">
-    <!-- 顶部房间名 -->
-    <div class="flex items-center justify-center gap-x-2 mb-2">
-      <div class="rounded-full w-3 h-3 bg-green-400"></div>
-      <div>
-        {{ room.name }}
+    <div
+      class="flex flex-row items-center justify-center gap-3 text-xs md:text-sm text-muted-foreground"
+    >
+      <div class="flex items-center gap-1">
+        <Armchair class="w-6 h-6 text-black" />
+        <span>可预约</span>
+      </div>
+      <div class="flex items-center gap-1">
+        <Armchair class="w-6 h-6 text-red-400" />
+        <span>已占用</span>
+      </div>
+      <div class="flex items-center gap-1">
+        <Armchair class="w-6 h-6 text-gray-300" />
+        <span>不可用</span>
       </div>
     </div>
 
