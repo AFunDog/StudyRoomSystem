@@ -1,6 +1,6 @@
 ﻿using StudyRoomSystem.Core.Structs.Entity;
 
-namespace StudyRoomSystem.Core.Structs.Api;
+namespace StudyRoomSystem.Core.Structs.Api.V2;
 
 public class GetSeatResponseOk
 {

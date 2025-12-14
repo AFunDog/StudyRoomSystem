@@ -1,4 +1,4 @@
-﻿namespace StudyRoomSystem.Core.Structs.Api;
+﻿namespace StudyRoomSystem.Core.Structs.Api.V1;
 
 public class CreateBookingRequest
 {
