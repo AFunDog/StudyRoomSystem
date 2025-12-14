@@ -4,7 +4,7 @@ import { Sheet } from "@/components/ui/sheet"
 import { UserRound } from 'lucide-vue-next'
 import type { User } from '@/lib/types/User'
 import { ref } from 'vue'
-import MainUserSheetContent from '../home/MainUserSheetContent.vue'
+import MainUserSheetContent from './MainUserSheetContent.vue'
 
 const user = JSON.parse(localStorage.getItem('user') || 'null') as User | null
 

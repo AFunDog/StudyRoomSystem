@@ -7,9 +7,9 @@ const router = useRouter()
 const route = useRoute()
 
 const navItems = [
-  { label: '座位预约', path: '/', icon: House },
+  { label: '座位预约', path: '/seatbooking', icon: House },
   { label: '我的预约', path: '/calendar', icon: CalendarDays },
-  { label: "用户中心", path: "/user", icon: UserRound },
+  { label: "用户中心", path: "/usercenter", icon: UserRound },
 ]
 
 function goTo(path: string) {

@@ -1,6 +1,15 @@
 import { http } from "../utils";
+import { httpV2 } from "../utils";
+import type { Room } from "../types/Room";
+
+export interface RoomAvailabilityResponse {
+  room: Room;
+  seats?: string[] | null;   // 后端返回的可用座位 id 列表
+}
 
 export const roomRequest = {
+
+  // V1 api
   // 获取所有房间信息（包含座位）
   getRooms: () => http.get("/room"),
 
@@ -28,4 +37,14 @@ export const roomRequest = {
 
   // 删除房间
   deleteRoom: (id: string) => http.delete(`/room/${id}`),
+
+  //v2 api
+  //获取房间-指定时间段下的座位信息
+  getRoomWithTime: (params: { id: string; start: string; end: string }) =>
+    httpV2.get<RoomAvailabilityResponse>(`/room/${params.id}`, {
+      params: {
+      start: params.start,
+      end: params.end,
+    },
+  }),
 };

@@ -20,6 +20,13 @@ const http: AxiosInstance = axios.create({
   withCredentials: true, // 让请求自动带上 HttpOnly Cookie
 });
 
+const httpV2: AxiosInstance = axios.create({
+  timeout: 10000,
+  headers: { "Content-Type": "application/json" },
+  baseURL: `/api/v2`,
+  withCredentials: true, // 让请求自动带上 HttpOnly Cookie
+});
+
 // 请求拦截器
 http.interceptors.request.use(config => {
   // TODO: 可以在这里添加日志、公共 header、Loading 状态
@@ -74,4 +81,4 @@ async function logout() {
 
 
 
-export { http, cn,logout };
+export { http as http, httpV2, cn, logout };

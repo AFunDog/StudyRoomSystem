@@ -5,10 +5,11 @@ import LoginView from '@/views/login/LoginView.vue'
 import MainView from '@/views/main/layout/MainView.vue'
 import RegisterView from '@/views/register/RegisterView.vue'
 import AdminLoginView from '@/views/admin/login/AdminLoginView.vue'
-import CalendarView from '@/views/main/pages/CalendarView.vue'
+import CalendarView from '@/views/main/pages/calendar/CalendarView.vue'
 import SettingView from '@/views/setting/SettingView.vue'
-import MyUserView from '@/views/main/pages/UserCenterView.vue'
-import MainHomeView from '@/views/main/pages/MainHomeView.vue'
+import MyUserView from '@/views/main/pages/usercenter/UserCenterView.vue'
+import MainHomeView from '@/views/main/pages/mainhome/MainHomeView.vue'
+import SeatBookingView from '@/views/main/pages/seatbooking/SeatBookingView.vue'
 
 // 图标
 import { Calendar, House, UserRound } from 'lucide-vue-next'
@@ -22,9 +23,9 @@ const router = createRouter({
       name: 'main',
       children: [
         { path: '/calendar', component: CalendarView, meta: { icon: Calendar, index: 0 } },
-        { path: '/', component: MainHomeView, meta: { icon: House, index: 1 } },
+        { path: '/seatbooking', component: SeatBookingView, meta: { icon: House, index: 1 } },
         // { path: '/setting', component: SettingView },
-        { path: '/user', component: MyUserView, meta: { icon: UserRound, index: 2 }},
+        { path: '/usercenter', component: MyUserView, meta: { icon: UserRound, index: 2 }},
       ]
     },
     // 静态引入
