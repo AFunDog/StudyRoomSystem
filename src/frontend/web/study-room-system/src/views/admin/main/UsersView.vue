@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 // 引入表单组件
 import AddUserDialog from '@/components/user/AddUserDialog.vue'
 import EditUserDialog from '@/components/user/EditUserDialog.vue'
+import AdminResetPasswordDialog from '@/components/user/AdminResetPasswordDialog.vue'
 
 const users = ref<User[]>([]);
 const page = ref(1);
@@ -45,17 +46,15 @@ async function changePage(newPage: number) {
 // 添加用户弹窗状态
 const showAddDialog = ref(false);
 const addRole = ref<'user' | 'admin'>('user');
-
-// 编辑弹窗状态
-const showEditDialog = ref(false);
-const editingUser = ref<UserEditInput | null>(null);
-
 // 打开添加用户弹窗
 function openAdd(role: 'user' | 'admin') {
   addRole.value = role
   showAddDialog.value = true
 }
 
+// 编辑弹窗状态
+const showEditDialog = ref(false);
+const editingUser = ref<UserEditInput | null>(null);
 // 打开编辑用户弹窗
 function handleEdit(user: User) {
   editingUser.value = {
@@ -68,7 +67,6 @@ function handleEdit(user: User) {
   }
   showEditDialog.value = true
 }
-
 
 // 删除相关状态
 const isDeleteDialogOpen = ref(false);          // 删除确认弹窗显隐
@@ -99,6 +97,16 @@ async function confirmDeleteUser() {
     isDeleteDialogOpen.value = false;
   }
 }
+
+// 修改密码相关状态
+const showChangePasswordDialog = ref(false)
+const changingUser = ref<User | null>(null)
+// 打开修改密码弹窗
+function openChangePassword(user: User) {
+  changingUser.value = user
+  showChangePasswordDialog.value = true
+}
+
 </script>
 
 <template>
@@ -109,45 +117,56 @@ async function confirmDeleteUser() {
       <Button class="hover:brightness-110" @click="openAdd('admin')">添加管理员</Button>
     </div>
 
-    <!-- 用户表格 -->
-    <table class="w-full border-collapse border border-gray-300 rounded-lg overflow-hidden shadow-sm">
-      <thead>
-        <tr class="bg-gray-100">
-          <th class="border p-2">用户名</th>
-          <th class="border p-2">昵称</th>
-          <th class="border p-2">角色</th>
-          <th class="border p-2">学号/工号</th>
-          <th class="border p-2">手机号</th>
-          <th class="border p-2">邮箱</th>
-          <th class="border p-2">操作</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- 空状态提示 -->
-        <tr v-if="users.length === 0">
-          <td colspan="7" class="text-center text-gray-500 p-4">暂无用户</td>
-        </tr>
-        <!-- 用户列表 -->
-        <tr v-for="user in users" :key="user.id">
-          <td class="border p-2">{{ user.userName }}</td>
-          <td class="border p-2">{{ user.displayName }}</td>
-          <td class="border p-2">{{ user.role }}</td>
-          <td class="border p-2">{{ user.campusId }}</td>
-          <td class="border p-2">{{ user.phone }}</td>
-          <td class="border p-2">{{ user.email }}</td>
-          <td class="border p-2 flex gap-x-2">
-            <Button class="bg-yellow-500 hover:bg-yellow-500 hover:brightness-110 text-white px-2 py-1 rounded flex items-center gap-x-1"
-                  @click="handleEdit(user)"><Edit class="size-4" />编辑</Button>
-            <Button
-              class="bg-red-600 hover:bg-red-600 hover:brightness-110 text-white px-2 py-1 rounded flex items-center gap-x-1"
-              @click="openDeleteDialog(user.id)"
-            >
-              <Trash class="size-4" />删除
-            </Button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="overflow-x-auto overflow-y-auto max-h-[600px] border border-gray-300 rounded-lg relative">
+      <!-- 用户表格 -->
+      <table class="w-full border-collapse">
+        <thead class="sticky top-0 z-50 bg-gray-100">
+          <tr class="bg-gray-100">
+            <th class="border p-2">用户名</th>
+            <th class="border p-2">昵称</th>
+            <th class="border p-2">角色</th>
+            <th class="border p-2">学号/工号</th>
+            <th class="border p-2">手机号</th>
+            <th class="border p-2">邮箱</th>
+            <th class="border p-2 sticky right-0 bg-gray-100 z-60 shadow-sm">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- 空状态提示 -->
+          <tr v-if="users.length === 0">
+            <td colspan="7" class="text-center text-gray-500 p-4">暂无用户</td>
+          </tr>
+          <!-- 用户列表 -->
+          <tr v-for="user in users" :key="user.id">
+            <td class="border p-2">{{ user.userName }}</td>
+            <td class="border p-2">{{ user.displayName }}</td>
+            <td class="border p-2">{{ user.role }}</td>
+            <td class="border p-2">{{ user.campusId }}</td>
+            <td class="border p-2">{{ user.phone }}</td>
+            <td class="border p-2">{{ user.email }}</td>
+            <td class="border-t border-b border-l sticky right-0 bg-white z-10 p-0">
+              <div class="h-full flex items-center gap-x-2 px-4 py-3">
+                <Button 
+                  class="bg-yellow-500 hover:bg-yellow-500 hover:brightness-110 text-white px-2 py-1 rounded flex items-center gap-x-1"
+                  @click="handleEdit(user)">
+                  <Edit class="size-4" />编辑
+                </Button>
+                <Button
+                  class="bg-red-600 hover:bg-red-600 hover:brightness-110 text-white px-2 py-1 rounded flex items-center gap-x-1"
+                  @click="openDeleteDialog(user.id)">
+                  <Trash class="size-4" />删除
+                </Button>
+                <Button
+                  class=" hover:brightness-110 text-white px-2 py-1 rounded flex items-center gap-x-1"
+                  @click="openChangePassword(user)">
+                  修改密码
+                </Button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
     <!-- 分页控件 -->
     <div class="flex justify-between items-center mt-4">
@@ -185,6 +204,12 @@ async function confirmDeleteUser() {
     <EditUserDialog
       v-model:show="showEditDialog"
       :user="editingUser"
+      @success="loadUsers"
+    />
+
+    <AdminResetPasswordDialog
+      v-model:show="showChangePasswordDialog"
+      :user="changingUser"
       @success="loadUsers"
     />
 
