@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using StudyRoomSystem.Core.Structs.Entity;
 
-namespace StudyRoomSystem.Core.Structs.Api;
+namespace StudyRoomSystem.Core.Structs.Api.V1;
 
 public class LoginRequest
 {

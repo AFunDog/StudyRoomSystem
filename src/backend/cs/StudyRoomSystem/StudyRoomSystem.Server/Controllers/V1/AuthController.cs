@@ -15,6 +15,7 @@ using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using StudyRoomSystem.Core.Structs;
 using StudyRoomSystem.Core.Structs.Api;
+using StudyRoomSystem.Core.Structs.Api.V1;
 using StudyRoomSystem.Server.Controllers.Filters;
 using StudyRoomSystem.Server.Database;
 using StudyRoomSystem.Server.Helpers;

@@ -24,7 +24,7 @@ class BookingRequest {
             // if(err instanceof AxiosError){
             //     return err.response?.data as { message: string };
             // }
-            //修改错误信息返回策略,返回错误中的title作为message
+            // 修改错误信息返回策略,返回错误中的title作为message
             if (err instanceof AxiosError) {
                 const data = err.response?.data as any
 

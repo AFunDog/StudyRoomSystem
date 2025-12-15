@@ -21,6 +21,7 @@ import { toast } from 'vue-sonner'
 import { bookingRequest } from '@/lib/api/bookingRequest'
 import { localizeState, type Booking } from '@/lib/types/Booking'
 import { CornerDownRight } from 'lucide-vue-next'
+import { AxiosError } from 'axios'
 
 const showOnlyActive = ref(false)
 
@@ -29,13 +30,17 @@ const loading = ref(false)
 
 const isDetailDialogOpen = ref(false)
 const isCancelDialogOpen = ref(false)
+const isEditDialogOpen = ref(false)
+
 const selectBooking = ref<Booking | null>(null)
 
+// 按状态控制按钮可用
 const canCheckIn = computed(() => selectBooking.value?.state === 'Booked')
 const canCheckOut = computed(() => selectBooking.value?.state === 'CheckIn')
 const canCancel = computed(() => selectBooking.value?.state === 'Booked')
+const canEdit   = computed(() => selectBooking.value?.state === 'Booked')
 
-// 修改列表显示顺序：按创建时间倒序，最新预约在前
+// 只看有效预约：Booked + CheckIn；按创建时间倒序
 const filteredBookings = computed<Booking[]>(() => {
   const list = showOnlyActive.value
     ? bookings.value.filter(
@@ -74,7 +79,6 @@ function openDetailDialog(b: Booking) {
   isDetailDialogOpen.value = true
 }
 
-
 function openCancelDialog() {
   if (!selectBooking.value) return
   isCancelDialogOpen.value = true
@@ -88,7 +92,6 @@ async function confirmCancelBooking() {
     return
   }
 
-  // 状态不是 Booking 禁止取消预约按钮
   if (b.state !== 'Booked') {
     toast.error('当前预约状态不可取消')
     isCancelDialogOpen.value = false
@@ -99,65 +102,84 @@ async function confirmCancelBooking() {
     const res = await bookingRequest.cancelBooking(b.id, false)
     console.log(res)
 
-    // 根据返回 message 判断是否真正取消成功
     if (res.message === '预约已取消') {
-      // 成功
       toast.success(res.message)
       await getBookings()
-      // 关掉详情弹窗
       isDetailDialogOpen.value = false
     } else {
-      // 后端返回了失败原因
       toast.error(res.message || '取消预约失败')
     }
   } catch (err) {
     console.error('取消预约时发生错误', err)
     toast.error('取消预约失败，请稍后重试')
   } finally {
-    // 只关掉“确认取消”的弹窗
     isCancelDialogOpen.value = false
-    isDetailDialogOpen.value = false
   }
 }
 
 // 签到
 async function checkInBooking() {
-  if (selectBooking.value === null)
-    return;
+  const b = selectBooking.value
+  if (!b) return
 
-  if (canCheckIn.value === false) {
-    toast.error('当前预约状态不可签到');
-    return;
+  if (!canCheckIn.value) {
+    toast.error('当前预约状态不可签到')
+    return
   }
 
   try {
-    const res = await bookingRequest.checkIn({ id: selectBooking.value.id })
-    console.log(res)
+    await bookingRequest.checkIn({ id: b.id })
     toast.success('签到成功')
     await getBookings()
   } catch (err) {
     console.error('签到时发生错误', err)
+
+    // 尝试解析后端 ProblemDetails.Title
+    if (err instanceof AxiosError) {
+      const data = err.response?.data as any
+      if (data && typeof data.title === 'string') {
+        toast.error(data.title)
+        return
+      }
+      if (data && typeof data.message === 'string') {
+        toast.error(data.message)
+        return
+      }
+    }
+
     toast.error('签到失败，请稍后重试')
   }
 }
 
 // 签退
 async function checkOutBooking() {
-  if (selectBooking.value === null)
-    return;
+  const b = selectBooking.value
+  if (!b) return
 
-  if (canCheckOut.value === false) {
-    toast.error('当前预约状态不可签退');
-    return;
+  if (!canCheckOut.value) {
+    toast.error('当前预约状态不可签退')
+    return
   }
 
   try {
-    const res = await bookingRequest.checkOut({ id: selectBooking.value.id })
-    console.log(res)
+    await bookingRequest.checkOut({ id: b.id })
     toast.success('签退成功')
     await getBookings()
   } catch (err) {
     console.error('签退时发生错误', err)
+
+    if (err instanceof AxiosError) {
+      const data = err.response?.data as any
+      if (data && typeof data.title === 'string') {
+        toast.error(data.title)
+        return
+      }
+      if (data && typeof data.message === 'string') {
+        toast.error(data.message)
+        return
+      }
+    }
+
     toast.error('签退失败，请稍后重试')
   }
 }
@@ -172,6 +194,43 @@ function formatTime(t: string | undefined | null) {
   return dayjs(t).format('HH:mm:ss')
 }
 
+function bookingCardClass(state: Booking['state']) {
+  switch (state) {
+    case 'Booked':
+      // 已预约：蓝色，当前/即将到来的预约
+      return 'border-l-4 border-l-sky-500/80 bg-background hover:bg-accent/40'
+    case 'CheckIn':
+      // 已签到：绿色，高亮一点
+      return 'border-l-4 border-l-emerald-500/80 bg-background hover:bg-accent/40'
+    case 'Checkout':
+      // 已签退：灰一点，弱化
+      return 'border-l-4 border-l-slate-400/80 bg-background opacity-80 hover:bg-accent/30'
+    case 'Canceled':
+      // 已取消：红色+透明度+一点删除感
+      return 'border-l-4 border-l-red-400/80 bg-background/60 opacity-70 hover:bg-accent/20'
+    default:
+      return 'bg-background hover:bg-accent/40'
+  }
+}
+
+function stateBadgeClass(state: Booking['state']) {
+  const base =
+    'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium border'
+
+  switch (state) {
+    case 'Booked':
+      return base + ' bg-sky-50 text-sky-700 border-sky-200'
+    case 'CheckIn':
+      return base + ' bg-emerald-50 text-emerald-700 border-emerald-200'
+    case 'Checkout':
+      return base + ' bg-slate-50 text-slate-600 border-slate-200'
+    case 'Canceled':
+      return base + ' bg-red-50 text-red-600 border-red-200 line-through'
+    default:
+      return base + ' bg-muted text-muted-foreground border-border'
+  }
+}
+
 onMounted(() => {
   getBookings()
 })
@@ -179,6 +238,7 @@ onMounted(() => {
 
 <template>
   <div class="flex flex-col items-stretch justify-between h-full w-full min-h-0">
+    <!-- 详情弹窗 -->
     <Dialog v-model:open="isDetailDialogOpen">
       <DialogContent>
         <DialogHeader>
@@ -186,11 +246,11 @@ onMounted(() => {
           <div class="flex flex-col gap-y-2">
             <div class="flex flex-row gap-x-2 items-center">
               <div class="text-lg">
-                {{ selectBooking?.seat?.room?.name }}
+                房间号: {{ selectBooking?.seat?.room?.name }}
               </div>
               <div class="text-lg">—</div>
-              <div>
-                {{
+              <div class="text-lg">
+                座位号: {{
                   (selectBooking?.seat?.row ?? 0) *
                     (selectBooking?.seat?.room?.cols ?? 0) +
                   (selectBooking?.seat?.col ?? 0)
@@ -208,20 +268,31 @@ onMounted(() => {
           </div>
         </DialogHeader>
         <DialogFooter>
-          <div class="flex flex-row items-center justify-center gap-x-2">
+          <div class="flex flex-wrap items-center justify-center gap-2">
             <Button variant="outline" @click="isDetailDialogOpen = false">
-              <CornerDownRight></CornerDownRight>
-              <span>
-                返回
-              </span>
+              <CornerDownRight class="mr-1" />
+              <span>返回</span>
             </Button>
-            <Button variant="default" :disabled="!canCheckIn" @click="checkInBooking">
+
+            <Button
+              variant="default"
+              :disabled="!canCheckIn"
+              @click="checkInBooking"
+            >
               签到
             </Button>
-            <Button variant="secondary" :disabled="!canCheckOut" @click="checkOutBooking">
+            <Button
+              variant="secondary"
+              :disabled="!canCheckOut"
+              @click="checkOutBooking"
+            >
               签退
             </Button>
-            <Button variant="destructive" :disabled="!canCancel" @click="() => { if (canCancel) openCancelDialog() }">
+            <Button
+              variant="destructive"
+              :disabled="!canCancel"
+              @click="() => { if (canCancel) openCancelDialog() }"
+            >
               取消预约
             </Button>
           </div>
@@ -295,23 +366,31 @@ onMounted(() => {
           >
             <TransitionGroup name="bookings">
               <div v-for="b in filteredBookings" :key="b.id">
-                <Card class="py-2" @click="openDetailDialog(b)">
+                <Card
+                  class="py-2 transition-colors cursor-pointer"
+                  :class="bookingCardClass(b.state)"
+                  @click="openDetailDialog(b)"
+                >
                   <CardHeader>
                     <div class="flex flex-row gap-x-2 items-center">
                       <div class="text-lg">
                         {{ b.seat?.room?.name }}
                       </div>
                       <div class="text-lg">—</div>
-                      <div>
+                      <div class="text-lg">
                         {{
                           (b.seat?.row ?? 0) * (b.seat?.room?.cols ?? 0) +
                           (b.seat?.col ?? 0)
                         }}
                       </div>
 
-                      <!-- 右侧只展示状态 -->
-                      <div class="flex flex-row items-center justify-center ml-auto text-sm text-muted-foreground">
-                        <div>{{ localizeState(b.state) }}</div>
+                      <!-- 右侧：彩色状态胶囊 -->
+                      <div
+                        class="flex flex-row items-center justify-center ml-auto text-sm"
+                      >
+                        <span :class="stateBadgeClass(b.state)">
+                          {{ localizeState(b.state) }}
+                        </span>
                       </div>
                     </div>
 

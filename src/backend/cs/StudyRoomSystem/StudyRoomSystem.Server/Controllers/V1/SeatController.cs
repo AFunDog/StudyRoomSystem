@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Asp.Versioning;
@@ -6,7 +7,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using StudyRoomSystem.Core.Helpers;
 using StudyRoomSystem.Core.Structs;
+using StudyRoomSystem.Core.Structs.Api;
 using StudyRoomSystem.Core.Structs.Entity;
 using StudyRoomSystem.Server.Database;
 using StudyRoomSystem.Server.Helpers;
@@ -25,6 +28,7 @@ public class SeatController : ControllerBase
         AppDbContext = appDbContext;
     }
 
+    [ApiVersion(1.0)]
     [HttpGet("{id:guid}")]
     [AllowAnonymous]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
@@ -38,6 +42,8 @@ public class SeatController : ControllerBase
             return NotFound();
         return Ok(seat);
     }
+    
+    
 
     public class CreateSeatRequest
     {
@@ -67,7 +73,7 @@ public class SeatController : ControllerBase
         );
         if (seat is not null)
             return Conflict(new { message = "该位置座位已存在" });
-        
+
         var newSeat = new Seat()
             { RoomId = request.RoomId, Id = Ulid.NewUlid().ToGuid(), Row = request.Row, Col = request.Col };
         await AppDbContext.Seats.AddAsync(newSeat);
@@ -83,7 +89,7 @@ public class SeatController : ControllerBase
     {
         return Ok();
     }
-    
+
 
     [HttpDelete("{id:guid}")]
     [Authorize(AuthorizationHelper.Policy.Admin)]

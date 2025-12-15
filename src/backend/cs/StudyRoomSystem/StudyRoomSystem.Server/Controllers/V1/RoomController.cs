@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StudyRoomSystem.Core.Structs;
 using StudyRoomSystem.Core.Structs.Api;
+using StudyRoomSystem.Core.Structs.Api.V1;
 using StudyRoomSystem.Core.Structs.Entity;
 using StudyRoomSystem.Server.Database;
 using StudyRoomSystem.Server.Helpers;
