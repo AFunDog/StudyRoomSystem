@@ -15,4 +15,4 @@ steps:
   - sh:
       name: "sh"
       inputs:
-        command: "echo hello"
+        command: "docker build -f .\scripts\server.Dockerfile -t study_room_system:latest ."
