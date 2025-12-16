@@ -154,7 +154,7 @@ function seatClass(seat: Seat | null) {
     return 'text-red-400 cursor-not-allowed'
   }
   // free
-  return 'text-black hover:text-primary cursor-pointer'
+  return 'hover:text-primary cursor-pointer'
 }
 
 function displaySeatNumber(seat: Seat | null) {
@@ -217,10 +217,10 @@ async function confirmBooking() {
 <template>
   <div class="bg-accent p-4 rounded-xl w-full h-full grid grid-rows-[auto_1fr]">
     <div
-      class="flex flex-row items-center justify-center gap-3 text-xs md:text-sm text-muted-foreground"
+      class="flex flex-row items-center justify-center gap-3 text-xs md:text-sm [&>div>span]:text-muted-foreground"
     >
       <div class="flex items-center gap-1">
-        <Armchair class="w-6 h-6 text-black" />
+        <Armchair class="w-6 h-6" />
         <span>可预约</span>
       </div>
       <div class="flex items-center gap-1">
