@@ -1,6 +1,10 @@
-﻿using Asp.Versioning;
+﻿using System.ComponentModel.DataAnnotations;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using StudyRoomSystem.Core.Structs.Api;
+using StudyRoomSystem.Core.Structs.Entity;
 using StudyRoomSystem.Server.Database;
 using StudyRoomSystem.Server.Helpers;
 
@@ -21,13 +25,35 @@ public class ViolationController : ControllerBase
         AppDbContext = appDbContext;
     }
 
-    
+
     [HttpGet]
     [Authorize(AuthorizationHelper.Policy.Admin)]
     [EndpointSummary("查看所有的违规记录")]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll(
+        [FromQuery] [Range(1, int.MaxValue)] int page = 1,
+        [FromQuery] [Range(1, 100)] int pageSize = 20)
     {
-        return Ok();
+        var query = AppDbContext
+            .Violations.Include(x => x.User)
+            .AsNoTracking();
+
+        var total = await query.CountAsync();
+
+        var items = await query
+            .OrderByDescending(x => x.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return Ok(
+            new ApiPageResult<Violation>()
+            {
+                Total = total,
+                Page = page,
+                PageSize = pageSize,
+                Items = items
+            }
+        );
     }
 
     [HttpGet("{id:guid}")]
@@ -45,7 +71,7 @@ public class ViolationController : ControllerBase
     {
         return Ok();
     }
-    
+
     [HttpDelete("{id:guid}")]
     [Authorize(AuthorizationHelper.Policy.Admin)]
     [EndpointSummary("删除违规记录")]
