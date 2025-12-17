@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using Asp.Versioning;
@@ -53,11 +54,10 @@ public class BookingController : ControllerBase
     [ProducesResponseType<IEnumerable<Booking>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
     [EndpointSummary("管理员获取所有预约")]
-    public async Task<IActionResult> GetAllBookings([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    public async Task<IActionResult> GetAllBookings(
+        [FromQuery] [Range(1, int.MaxValue)] int page = 1,
+        [FromQuery] [Range(1, 100)] int pageSize = 20)
     {
-        if (page < 1) page = 1;
-        if (pageSize < 1) pageSize = 1;
-        if (pageSize > 100) pageSize = 100; // 限制最大页大小
 
         var query = AppDbContext
             .Bookings
@@ -73,12 +73,13 @@ public class BookingController : ControllerBase
             .Take(pageSize)
             .ToListAsync();
 
-        return Ok(new
+        return Ok(
+            new ApiPageResult<Booking>()
         {
-            total,
-            page,
-            pageSize,
-            items
+            Total = total,
+            Page = page,
+            PageSize = pageSize,
+            Items = items
         });
     }
 
