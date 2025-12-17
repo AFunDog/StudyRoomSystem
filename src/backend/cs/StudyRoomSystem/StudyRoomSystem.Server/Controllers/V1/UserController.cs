@@ -352,14 +352,10 @@ public class UserController : ControllerBase
     [Authorize(AuthorizationHelper.Policy.Admin)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [EndpointSummary("管理员获取所有用户")]
-    public async Task<IActionResult> GetAllUsers([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    public async Task<IActionResult> GetAllUsers( 
+        [FromQuery] [Range(1, int.MaxValue)] int page = 1,
+        [FromQuery] [Range(1, 100)] int pageSize = 20)
     {
-        if (page < 1)
-            page = 1;
-        if (pageSize < 1)
-            pageSize = 1;
-        if (pageSize > 100)
-            pageSize = 100; // 限制最大页大小
 
         var query = AppDbContext.Users.AsQueryable();
 
@@ -369,15 +365,15 @@ public class UserController : ControllerBase
             .OrderByDescending(u => u.CreateTime)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .ToArrayAsync();
+            .ToListAsync();
 
         return Ok(
-            new
+            new ApiPageResult<User>
             {
-                total,
-                page,
-                pageSize,
-                items
+                Total = total,
+                Page = page,
+                PageSize = pageSize,
+                Items = items
             }
         );
     }

@@ -54,6 +54,18 @@ public class AppDbContext : DbContext
             .HasForeignKey(v => v.UserId)
             .HasPrincipalKey(u => u.Id)
             .IsRequired();
+        // Violation 关联 Booking
+        modelBuilder
+            .Entity<Violation>()
+            .HasOne(v => v.Booking)
+            .WithMany()
+            .HasForeignKey(v => v.BookingId)
+            .HasPrincipalKey(u => u.Id)
+            .IsRequired();
+        // Violation State 枚举转换
+        modelBuilder.Entity<Violation>().Property(v => v.State).HasConversion<string>();
+        // Violation Type 枚举转换
+        modelBuilder.Entity<Violation>().Property(v => v.Type).HasConversion<string>();
         // Complaint 关联 User
         modelBuilder
             .Entity<Complaint>()
