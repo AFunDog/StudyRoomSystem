@@ -128,7 +128,8 @@ public class ComplaintController : ControllerBase
                 State = ComplaintStateEnum.已发起,
                 Type = request.Type,
                 SendContent = request.Content,
-                CreateTime = DateTime.UtcNow
+                CreateTime = DateTime.UtcNow,
+                TargetTime = request.TargetTime
             }
         );
         await AppDbContext.SaveChangesAsync();
@@ -153,6 +154,7 @@ public class ComplaintController : ControllerBase
 
         entity.Type = request.Type ?? entity.Type;
         entity.SendContent = request.Content ?? entity.SendContent;
+        entity.TargetTime = request.TargetTime ?? entity.TargetTime;
         var track = AppDbContext.Complaints.Update(entity);
         await AppDbContext.SaveChangesAsync();
 

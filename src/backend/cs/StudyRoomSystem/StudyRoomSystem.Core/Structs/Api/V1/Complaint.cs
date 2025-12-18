@@ -9,6 +9,7 @@ public record CreateComplaintRequest
     public required string Type { get; set; }
     [MaxLength(2048)]
     public required string Content { get; set; }
+    public DateTime? TargetTime { get; set; }
 }
 
 public record EditComplaintRequest
@@ -18,6 +19,7 @@ public record EditComplaintRequest
     public string? Type { get; set; }
     [MaxLength(2048)]
     public string? Content { get; set; }
+    public DateTime? TargetTime { get; set; }
 }
 
 public record HandleComplaintRequest

@@ -7,6 +7,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using Asp.Versioning;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +17,7 @@ using Serilog;
 using StudyRoomSystem.Core.Structs;
 using StudyRoomSystem.Core.Structs.Api;
 using StudyRoomSystem.Core.Structs.Api.V1;
+using StudyRoomSystem.Server.Contacts;
 using StudyRoomSystem.Server.Controllers.Filters;
 using StudyRoomSystem.Server.Database;
 using StudyRoomSystem.Server.Helpers;
@@ -26,16 +28,11 @@ namespace StudyRoomSystem.Server.Controllers.V1;
 [ApiController]
 [Route("api/v{version:apiVersion}/auth")]
 [ApiVersion("1.0")]
-public class AuthController : ControllerBase
+public class AuthController(IConfiguration configuration, AppDbContext appDbContext,IBlacklistService blacklistService) : ControllerBase
 {
-    private IConfiguration Configuration { get; }
-    private AppDbContext AppDbContext { get; }
-
-    public AuthController(IConfiguration configuration, AppDbContext appDbContext)
-    {
-        Configuration = configuration;
-        AppDbContext = appDbContext;
-    }
+    private IConfiguration Configuration { get; } = configuration;
+    private AppDbContext AppDbContext { get; } = appDbContext;
+    private IBlacklistService BlacklistService { get; } = blacklistService;
 
     // public static IEndpointRouteBuilder MapAuthController(this IEndpointRouteBuilder builder)
     // {
@@ -71,7 +68,14 @@ public class AuthController : ControllerBase
                     Title = "密码错误"
                 }
             );
-
+        
+        // 检查黑名单
+        var blacklists = (await BlacklistService.GetValidBlacklists(user.Id)).ToArray();
+        if (blacklists.Any())
+        {
+            return Forbid();
+        }
+        
         var claims = new List<Claim>()
         {
             new Claim(ClaimExtendTypes.Id, user.Id.ToString()), new Claim(ClaimTypes.Name, request.UserName),

@@ -43,7 +43,7 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 
 // 配置 Service
-builder.Services.AddHostedService<PgSqlNotificationsService>().AddHostedService<UpdateDatabaseService>();
+builder.Services.AddInternalServices();
 
 // 配置 OpenApi
 builder.Services.AddOpenApi("v1", options => { options.AddOperationTransformer<AuthorizeCheckOperationFilter>(); });

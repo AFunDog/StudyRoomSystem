@@ -12,14 +12,22 @@ public class AppDbContext : DbContext
     public DbSet<Booking> Bookings { get; set; }
     public DbSet<Violation> Violations { get; set; }
     public DbSet<Complaint> Complaints { get; set; }
+    public DbSet<Blacklist> Blacklists { get; set; }
+
 
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        #region 数据关联
+        #region Users
+
         // User Role 枚举转换
         modelBuilder.Entity<User>().Property(u => u.Role).HasConversion<string>();
+
+        #endregion
+
+        #region Seats
+
         // Seat 关联 Room
         modelBuilder
             .Entity<Seat>()
@@ -28,6 +36,11 @@ public class AppDbContext : DbContext
             .HasForeignKey(s => s.RoomId)
             .HasPrincipalKey(r => r.Id)
             .IsRequired();
+
+        #endregion
+
+        #region Bookings
+
         // Booking 关联 User
         modelBuilder
             .Entity<Booking>()
@@ -46,6 +59,11 @@ public class AppDbContext : DbContext
             .IsRequired();
         // Booking State 枚举转换
         modelBuilder.Entity<Booking>().Property(b => b.State).HasConversion<string>();
+
+        #endregion
+
+        #region Violations
+
         // Violation 关联 User
         modelBuilder
             .Entity<Violation>()
@@ -66,6 +84,11 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Violation>().Property(v => v.State).HasConversion<string>();
         // Violation Type 枚举转换
         modelBuilder.Entity<Violation>().Property(v => v.Type).HasConversion<string>();
+
+        #endregion
+
+        #region Complaints
+
         // Complaint 关联 User
         modelBuilder
             .Entity<Complaint>()
@@ -89,6 +112,18 @@ public class AppDbContext : DbContext
             .HasPrincipalKey(u => u.Id);
         // Complaint State 枚举转换
         modelBuilder.Entity<Complaint>().Property(c => c.State).HasConversion<string>();
+
+        #endregion
+
+        #region Blacklists
+        // Blacklist 关联 User
+        modelBuilder
+            .Entity<Blacklist>()
+            .HasOne(b => b.User)
+            .WithMany()
+            .HasForeignKey(b => b.UserId)
+            .HasPrincipalKey(u => u.Id);
+
         #endregion
     }
 }
