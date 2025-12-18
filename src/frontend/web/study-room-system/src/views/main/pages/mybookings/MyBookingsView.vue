@@ -250,7 +250,10 @@ onMounted(() => {
         <Button
           variant="ghost"
           size="sm"
-          class="flex items-center gap-1 md:hidden"
+          class="flex items-center gap-1 md:hidden
+                  bg-gray-100 hover:bg-gray-200
+                  text-gray-600 border border-gray-200
+                  disabled:opacity-60 disabled:cursor-not-allowed"
           :disabled="loading"
           @click="loadBookings(true)"
         >
@@ -262,7 +265,11 @@ onMounted(() => {
         <Button
           variant="ghost"
           size="icon"
-          class="hidden md:inline-flex"
+          class="hidden md:inline-flex
+                  bg-gray-100 hover:bg-gray-200
+                  text-gray-600 border border-gray-200
+                  rounded-full
+                  disabled:opacity-60 disabled:cursor-not-allowed"
           :disabled="loading"
           @click="loadBookings(true)"
         >
