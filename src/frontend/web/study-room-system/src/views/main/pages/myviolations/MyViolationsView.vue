@@ -7,6 +7,7 @@ import { violationRequest } from "@/lib/api/violationRequest";
 import ViolationFilters from "./components/ViolationFilters.vue";
 import ViolationList from "./components/ViolationList.vue";
 import { Button } from "@/components/ui/button";
+import { RotateCw } from "lucide-vue-next";
 
 type TypeFilter = "all" | Violation["type"];
 
@@ -49,7 +50,7 @@ async function loadViolations(reset = false) {
       pageSize,
     });
 
-    if (res.items.length < pageSize) {
+    if (res.items.length < pageSize || page.value * pageSize >= res.total ) {
       hasMore.value = false;
     }
 
@@ -80,9 +81,39 @@ onMounted(() => {
 
 <template>
   <div class="flex flex-col h-full w-full px-4 py-4 gap-4 min-h-0">
-    <div class="flex items-center justify-between">
+    <div class="flex items-center justify-between gap-2">
       <div class="text-lg font-semibold">
         我的违规
+      </div>
+
+      <div class="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          class="flex items-center gap-1 md:hidden
+                  bg-gray-100 hover:bg-gray-200
+                  text-gray-600 border border-gray-200
+                  disabled:opacity-60 disabled:cursor-not-allowed"
+          :disabled="loading"
+          @click="loadViolations(true)"
+        >
+          <RotateCw class="w-4 h-4" />
+          <span class="text-xs">刷新</span>
+        </Button>
+
+        <!-- PC端：纯图标按钮 -->
+        <Button
+          variant="ghost"
+          size="icon"
+          class="hidden md:inline-flex
+                  bg-gray-100 hover:bg-gray-200
+                  text-gray-600 border border-gray-200
+                  rounded-full
+                  disabled:opacity-60 disabled:cursor-not-allowed"
+          :disabled="loading"
+          @click="loadViolations(true)"
+        ><RotateCw class="w-4 h-4" />
+        </Button>
       </div>
     </div>
 
@@ -90,7 +121,6 @@ onMounted(() => {
       :type-filter="typeFilter"
       :loading="loading"
       @update:type-filter="typeFilter = $event as TypeFilter"
-      @refresh="() => loadViolations(true)"
     />
 
     <div class="flex-1 min-h-0 h-full overflow-hidden">

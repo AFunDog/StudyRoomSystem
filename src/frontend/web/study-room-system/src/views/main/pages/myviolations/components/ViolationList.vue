@@ -24,6 +24,20 @@ function badgeClass(type: Violation["type"]) {
   }
 }
 
+function cardClass(type: Violation["type"]) {
+  switch (type) {
+    case "超时":
+      return "border-l-4 border-l-amber-500/80";
+    case "强制取消":
+      return "border-l-4 border-l-red-500/80";
+    case "管理员":
+      return "border-l-4 border-l-slate-400/80";
+    default:
+      return "";
+  }
+}
+
+// TODO: 处理房间和座位位置的相关信息，考虑使用按guid查询预约条目获取房间和座位信息
 function formatCreate(t?: string | null) {
   return t ? dayjs(t).format("YYYY/MM/DD HH:mm") : "--";
 }
@@ -60,7 +74,11 @@ function seatNumber(cols?: number | null, row?: number | null, col?: number | nu
       class="flex flex-col min-w-0 gap-y-2 max-w-full flex-nowrap overflow-y-auto h-full rounded-md"
     >
       <div v-for="v in violations" :key="v.id">
-        <Card class="py-2 px-2 bg-background/70">
+        <Card
+          class="py-2 px-2 bg-background/70 transition-colors"
+          :class="cardClass(v.type)"
+        >
+
           <CardHeader>
             <div class="flex flex-row gap-x-2 items-center">
               <div class="text-base font-semibold">

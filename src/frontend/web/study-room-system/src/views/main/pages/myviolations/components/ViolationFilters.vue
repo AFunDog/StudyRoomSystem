@@ -8,7 +8,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: "update:type-filter", value: string): void;
-  (e: "refresh"): void;
 }>();
 
 const typeOptions = [
@@ -36,10 +35,5 @@ const typeOptions = [
       </div>
     </div>
 
-    <div class="flex items-center gap-2 md:ml-auto">
-      <Button variant="ghost" size="sm" :disabled="loading" @click="emit('refresh')">
-        刷新
-      </Button>
-    </div>
   </div>
 </template>
