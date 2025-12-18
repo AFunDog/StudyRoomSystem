@@ -34,7 +34,9 @@ public class BookingController : ControllerBase
     [ProducesResponseType<IEnumerable<Booking>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [EndpointSummary("获取所有我的预约")]
-    public async Task<IActionResult> GetMyBookings()
+    public async Task<IActionResult> GetMyBookings(
+        [FromQuery] [Range(1, int.MaxValue)] int page = 1,
+        [FromQuery] [Range(1, 100)] int pageSize = 20)
     {
         var userId = Guid.TryParse(User.FindFirst(ClaimExtendTypes.Id)?.Value, out var id) ? id : Guid.Empty;
         if (userId == Guid.Empty)
@@ -45,6 +47,9 @@ public class BookingController : ControllerBase
                 .Bookings.Include(b => b.Seat)
                 .Include(b => b.Seat.Room)
                 .Where(x => x.UserId == userId)
+                .OrderByDescending(b => b.CreateTime)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync()
         );
     }
