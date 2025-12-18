@@ -11,6 +11,7 @@ import MyUserView from '@/views/main/pages/usercenter/UserCenterView.vue'
 import MainHomeView from '@/views/main/pages/mainhome/MainHomeView.vue'
 import SeatBookingView from '@/views/main/pages/seatbooking/SeatBookingView.vue'
 import MyBookingsView from '@/views/main/pages/mybookings/MyBookingsView.vue'
+import MyViolationsView from '@/views/main/pages/myviolations/MyViolationsView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -22,6 +23,7 @@ const router = createRouter({
       children: [
         { path: '/seatbooking', component: SeatBookingView },
         { path: '/mybookings', component: MyBookingsView },
+        { path: '/myviolations', component: MyViolationsView },
         { path: '/usercenter', component: MyUserView },
 
         // 弃用
