@@ -1,12 +1,12 @@
 ﻿using System.Text.Json.Serialization;
 
 namespace StudyRoomSystem.Core.Structs.Entity;
-[JsonConverter(typeof(JsonStringEnumConverter))]
+[JsonConverter(typeof(JsonStringEnumConverter<ViolationStateEnum>))]
 public enum ViolationStateEnum
 {
     Violation
 }
-[JsonConverter(typeof(JsonStringEnumConverter))]
+[JsonConverter(typeof(JsonStringEnumConverter<ViolationTypeEnum>))]
 public enum ViolationTypeEnum
 {
     超时,

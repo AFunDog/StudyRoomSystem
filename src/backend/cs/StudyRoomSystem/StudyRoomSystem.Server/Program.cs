@@ -10,6 +10,8 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using Serilog;
+using Serilog.Events;
+using Serilog.Formatting.Compact;
 using StudyRoomSystem.Core.Structs.Entity;
 using StudyRoomSystem.Server.Controllers.V1;
 using StudyRoomSystem.Server.Converters;
@@ -21,16 +23,22 @@ using StudyRoomSystem.Server.Services;
 using StudyRoomSystem.Server.Services.HostedService;
 using Zeng.CoreLibrary.Toolkit.Logging;
 
-// using ApiVersion = Asp.Versioning.ApiVersion;
-
 var builder = WebApplication.CreateBuilder(args);
 
 // 初始化 Serilog
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.FromLogContext()
     .Enrich.ShortSourceContext()
     .Enrich.FromTraceInfo()
     .WriteTo.Console(outputTemplate: LoggerExtension.ConsoleMessageTemplate)
+    .WriteTo.File(
+        new CompactJsonFormatter(),
+        "logs/log-.json",
+        restrictedToMinimumLevel: LogEventLevel.Verbose,
+        rollingInterval: RollingInterval.Day,
+        rollOnFileSizeLimit: true
+    )
     .CreateLogger();
 builder.Host.UseSerilog();
 
@@ -38,30 +46,8 @@ builder.Host.UseSerilog();
 builder.Services.AddHostedService<PgSqlNotificationsService>().AddHostedService<UpdateDatabaseService>();
 
 // 配置 OpenApi
-builder.Services.AddOpenApi(
-    "v1",
-    options =>
-    {
-        options
-            // .AddDocumentTransformer<BearerSecuritySchemeTransformer>()
-            .AddOperationTransformer<AuthorizeCheckOperationFilter>()
-            // .AddSchemaTransformer<ModelDescSchemeTransformer>()
-            //
-            ;
-    }
-);
-builder.Services.AddOpenApi(
-    "v2",
-    options =>
-    {
-        options
-            // .AddDocumentTransformer<BearerSecuritySchemeTransformer>()
-            .AddOperationTransformer<AuthorizeCheckOperationFilter>()
-            // .AddSchemaTransformer<ModelDescSchemeTransformer>()
-            //
-            ;
-    }
-);
+builder.Services.AddOpenApi("v1", options => { options.AddOperationTransformer<AuthorizeCheckOperationFilter>(); });
+builder.Services.AddOpenApi("v2", options => { options.AddOperationTransformer<AuthorizeCheckOperationFilter>(); });
 
 // 添加 CORS 服务
 builder.Services.AddCors(options =>
@@ -77,26 +63,6 @@ builder.Services.AddCors(options =>
     }
 );
 
-// API文档版本控制
-// builder.Services.AddApiVersioning(options =>
-//     {
-//         options.DefaultApiVersion = new ApiVersion(1, 0);
-//         options.AssumeDefaultVersionWhenUnspecified = true;
-//         options.ReportApiVersions = true;
-//         // options.ApiVersionReader = ApiVersionReader.Combine(
-//         //     new UrlSegmentApiVersionReader(),
-//         //     new HeaderApiVersionReader("x-api-version"),
-//         //     new MediaTypeApiVersionReader("x-api-version")
-//         // );
-//         // 关键：指定版本号的来源
-//     }
-// ).AddVersionedApiExplorer(options =>
-//     {
-//         // 自动添加版本控制
-//         options.GroupNameFormat = "'v'VVV";
-//         options.SubstituteApiVersionInUrl = true;
-//     }
-// );
 builder
     .Services.AddApiVersioning(options =>
         {
@@ -156,12 +122,6 @@ builder.Services.Configure<CookiePolicyOptions>(options =>
         options.Secure = CookieSecurePolicy.Always;
     }
 );
-
-// builder.Services.AddRouting(options =>
-// {
-//     options.LowercaseQueryStrings = true;
-//     options.LowercaseUrls = true;
-// });
 
 // 添加 JWT 认证
 builder

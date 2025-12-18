@@ -36,18 +36,14 @@ public class ComplaintController : ControllerBase
         [FromQuery] [Range(1, 100)] int pageSize = 20)
     {
         var query = AppDbContext
-            .Complaints.Include(x => x.ReceiveUser)
+            .Complaints.Include(x => x.Seat)
             .Include(x => x.SendUser)
             .Include(x => x.HandleUser)
             .AsNoTracking();
 
         var total = await query.CountAsync();
 
-        var items = await query
-            .OrderByDescending(x => x.Id)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
+        var items = await query.OrderByDescending(x => x.Id).Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
 
         return Ok(
             new ApiPageResult<Complaint>()
@@ -68,7 +64,7 @@ public class ComplaintController : ControllerBase
     public async Task<IActionResult> Get(Guid id)
     {
         var item = await AppDbContext
-            .Complaints.Include(x => x.ReceiveUser)
+            .Complaints.Include(x => x.Seat)
             .Include(x => x.SendUser)
             .Include(x => x.HandleUser)
             .AsNoTracking()
@@ -80,9 +76,8 @@ public class ComplaintController : ControllerBase
     [Authorize]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType<ApiPageResult<Complaint>>(StatusCodes.Status200OK)]
-    [EndpointSummary("获取我的投诉")]
+    [EndpointSummary("获取我发起的投诉")]
     public async Task<IActionResult> GetMy(
-        [FromQuery] bool receive = false,
         [FromQuery] [Range(1, int.MaxValue)] int page = 1,
         [FromQuery] [Range(1, 100)] int pageSize = 20)
     {
@@ -91,20 +86,16 @@ public class ComplaintController : ControllerBase
             return Unauthorized();
 
         var query = AppDbContext
-            .Complaints.Include(x => x.ReceiveUser)
+            .Complaints.Include(x => x.Seat)
             .Include(x => x.SendUser)
             .Include(x => x.HandleUser)
-            .AsNoTracking();
+            .AsNoTracking()
+            .Where(x => x.SendUserId == userId);
 
-        query = receive ? query.Where(x => x.ReceiveUserId == userId) : query.Where(x => x.SendUserId == userId);
 
         var total = await query.CountAsync();
 
-        var items = await query
-            .OrderByDescending(x => x.Id)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
+        var items = await query.OrderByDescending(x => x.Id).Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
 
         return Ok(
             new ApiPageResult<Complaint>()
@@ -128,20 +119,20 @@ public class ComplaintController : ControllerBase
         if (userId == Guid.Empty)
             return Unauthorized();
 
-        var entity = await AppDbContext.Complaints.AddAsync(
+        var track = await AppDbContext.Complaints.AddAsync(
             new()
             {
                 Id = Ulid.NewUlid().ToGuid(),
                 SendUserId = userId,
-                ReceiveUserId = request.ReceiveUserId,
+                SeatId = request.SeatId,
                 State = ComplaintStateEnum.已发起,
                 Type = request.Type,
-                Content = request.Content,
+                SendContent = request.Content,
                 CreateTime = DateTime.UtcNow
             }
         );
         await AppDbContext.SaveChangesAsync();
-        return Ok(entity);
+        return Ok(track.Entity);
     }
 
     [HttpPut]
@@ -161,7 +152,7 @@ public class ComplaintController : ControllerBase
             return NotFound();
 
         entity.Type = request.Type ?? entity.Type;
-        entity.Content = request.Content ?? entity.Content;
+        entity.SendContent = request.Content ?? entity.SendContent;
         var track = AppDbContext.Complaints.Update(entity);
         await AppDbContext.SaveChangesAsync();
 
@@ -180,20 +171,21 @@ public class ComplaintController : ControllerBase
         var userId = this.GetLoginUserId();
         if (userId == Guid.Empty)
             return Unauthorized();
-        
+
         var entity = await AppDbContext.Complaints.SingleOrDefaultAsync(x => x.Id == request.Id);
         if (entity is null)
             return NotFound();
         if (entity.State is not ComplaintStateEnum.已发起)
             return BadRequest(new ProblemDetails() { Title = "投诉状态不是已发起状态" });
         entity.State = ComplaintStateEnum.已处理;
+        entity.HandleContent = request.Content;
         entity.HandleTime = DateTime.UtcNow;
         entity.HandleUserId = userId;
         var track = AppDbContext.Complaints.Update(entity);
         await AppDbContext.SaveChangesAsync();
         return Ok(track.Entity);
     }
-    
+
     [HttpPut("close")]
     [Authorize(AuthorizationHelper.Policy.Admin)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
@@ -206,7 +198,7 @@ public class ComplaintController : ControllerBase
         var userId = this.GetLoginUserId();
         if (userId == Guid.Empty)
             return Unauthorized();
-        
+
         var entity = await AppDbContext.Complaints.SingleOrDefaultAsync(x => x.Id == request.Id);
         if (entity is null)
             return NotFound();

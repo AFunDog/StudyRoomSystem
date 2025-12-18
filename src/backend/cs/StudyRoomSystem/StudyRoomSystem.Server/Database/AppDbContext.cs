@@ -76,10 +76,10 @@ public class AppDbContext : DbContext
             .IsRequired();
         modelBuilder
             .Entity<Complaint>()
-            .HasOne(c => c.ReceiveUser)
+            .HasOne(c => c.Seat)
             .WithMany()
-            .HasForeignKey(c => c.ReceiveUserId)
-            .HasPrincipalKey(u => u.Id)
+            .HasForeignKey(c => c.SeatId)
+            .HasPrincipalKey(s => s.Id)
             .IsRequired();
         modelBuilder
             .Entity<Complaint>()
@@ -87,7 +87,8 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(c => c.HandleUserId)
             .HasPrincipalKey(u => u.Id);
-
+        // Complaint State 枚举转换
+        modelBuilder.Entity<Complaint>().Property(c => c.State).HasConversion<string>();
         #endregion
     }
 }

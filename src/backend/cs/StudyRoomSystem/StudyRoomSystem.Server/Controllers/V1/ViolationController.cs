@@ -17,14 +17,9 @@ namespace StudyRoomSystem.Server.Controllers.V1;
 [ApiController]
 [Route("api/v{version:apiVersion}/violation")]
 [ApiVersion("1.0")]
-public class ViolationController : ControllerBase
+public class ViolationController(AppDbContext appDbContext) : ControllerBase
 {
-    private AppDbContext AppDbContext { get; }
-
-    public ViolationController(AppDbContext appDbContext)
-    {
-        AppDbContext = appDbContext;
-    }
+    private AppDbContext AppDbContext { get; } = appDbContext;
 
 
     [HttpGet("my")]
@@ -132,6 +127,7 @@ public class ViolationController : ControllerBase
         var booking = await AppDbContext.Bookings.FindAsync(request.BookingId);
         if (booking == null)
             return NotFound("预约记录不存在");
+        
         
         var track = await AppDbContext.Violations.AddAsync(
             new Violation
