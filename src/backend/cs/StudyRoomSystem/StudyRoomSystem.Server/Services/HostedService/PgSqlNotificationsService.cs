@@ -1,22 +1,16 @@
-﻿using System;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Threading;
+﻿using System.Text.Json;
 using System.Threading.Channels;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Npgsql;
 using Serilog;
-using StudyRoomSystem.Core.Structs;
 using StudyRoomSystem.Server.Database;
 using StudyRoomSystem.Server.Hubs;
 using Zeng.CoreLibrary.Toolkit.Logging;
 
-namespace StudyRoomSystem.Server.Services;
+namespace StudyRoomSystem.Server.Services.HostedService;
 
 public class PgSqlNotificationsService : IHostedService
 {

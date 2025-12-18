@@ -13,15 +13,10 @@ namespace StudyRoomSystem.Server.Controllers.V2;
 [ApiController]
 [Route("api/v{version:apiVersion}/seat")]
 [ApiVersion("2.0")]
-public class SeatController : ControllerBase
+public class SeatController(AppDbContext appDbContext) : ControllerBase
 {
-    private AppDbContext AppDbContext { get; }
+    private AppDbContext AppDbContext { get; } = appDbContext;
 
-    public SeatController(AppDbContext appDbContext)
-    {
-        AppDbContext = appDbContext;
-    }
-    
     [HttpGet("{id:guid}")]
     [AllowAnonymous]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]

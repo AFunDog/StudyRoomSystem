@@ -18,6 +18,7 @@ using StudyRoomSystem.Server.Helpers;
 using StudyRoomSystem.Server.Hubs;
 using StudyRoomSystem.Server.OpenApi;
 using StudyRoomSystem.Server.Services;
+using StudyRoomSystem.Server.Services.HostedService;
 using Zeng.CoreLibrary.Toolkit.Logging;
 
 // using ApiVersion = Asp.Versioning.ApiVersion;
@@ -34,7 +35,7 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 
 // 配置 Service
-builder.Services.AddHostedService<PgSqlNotificationsService>();
+builder.Services.AddHostedService<PgSqlNotificationsService>().AddHostedService<UpdateDatabaseService>();
 
 // 配置 OpenApi
 builder.Services.AddOpenApi(
