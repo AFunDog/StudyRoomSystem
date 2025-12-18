@@ -8,8 +8,11 @@ const route = useRoute()
 
 const navItems = [
   { label: '座位预约', path: '/seatbooking', icon: House },
-  { label: '我的预约', path: '/calendar', icon: CalendarDays },
+  { label: "用户中心", path: "/mybookings", icon: CalendarDays },
   { label: "用户中心", path: "/usercenter", icon: UserRound },
+
+  // 弃用
+  // { label: '我的预约', path: '/calendar', icon: CalendarDays },
 ]
 
 function goTo(path: string) {
