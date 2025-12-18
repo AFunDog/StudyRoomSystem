@@ -28,7 +28,8 @@ namespace StudyRoomSystem.Server.Controllers.V1;
 [ApiController]
 [Route("api/v{version:apiVersion}/auth")]
 [ApiVersion("1.0")]
-public class AuthController(IConfiguration configuration, AppDbContext appDbContext,IBlacklistService blacklistService) : ControllerBase
+public class AuthController(IConfiguration configuration, AppDbContext appDbContext, IBlacklistService blacklistService)
+    : ControllerBase
 {
     private IConfiguration Configuration { get; } = configuration;
     private AppDbContext AppDbContext { get; } = appDbContext;
@@ -68,14 +69,24 @@ public class AuthController(IConfiguration configuration, AppDbContext appDbCont
                     Title = "密码错误"
                 }
             );
-        
+
         // 检查黑名单
         var blacklists = (await BlacklistService.GetValidBlacklists(user.Id)).ToArray();
         if (blacklists.Any())
         {
-            return Forbid();
+            return Unauthorized(
+                new ProblemDetails()
+                {
+                    Title = "禁止登录",
+                    Detail = "黑名单用户禁止登录",
+                    Extensions =
+                    {
+                        ["blacklist"] = blacklists
+                    }
+                }
+            );
         }
-        
+
         var claims = new List<Claim>()
         {
             new Claim(ClaimExtendTypes.Id, user.Id.ToString()), new Claim(ClaimTypes.Name, request.UserName),

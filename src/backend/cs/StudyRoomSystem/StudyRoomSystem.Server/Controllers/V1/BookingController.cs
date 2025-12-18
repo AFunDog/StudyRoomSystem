@@ -53,7 +53,7 @@ public class BookingController : ControllerBase
                 .ToListAsync()
         );
     }
-    
+
     [HttpGet("all")]
     [Authorize(AuthorizationHelper.Policy.Admin)]
     [ProducesResponseType<IEnumerable<Booking>>(StatusCodes.Status200OK)]
@@ -63,12 +63,7 @@ public class BookingController : ControllerBase
         [FromQuery] [Range(1, int.MaxValue)] int page = 1,
         [FromQuery] [Range(1, 100)] int pageSize = 20)
     {
-
-        var query = AppDbContext
-            .Bookings
-            .Include(b => b.Seat)
-            .Include(b => b.Seat.Room)
-            .AsQueryable();
+        var query = AppDbContext.Bookings.Include(b => b.Seat).Include(b => b.Seat.Room).AsQueryable();
 
         var total = await query.CountAsync();
 
@@ -80,17 +75,16 @@ public class BookingController : ControllerBase
 
         return Ok(
             new ApiPageResult<Booking>()
-        {
-            Total = total,
-            Page = page,
-            PageSize = pageSize,
-            Items = items
-        });
+            {
+                Total = total,
+                Page = page,
+                PageSize = pageSize,
+                Items = items
+            }
+        );
     }
 
-    
-    
-    
+
     [HttpGet("{id:guid}")]
     [Authorize]
     [ProducesResponseType<Booking>(StatusCodes.Status200OK)]
@@ -132,7 +126,7 @@ public class BookingController : ControllerBase
         // 不允许创建过去的预约
         if (request.StartTime <= DateTime.UtcNow)
             return BadRequest(new ProblemDetails() { Title = "不允许创建过去的预约" });
-        
+
         // 检查座位是否在时间段内被占用
         var booking = await AppDbContext.Bookings.FirstOrDefaultAsync(x
             => x.SeatId == request.SeatId
@@ -164,7 +158,7 @@ public class BookingController : ControllerBase
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType<Booking>(StatusCodes.Status200OK)]
     [EndpointSummary("取消预约")]
     public async Task<IActionResult> CancelBooking(Guid id, [FromQuery] bool isForce = false)
     {
@@ -184,16 +178,26 @@ public class BookingController : ControllerBase
         if (booking.StartTime - DateTime.UtcNow < TimeSpan.FromHours(3))
             if (!isForce)
                 return BadRequest(new ProblemDetails() { Title = "距离预约起始时间小于3小时，若强制取消预约将会记录为违规" });
+            else
+            {
+                await AppDbContext.Violations.AddAsync(
+                    new Violation()
+                    {
+                        Id = Ulid.NewUlid().ToGuid(), UserId = userId, BookingId = booking.Id,
+                        Type = ViolationTypeEnum.强制取消, Content = "在预约开始前3个小时内强制取消预约违规",
+                        CreateTime = DateTime.UtcNow,
+                        State = ViolationStateEnum.Violation
+                    }
+                );
+            }
 
-
-        AppDbContext.Bookings.Update(booking);
+        var track = AppDbContext.Bookings.Update(booking);
         await AppDbContext.SaveChangesAsync();
-        return Ok();
+        return Ok(track.Entity);
     }
 
 
-
-    [HttpPut] 
+    [HttpPut]
     [Authorize]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
@@ -228,14 +232,13 @@ public class BookingController : ControllerBase
                && (x.State == (BookingStateEnum.Booked) || x.State == (BookingStateEnum.CheckIn))
         );
         if (existBooking is not null)
-            return Conflict(new ProblemDetails(){ Title = "座位在时间范围内已被用户预约" });
+            return Conflict(new ProblemDetails() { Title = "座位在时间范围内已被用户预约" });
 
 
         var track = AppDbContext.Bookings.Update(booking);
         await AppDbContext.SaveChangesAsync();
         return Ok(track.Entity);
     }
-
 
 
     [HttpPost("check-in")]
@@ -249,16 +252,16 @@ public class BookingController : ControllerBase
         var userId = this.GetLoginUserId();
         var booking = await AppDbContext.Bookings.SingleOrDefaultAsync(b => b.Id == request.Id);
         if (booking is null)
-            return NotFound(new ProblemDetails(){ Title = "预约不存在" });
+            return NotFound(new ProblemDetails() { Title = "预约不存在" });
         if (booking.UserId != userId)
             return Forbid();
 
         if (booking.State is not (BookingStateEnum.Booked))
-            return BadRequest(new ProblemDetails(){ Title = "当前状态不能签到" });
+            return BadRequest(new ProblemDetails() { Title = "当前状态不能签到" });
 
         // TODO 由于定时系统自动清理逾期预约，所以可以不检查预约时间
         if ((booking.StartTime - DateTime.UtcNow).Duration() > TimeSpan.FromMinutes(15))
-            return BadRequest(new ProblemDetails(){ Title = "距离开始时间超过15分钟，不可签到" });
+            return BadRequest(new ProblemDetails() { Title = "距离开始时间超过15分钟，不可签到" });
 
         booking.State = (BookingStateEnum.CheckIn);
         var track = AppDbContext.Bookings.Update(booking);
@@ -277,15 +280,15 @@ public class BookingController : ControllerBase
         var userId = this.GetLoginUserId();
         var booking = await AppDbContext.Bookings.SingleOrDefaultAsync(b => b.Id == request.Id);
         if (booking is null)
-            return NotFound(new ProblemDetails(){ Title = "预约不存在" });
+            return NotFound(new ProblemDetails() { Title = "预约不存在" });
         if (booking.UserId != userId)
             return Forbid();
         if (booking.State is not BookingStateEnum.CheckIn)
-            return BadRequest(new ProblemDetails(){ Title = "当前状态不能签退" });
+            return BadRequest(new ProblemDetails() { Title = "当前状态不能签退" });
 
         // WHY 能不能提前签退
         if ((booking.EndTime - DateTime.UtcNow).Duration() > TimeSpan.FromMinutes(15))
-            return BadRequest(new ProblemDetails(){ Title = "距离结束时间超过15分钟，不可签退" });
+            return BadRequest(new ProblemDetails() { Title = "距离结束时间超过15分钟，不可签退" });
 
         booking.State = (BookingStateEnum.Checkout);
         var track = AppDbContext.Bookings.Update(booking);
