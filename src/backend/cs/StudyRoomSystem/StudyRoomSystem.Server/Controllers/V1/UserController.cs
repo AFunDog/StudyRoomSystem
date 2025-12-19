@@ -350,7 +350,7 @@ public class UserController : ControllerBase
 
     [HttpGet("all")]
     [Authorize(AuthorizationHelper.Policy.Admin)]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType<ApiPageResult<User>>(StatusCodes.Status200OK)]
     [EndpointSummary("管理员获取所有用户")]
     public async Task<IActionResult> GetAllUsers( 
         [FromQuery] [Range(1, int.MaxValue)] int page = 1,
@@ -376,6 +376,20 @@ public class UserController : ControllerBase
                 Items = items
             }
         );
+    }
+    
+    [HttpGet("{id:guid}")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<User>(StatusCodes.Status200OK)]
+    [EndpointSummary("获取指定用户信息")]
+    public async Task<IActionResult> GetById(Guid id)
+    {
+        var user = await AppDbContext.Users.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id);
+        if (user is null)
+            return NotFound();
+        
+        return Ok(user);
     }
 
     #endregion
