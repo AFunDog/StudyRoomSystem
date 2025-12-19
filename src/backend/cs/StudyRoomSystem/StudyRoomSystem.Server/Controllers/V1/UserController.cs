@@ -348,6 +348,19 @@ public class UserController : ControllerBase
 
     #region Get
 
+    [HttpGet("{id:guid}")]
+    [Authorize]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<User>(StatusCodes.Status200OK)]
+    [EndpointSummary("获取指定的用户信息")]
+    public async Task<IActionResult> GetUserById(Guid id)
+    {
+        var user = await AppDbContext.Users.SingleOrDefaultAsync(x => x.Id == id);
+        if (user is null)
+            return NotFound("违规记录不存在");
+        return Ok(user);
+    }
+    
     [HttpGet("all")]
     [Authorize(AuthorizationHelper.Policy.Admin)]
     [ProducesResponseType<ApiPageResult<User>>(StatusCodes.Status200OK)]
