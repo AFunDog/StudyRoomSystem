@@ -10,9 +10,8 @@ import SettingView from '@/views/setting/SettingView.vue'
 import MyUserView from '@/views/main/pages/usercenter/UserCenterView.vue'
 import MainHomeView from '@/views/main/pages/mainhome/MainHomeView.vue'
 import SeatBookingView from '@/views/main/pages/seatbooking/SeatBookingView.vue'
-
-// 图标
-import { Calendar, House, UserRound } from 'lucide-vue-next'
+import MyBookingsView from '@/views/main/pages/mybookings/MyBookingsView.vue'
+import MyViolationsView from '@/views/main/pages/myviolations/MyViolationsView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -22,10 +21,14 @@ const router = createRouter({
       component: MainView, // 首页框架静态引入
       name: 'main',
       children: [
-        { path: '/calendar', component: CalendarView, meta: { icon: Calendar, index: 0 } },
-        { path: '/seatbooking', component: SeatBookingView, meta: { icon: House, index: 1 } },
+        { path: '/seatbooking', component: SeatBookingView },
+        { path: '/mybookings', component: MyBookingsView },
+        { path: '/myviolations', component: MyViolationsView },
+        { path: '/usercenter', component: MyUserView },
+
+        // 弃用
+        { path: '/calendar', component: CalendarView },
         // { path: '/setting', component: SettingView },
-        { path: '/usercenter', component: MyUserView, meta: { icon: UserRound, index: 2 }},
       ]
     },
     // 静态引入
