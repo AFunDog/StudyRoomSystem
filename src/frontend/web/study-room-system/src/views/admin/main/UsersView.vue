@@ -117,7 +117,7 @@ function openChangePassword(user: User) {
       <Button class="hover:brightness-110" @click="openAdd('admin')">添加管理员</Button>
     </div>
 
-    <div class="overflow-x-auto overflow-y-auto max-h-[600px] border border-gray-300 rounded-lg relative">
+    <div class="overflow-x-auto overflow-y-auto max-h-150 border border-gray-300 rounded-lg relative">
       <!-- 用户表格 -->
       <table class="w-full border-collapse">
         <thead class="sticky top-0 z-50 bg-gray-100">
