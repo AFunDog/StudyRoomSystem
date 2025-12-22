@@ -9,9 +9,9 @@ public enum UserRoleEnum
     User,Admin
 }
 
-public class User
+public record User
 {
-    public required Guid Id { get; set; }
+    public Guid Id { get; } = Ulid.NewUlid().ToGuid();
     
     public DateTime CreateTime { get; set; } = DateTime.UtcNow;
     
@@ -45,4 +45,10 @@ public class User
     
     [Url]
     public string? Avatar { get; set; }
+    
+    /// <summary>
+    /// 用户信用分
+    /// </summary>
+    [Range(0,100)]
+    public int Credits { get; set; } = 80;
 }

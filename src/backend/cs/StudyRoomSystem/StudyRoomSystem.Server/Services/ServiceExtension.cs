@@ -7,10 +7,14 @@ public static class ServiceExtension
 {
     public static IServiceCollection AddInternalServices(this IServiceCollection serviceCollection)
     {
+        // 异常处理
+        serviceCollection.AddProblemDetails();
+        serviceCollection.AddExceptionHandler<GlobalExceptionHandler>();
+        
         // 添加 HostedService
         serviceCollection.AddHostedService<PgSqlNotificationsService>().AddHostedService<UpdateDatabaseService>();
 
-        serviceCollection.AddTransient<IBlacklistService, BlacklistService>();
+        serviceCollection.AddTransient<IBlacklistService, BlacklistService>().AddTransient<IUserService, UserService>();
         return serviceCollection;
     }
 }
