@@ -7,8 +7,10 @@ using Microsoft.EntityFrameworkCore;
 using StudyRoomSystem.Core.Structs.Api;
 using StudyRoomSystem.Core.Structs.Api.V1;
 using StudyRoomSystem.Core.Structs.Entity;
+using StudyRoomSystem.Server.Contacts;
 using StudyRoomSystem.Server.Database;
 using StudyRoomSystem.Server.Helpers;
+using StudyRoomSystem.Server.Services;
 
 namespace StudyRoomSystem.Server.Controllers.V1;
 
@@ -18,14 +20,10 @@ namespace StudyRoomSystem.Server.Controllers.V1;
 [ApiController]
 [Route("api/v{version:apiVersion}/complaint")]
 [ApiVersion("1.0")]
-public class ComplaintController : ControllerBase
+public class ComplaintController(AppDbContext appDbContext,IUserService userService) : ControllerBase
 {
-    private AppDbContext AppDbContext { get; }
-
-    public ComplaintController(AppDbContext appDbContext)
-    {
-        AppDbContext = appDbContext;
-    }
+    private AppDbContext AppDbContext { get; } = appDbContext;
+    private IUserService UserService { get; } = userService;
 
     [HttpGet]
     [Authorize(AuthorizationHelper.Policy.Admin)]
@@ -170,9 +168,8 @@ public class ComplaintController : ControllerBase
     [EndpointSummary("处理投诉请求")]
     public async Task<IActionResult> Handle([FromBody] HandleComplaintRequest request)
     {
-        var userId = this.GetLoginUserId();
-        if (userId == Guid.Empty)
-            return Unauthorized();
+        var loginUser = await UserService.GetUserById(this.GetLoginUserId());
+        var targetUser = await UserService.GetUserById(request.TargetUserId);
 
         var entity = await AppDbContext.Complaints.SingleOrDefaultAsync(x => x.Id == request.Id);
         if (entity is null)
@@ -182,8 +179,20 @@ public class ComplaintController : ControllerBase
         entity.State = ComplaintStateEnum.已处理;
         entity.HandleContent = request.Content;
         entity.HandleTime = DateTime.UtcNow;
-        entity.HandleUserId = userId;
+        entity.HandleUserId = loginUser.Id;
+
+        var violation = new Violation()
+        {
+            Id = Ulid.NewUlid().ToGuid(),
+            UserId = targetUser.Id,
+            CreateTime = DateTime.UtcNow,
+            State = ViolationStateEnum.Violation,
+            Type = ViolationTypeEnum.管理员,
+            Content = request.ViolationContent
+        };
+        
         var track = AppDbContext.Complaints.Update(entity);
+        await AppDbContext.Violations.AddAsync(violation);
         await AppDbContext.SaveChangesAsync();
         return Ok(track.Entity);
     }

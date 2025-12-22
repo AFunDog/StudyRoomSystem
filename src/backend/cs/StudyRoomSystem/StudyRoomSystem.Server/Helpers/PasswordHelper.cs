@@ -1,5 +1,8 @@
 ﻿namespace StudyRoomSystem.Server.Helpers;
 
+/// <summary>
+/// 使用 BCrypt 算法进行密码的加密和校验
+/// </summary>
 public static class PasswordHelper
 {
     /// <summary>

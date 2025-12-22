@@ -63,14 +63,13 @@ public class BookingController : ControllerBase
         [FromQuery] [Range(1, int.MaxValue)] int page = 1,
         [FromQuery] [Range(1, 100)] int pageSize = 20)
     {
-        var query = AppDbContext.Bookings.Include(b => b.Seat).Include(b => b.Seat.Room).AsQueryable();
+        var query = AppDbContext.Bookings.AsQueryable();
 
         var total = await query.CountAsync();
 
         var items = await query
             .OrderByDescending(b => b.CreateTime)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
+            .Page(page, pageSize)
             .ToListAsync();
 
         return Ok(

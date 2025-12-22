@@ -27,8 +27,13 @@ public record HandleComplaintRequest
 {
     public required Guid Id { get; set; }
     public required string Content { get; set; }
+    
+    [Description("处理目标用户")]
+    public required Guid TargetUserId { get; set; }
     [Description("扣除信用分分数")]
     public required int Score { get; set; } 
+    [Description("违约信息")]
+    public required string ViolationContent { get; set; }
 }
 public record CloseComplaintRequest
 {

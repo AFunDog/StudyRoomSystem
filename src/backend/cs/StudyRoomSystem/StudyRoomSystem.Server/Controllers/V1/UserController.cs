@@ -40,13 +40,11 @@ public class UserController(AppDbContext appDbContext, IUserService userService)
     [EndpointDescription("用户需要使用该接口注册，注册成功之后需要使用用户名密码登录")]
     public async Task<IActionResult> RegisterUser([FromBody] RegisterRequest request)
     {
-        // 用户是否已登录
-        var userId = this.GetLoginUserId();
-        var user = await AppDbContext.Users.AsNoTracking().SingleOrDefaultAsync(x => x.Id == userId);
-        
-        // 检查用户
-        if (request.Role == UserRoleEnum.Admin && user?.Role != UserRoleEnum.Admin)
-            return Unauthorized(new ProblemDetails() { Title = "用户权限不足" });
+        var user = await UserService.GetUserById(this.GetLoginUserId());
+
+        // 检查用户权限
+        if (request.Role == UserRoleEnum.Admin && user.Role != UserRoleEnum.Admin)
+            throw new ForbidException("用户权限不足");
 
         return Ok(await UserService.RegisterUser(CreateUser(request)));
     }
@@ -72,12 +70,12 @@ public class UserController(AppDbContext appDbContext, IUserService userService)
     {
         public required Guid Id { get; set; }
         [MaxLength(128)]
-        public required string DisplayName { get; set; }
+        public string? DisplayName { get; set; }
         [MaxLength(64)]
-        public required string CampusId { get; set; }
+        public string? CampusId { get; set; }
         [MaxLength(64)]
         [Phone]
-        public required string Phone { get; set; }
+        public string? Phone { get; set; }
         [MaxLength(64)]
         [EmailAddress]
         public string? Email { get; set; }
@@ -91,17 +89,19 @@ public class UserController(AppDbContext appDbContext, IUserService userService)
     [EndpointSummary("用户更新基本信息")]
     public async Task<IActionResult> EditUserNormal([FromBody] EditRequestNormal request)
     {
-        var userId = this.GetLoginUserId();
-        var loginUser = await AppDbContext.Users.SingleOrDefaultAsync(b => b.Id == request.Id);
-        if (loginUser is null)
-            return NotFound(new ProblemDetails() { Title = "用户不存在" });
-        loginUser.DisplayName = request.DisplayName;
-        loginUser.CampusId = request.CampusId;
-        loginUser.Phone = request.Phone;
-        loginUser.Email = request.Email ?? loginUser.Email;
-        await AppDbContext.SaveChangesAsync();
-        var track = AppDbContext.Users.Update(loginUser);
-        return Ok(track.Entity);
+        var loginUser = await UserService.GetUserById(this.GetLoginUserId());
+        var targetUser = await UserService.GetUserById(request.Id);
+
+        // 如果不是管理员则只能修改自己的信息
+        if (loginUser.Id != targetUser.Id && loginUser.Role != UserRoleEnum.Admin)
+            throw new ForbidException("用户权限不足");
+
+        targetUser.DisplayName = request.DisplayName ?? targetUser.DisplayName;
+        targetUser.CampusId = request.CampusId ?? targetUser.CampusId;
+        targetUser.Phone = request.Phone ?? targetUser.Phone;
+        targetUser.Email = request.Email ?? targetUser.Email;
+
+        return Ok(await UserService.UpdateUser(targetUser));
     }
 
     public class EditRequestPassword
@@ -123,16 +123,23 @@ public class UserController(AppDbContext appDbContext, IUserService userService)
     [EndpointSummary("用户更新密码")]
     public async Task<IActionResult> EditUserPassword([FromBody] EditRequestPassword request)
     {
-        var userId = this.GetLoginUserId();
-        var loginUser = await AppDbContext.Users.SingleOrDefaultAsync(b => b.Id == request.Id);
-        if (loginUser is null)
-            return NotFound(new ProblemDetails() { Title = "用户不存在" });
-        if (!PasswordHelper.CheckPassword(request.OldPassword, loginUser.Password))
-            return Conflict(new ProblemDetails() { Title = "旧密码错误" });
-        loginUser.Password = PasswordHelper.HashPassword(request.NewPassword);
-        await AppDbContext.SaveChangesAsync();
-        var track = AppDbContext.Users.Update(loginUser);
-        return Ok(track.Entity);
+        var loginUser = await UserService.GetUserById(this.GetLoginUserId());
+        var targetUser = await UserService.GetUserById(request.Id);
+
+        // 如果不是管理员则只能修改自己的信息
+        if (loginUser.Id != targetUser.Id && loginUser.Role != UserRoleEnum.Admin)
+            throw new ForbidException("用户权限不足");
+        
+        // 如果不是管理员就要检验旧密码
+        if (loginUser.Role is not UserRoleEnum.Admin)
+        {
+            if (!PasswordHelper.CheckPassword(request.OldPassword, targetUser.Password))
+                throw new ConflictException("旧密码错误");
+        }
+
+        targetUser.Password = PasswordHelper.HashPassword(request.NewPassword);
+
+        return Ok(await UserService.UpdateUser(targetUser));
     }
 
     public class EditRequestRole
@@ -148,9 +155,8 @@ public class UserController(AppDbContext appDbContext, IUserService userService)
     [EndpointSummary("管理员修改用户角色")]
     public async Task<IActionResult> EditUserRole([FromBody] EditRequestRole request)
     {
-        var user =  await UserService.GetUserById(request.Id);
+        var user = await UserService.GetUserById(request.Id);
         user.Role = request.Role;
-        await AppDbContext.SaveChangesAsync();
         return Ok(await UserService.UpdateUser(user));
     }
 
