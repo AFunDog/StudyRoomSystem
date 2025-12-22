@@ -6,7 +6,7 @@ namespace StudyRoomSystem.Core.Structs.Entity;
 [JsonConverter(typeof(JsonStringEnumConverter<BookingStateEnum>))]
 public enum BookingStateEnum
 {
-    Booked,CheckIn,Checkout,Canceled
+    已预约,已签到,已签退,已取消,已超时
 }
 
 public class Booking

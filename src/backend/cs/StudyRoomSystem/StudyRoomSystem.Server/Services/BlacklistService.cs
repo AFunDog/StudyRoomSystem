@@ -5,7 +5,7 @@ using StudyRoomSystem.Server.Database;
 
 namespace StudyRoomSystem.Server.Services;
 
-public class BlacklistService(AppDbContext appDbContext) : IBlacklistService
+internal class BlacklistService(AppDbContext appDbContext) : IBlacklistService
 {
     private AppDbContext AppDbContext { get; } = appDbContext;
 

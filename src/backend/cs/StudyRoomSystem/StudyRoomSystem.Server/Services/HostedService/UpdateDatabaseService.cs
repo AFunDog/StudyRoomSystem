@@ -27,11 +27,11 @@ public class UpdateDatabaseService(IServiceScopeFactory serviceScopeFactory) : I
             var res = 0;
             var 没签到预约 = appDbContext
                 .Bookings.Where(x => x.StartTime.AddMinutes(15) < DateTime.UtcNow)
-                .Where(x => x.State == BookingStateEnum.Booked);
+                .Where(x => x.State == BookingStateEnum.已预约);
 
             var 没签退预约 = appDbContext
                 .Bookings.Where(x => x.EndTime.AddMinutes(15) < DateTime.UtcNow)
-                .Where(x => x.State == BookingStateEnum.CheckIn);
+                .Where(x => x.State == BookingStateEnum.已签到);
             var 添加违规 = 没签到预约
                 .ToList()
                 .Select(x => new Violation()
@@ -46,7 +46,7 @@ public class UpdateDatabaseService(IServiceScopeFactory serviceScopeFactory) : I
                     }
                 );
             res += await 没签到预约.ExecuteUpdateAsync(
-                x => x.SetProperty(b => b.State, BookingStateEnum.Canceled),
+                x => x.SetProperty(b => b.State, BookingStateEnum.已超时),
                 cancellationToken: token
             );
             await appDbContext.Violations.AddRangeAsync(添加违规, token);
@@ -65,7 +65,7 @@ public class UpdateDatabaseService(IServiceScopeFactory serviceScopeFactory) : I
                     }
                 );
             res += await 没签退预约.ExecuteUpdateAsync(
-                x => x.SetProperty(b => b.State, BookingStateEnum.Canceled),
+                x => x.SetProperty(b => b.State, BookingStateEnum.已超时),
                 cancellationToken: token
             );
             await appDbContext.Violations.AddRangeAsync(添加违规, token);

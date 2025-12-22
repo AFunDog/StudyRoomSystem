@@ -43,7 +43,7 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 
 // 配置 Service
-builder.Services.AddInternalServices();
+builder.Services.AddSerilog().AddInternalServices();
 
 // 配置 OpenApi
 builder.Services.AddOpenApi("v1", options => { options.AddOperationTransformer<AuthorizeCheckOperationFilter>(); });
@@ -201,6 +201,7 @@ await using var app = builder.Build();
 // 在 HTTP 请求流水线中加入 Serilog 请求日志
 app.UseSerilogRequestLogging();
 
+app.UseExceptionHandler();
 
 // 承载网页和静态资源
 if (app.Environment.IsProduction())
