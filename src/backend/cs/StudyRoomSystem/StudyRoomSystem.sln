@@ -6,7 +6,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StudyRoomSystem.Core", "Stu
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionFolder", "SolutionFolder", "{C9080662-FBC0-4FFE-8869-305777EF4F85}"
 	ProjectSection(SolutionItems) = preProject
-		..\..\..\..\scripts\Dockerfile = ..\..\..\..\scripts\Dockerfile
+		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StudyRoomSystem.Core.Test", "StudyRoomSystem.Core.Test\StudyRoomSystem.Core.Test.csproj", "{53B6AB37-8BF6-42A4-BF6D-4CB3A99A2BE4}"

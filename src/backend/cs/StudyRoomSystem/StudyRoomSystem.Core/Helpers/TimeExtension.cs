@@ -2,7 +2,7 @@
 
 namespace StudyRoomSystem.Core.Helpers;
 
-public static class TimeHelper
+public static class TimeExtension
 {
     public static TimeOnly ToTimeOnly(this TimeSpan source)
     {

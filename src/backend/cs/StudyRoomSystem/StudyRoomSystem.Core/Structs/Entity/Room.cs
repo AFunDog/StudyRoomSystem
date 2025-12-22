@@ -4,7 +4,7 @@ namespace StudyRoomSystem.Core.Structs.Entity;
 
 public class Room
 {
-    public required Guid Id { get; set; }
+    public Guid Id { get; set; } = Ulid.NewUlid().ToGuid();
     
     [MaxLength(64)]
     public required string Name { get; set; }

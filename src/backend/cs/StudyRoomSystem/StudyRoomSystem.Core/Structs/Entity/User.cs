@@ -11,7 +11,7 @@ public enum UserRoleEnum
 
 public record User
 {
-    public Guid Id { get; } = Ulid.NewUlid().ToGuid();
+    public Guid Id { get; set; } = Ulid.NewUlid().ToGuid();
     
     public DateTime CreateTime { get; set; } = DateTime.UtcNow;
     
