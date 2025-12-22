@@ -13,6 +13,7 @@ using StudyRoomSystem.Core.Structs;
 using StudyRoomSystem.Core.Structs.Api;
 using StudyRoomSystem.Core.Structs.Api.V1;
 using StudyRoomSystem.Core.Structs.Entity;
+using StudyRoomSystem.Core.Structs.Exceptions;
 using StudyRoomSystem.Server.Contacts;
 using StudyRoomSystem.Server.Database;
 using StudyRoomSystem.Server.Helpers;
@@ -147,14 +148,10 @@ public class UserController(AppDbContext appDbContext, IUserService userService)
     [EndpointSummary("管理员修改用户角色")]
     public async Task<IActionResult> EditUserRole([FromBody] EditRequestRole request)
     {
-        var userId = this.GetLoginUserId();
-        var loginUser = await AppDbContext.Users.SingleOrDefaultAsync(b => b.Id == request.Id);
-        if (loginUser is null)
-            return NotFound(new ProblemDetails() { Title = "用户不存在" });
-        loginUser.Role = request.Role;
+        var user =  await UserService.GetUserById(request.Id);
+        user.Role = request.Role;
         await AppDbContext.SaveChangesAsync();
-        var track = AppDbContext.Users.Update(loginUser);
-        return Ok(track.Entity);
+        return Ok(await UserService.UpdateUser(user));
     }
 
     #endregion
@@ -169,11 +166,7 @@ public class UserController(AppDbContext appDbContext, IUserService userService)
     [EndpointSummary("管理员删除用户")]
     public async Task<IActionResult> DeleteUser(Guid id)
     {
-        var user = await AppDbContext.Users.SingleOrDefaultAsync(x => x.Id == id);
-        if (user is null)
-            return NotFound(new ProblemDetails() { Title = "用户不存在" });
-        AppDbContext.Users.Remove(user);
-        await AppDbContext.SaveChangesAsync();
+        await UserService.DeleteUser(id);
         return Ok();
     }
 
@@ -208,7 +201,7 @@ public class UserController(AppDbContext appDbContext, IUserService userService)
     {
         var userId = this.GetLoginUserId();
         if (userId == Guid.Empty)
-            return Unauthorized();
+            throw new UnauthorizedException();
         var user = await UserService.GetUserById(userId);
         return Ok(user);
     }
@@ -232,7 +225,7 @@ public class UserController(AppDbContext appDbContext, IUserService userService)
         [FromQuery] [Range(1, int.MaxValue)] int page = 1,
         [FromQuery] [Range(1, 100)] int pageSize = 20)
     {
-        return Ok(UserService.GetUsers(page, pageSize));
+        return Ok(await UserService.GetUsers(page, pageSize));
     }
 
     #endregion

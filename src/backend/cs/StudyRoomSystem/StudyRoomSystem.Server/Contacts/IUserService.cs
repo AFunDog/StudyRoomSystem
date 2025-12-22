@@ -27,4 +27,7 @@ public interface IUserService
     /// 注册新用户并返回创建后的用户实体。
     /// </summary>
     Task<User> RegisterUser(User user);
+
+    Task DeleteUser(Guid userId);
+    Task<User> UpdateUser(User user);
 }

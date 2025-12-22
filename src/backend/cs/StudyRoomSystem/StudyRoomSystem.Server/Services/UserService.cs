@@ -76,4 +76,28 @@ internal class UserService(AppDbContext appDbContext) : IUserService
             throw new ConflictException("用户注册失败");
         return track.Entity;
     }
+
+    public async Task DeleteUser(Guid userId)
+    {
+        var user = await GetUserById(userId);
+        AppDbContext.Users.Remove(user);
+        var res = await AppDbContext.SaveChangesAsync();
+        if (res == 0)
+            throw new ConflictException("用户删除失败");
+    }
+    
+    public async Task<User> UpdateUser(User user)
+    { 
+        // var oldUser = await GetUserById(user.Id);
+        // oldUser.DisplayName = user.DisplayName;
+        // oldUser.Email = user.Email;
+        // oldUser.Phone = user.Phone;
+        // oldUser.Role = user.Role;
+        // oldUser.Avatar = user.Avatar;
+        var track = AppDbContext.Users.Update(user);
+        var res = await AppDbContext.SaveChangesAsync();
+        if (res == 0)
+            throw new ConflictException("用户更新失败");
+        return track.Entity;
+    }
 }

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace StudyRoomSystem.Core.Structs.Api.V1;
 
@@ -26,8 +27,11 @@ public record HandleComplaintRequest
 {
     public required Guid Id { get; set; }
     public required string Content { get; set; }
+    [Description("扣除信用分分数")]
+    public required int Score { get; set; } 
 }
 public record CloseComplaintRequest
 {
     public required Guid Id { get; set; }
+    public required string Content { get; set; }
 }

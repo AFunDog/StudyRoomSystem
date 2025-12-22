@@ -57,7 +57,7 @@ public class RoomController(AppDbContext appDbContext) : ControllerBase
             foreach (var seat in room.Seats)
             {
                 var res = seat.Bookings.Any(x
-                    => (x.State != BookingStateEnum.Canceled) && (start.Value <= x.EndTime && x.StartTime <= end.Value)
+                    => (x.State != BookingStateEnum.已取消) && (start.Value <= x.EndTime && x.StartTime <= end.Value)
                 );
                 if (res)
                     continue;

@@ -16,6 +16,7 @@ internal sealed class GlobalExceptionHandler : IExceptionHandler
         {
             NotFoundException notFoundException => (StatusCodes.Status404NotFound,"未找到"),
             ConflictException conflictException => (StatusCodes.Status409Conflict, "冲突"),
+            UnauthorizedException unauthorizedException => (StatusCodes.Status401Unauthorized, "未授权"),
             _ => (StatusCodes.Status500InternalServerError, "服务器内部错误")
         };
 
