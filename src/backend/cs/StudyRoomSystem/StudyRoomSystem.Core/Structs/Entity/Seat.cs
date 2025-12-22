@@ -1,13 +1,13 @@
 ﻿namespace StudyRoomSystem.Core.Structs.Entity;
 
-public class Seat
+public record Seat
 {
-    public required Guid Id { get; set; }
+    public Guid Id { get; set; } = Ulid.NewUlid().ToGuid();
     public required Guid RoomId { get; set; }
     public required int Row { get; set; }
     public required int Col { get; set; }
 
     public virtual Room Room { get; set; } = null!;
-    
+
     public virtual ICollection<Booking> Bookings { get; set; } = [];
 }

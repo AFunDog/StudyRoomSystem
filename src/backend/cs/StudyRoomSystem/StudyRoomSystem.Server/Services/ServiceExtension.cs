@@ -10,11 +10,15 @@ public static class ServiceExtension
         // 异常处理
         serviceCollection.AddProblemDetails();
         serviceCollection.AddExceptionHandler<GlobalExceptionHandler>();
-        
+
         // 添加 HostedService
         serviceCollection.AddHostedService<PgSqlNotificationsService>().AddHostedService<UpdateDatabaseService>();
 
-        serviceCollection.AddTransient<IBlacklistService, BlacklistService>().AddTransient<IUserService, UserService>();
+        serviceCollection
+            .AddTransient<IBookingService,BookingService>()
+            .AddTransient<IRoomService, RoomService>()
+            .AddTransient<IBlacklistService, BlacklistService>()
+            .AddTransient<IUserService, UserService>();
         return serviceCollection;
     }
 }

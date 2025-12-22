@@ -71,8 +71,8 @@ public class AuthController(IConfiguration configuration, AppDbContext appDbCont
             );
 
         // 检查黑名单
-        var blacklists = (await BlacklistService.GetValidBlacklists(user.Id)).ToArray();
-        if (blacklists.Any())
+        var blacklists = (await BlacklistService.GetAllValidByUserId(user.Id, 1, 1));
+        if (blacklists.Total != 0)
         {
             return Unauthorized(
                 new ProblemDetails()

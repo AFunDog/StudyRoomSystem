@@ -16,6 +16,9 @@ export const userRequest = {
   // 获取登录用户信息
   getUser: () => http.get('/user'),
 
+  // 根据用户 ID 获取用户信息
+  getUserById: (id: string) => http.get(`/user/${id}`),
+
   // 更新用户信息
   updateUser: (data: {id: string; displayName: string; campusId: string; phone: string; email?: string}) => 
     http.put('/user/information', data),

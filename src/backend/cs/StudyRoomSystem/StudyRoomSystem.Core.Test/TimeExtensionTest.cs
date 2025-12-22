@@ -4,7 +4,7 @@ using Xunit.Abstractions;
 
 namespace StudyRoomSystem.Core.Test;
 
-public class TimeHelperTest(ITestOutputHelper output)
+public class TimeExtensionTest(ITestOutputHelper output)
 {
     [Fact]
     public void ToOpenTimesTest()

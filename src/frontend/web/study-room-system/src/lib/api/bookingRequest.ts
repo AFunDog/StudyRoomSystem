@@ -1,46 +1,105 @@
 import { http } from "../utils";
 import type { Booking } from "../types/Booking";
-import { AxiosError } from "axios";
+import axios, { AxiosError } from "axios";
 
-// 异常交由调用者处理,此处不要吞并err
 class BookingRequest {
-    public async getMyBookings(params?: { page?: number; pageSize?: number }) {
-        try {
-            const res = await http.get("/booking/my", { params });
-            return res.data as Booking[];
-        } catch (err) {
-            console.error(err);
-            throw err; 
-        }
-  }
+    /** 统一错误格式化 */
+    private formatError(err: unknown, defaultMsg: string): Error {
+        console.error(err);
 
-    public async cancelBooking(id: string,isForce: boolean) {
-        const res = await http.delete(`/booking/${id}?isForce=${isForce}`);
-        return res.data as { message?: string };
+        if (axios.isAxiosError(err)) {
+            const data = err.response?.data as any;
+
+            if (data?.title && typeof data.title === "string") {
+                return new Error(data.title);
+            }
+            if (data?.message && typeof data.message === "string") {
+                return new Error(data.message);
+            }
+        }
+
+        return new Error(defaultMsg);
     }
 
-    public async createBooking(request: { seatId: string, startTime: string, endTime: string }) {
+    /** 获取我的预约（支持分页） */
+    public async getMyBookings(page = 1, pageSize = 20) {
+        try {
+            const res = await http.get("/booking/my", { params: { page, pageSize } });
+            return res.data as Booking[];
+        } catch (err) {
+            throw this.formatError(err, "获取我的预约失败");
+        }
+    }
+
+    /** 管理员获取所有预约（分页） */
+    public async getAllBookings(page = 1, pageSize = 20) {
+        try {
+            const res = await http.get("/booking/all", { params: { page, pageSize } });
+            return res.data;
+        } catch (err) {
+            throw this.formatError(err, "获取所有预约失败");
+        }
+    }
+
+    /** 获取指定预约 */
+    public async getBookingById(id: string): Promise<Booking> {
+        try {
+            const res = await http.get(`/booking/${id}`);
+            return res.data as Booking;
+        } catch (err) {
+            throw this.formatError(err, "获取预约详情失败");
+        }
+    }
+
+    /** 创建预约 */
+    public async createBooking(request: { seatId: string; startTime: string; endTime: string }): Promise<Booking> {
         try {
             const res = await http.post("/booking", request);
             return res.data as Booking;
+        } catch (err) {
+            throw this.formatError(err, "创建预约失败");
         }
-        catch (err) {
-            console.error(err);
-        }
-        return null;
     }
 
-    public async checkIn(request: { id: string }) {
-        const res = await http.post("/booking/check-in", request);
-        return res.data as Booking;
+    /** 修改预约 */
+    public async updateBooking(request: { id: string; startTime: string; endTime: string }): Promise<Booking> {
+        try {
+            const res = await http.put("/booking", request);
+            return res.data as Booking;
+        } catch (err) {
+            throw this.formatError(err, "修改预约失败");
+        }
     }
-    
-    public async checkOut(request: { id: string }) {
-        const res = await http.post("/booking/check-out", request);
-        return res.data as Booking;
+
+    /** 取消预约 */
+    public async cancelBooking(id: string, isForce = false): Promise<{ message: string }> {
+        try {
+            const res = await http.delete(`/booking/${id}`, { params: { isForce } });
+            return res.data as { message: string };
+        } catch (err) {
+            throw this.formatError(err, "取消预约失败");
+        }
+    }
+
+    /** 签到 */
+    public async checkIn(request: { id: string }): Promise<Booking> {
+        try {
+            const res = await http.post("/booking/check-in", request);
+            return res.data as Booking;
+        } catch (err) {
+            throw this.formatError(err, "签到失败");
+        }
+    }
+
+    /** 签退 */
+    public async checkOut(request: { id: string }): Promise<Booking> {
+        try {
+            const res = await http.post("/booking/check-out", request);
+            return res.data as Booking;
+        } catch (err) {
+            throw this.formatError(err, "签退失败");
+        }
     }
 }
 
-const bookingRequest = new BookingRequest();
-
-export { bookingRequest };
+export const bookingRequest = new BookingRequest();

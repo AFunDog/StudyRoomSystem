@@ -9,12 +9,12 @@ public enum BookingStateEnum
     已预约,已签到,已签退,已取消,已超时
 }
 
-public class Booking
+public record Booking
 {
-    public required Guid Id { get; set; }
+    public Guid Id { get; set; } = Ulid.NewUlid().ToGuid();
     public required Guid UserId { get; set; }
     public required Guid SeatId { get; set; }
-    public required DateTime CreateTime { get; set; }
+    public DateTime CreateTime { get; set; } = DateTime.UtcNow;
     public required DateTime StartTime { get; set; }
     public required DateTime EndTime { get; set; }
     public DateTime? CheckInTime { get; set; }
