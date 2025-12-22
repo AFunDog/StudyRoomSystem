@@ -5,7 +5,7 @@ import { toast } from "vue-sonner";
 import { AxiosError } from "axios";
 
 import { bookingRequest } from "@/lib/api/bookingRequest";
-import type { Booking } from "@/lib/types/Booking";
+import type { Booking, BookingState } from "@/lib/types/Booking";
 import BookingFilters from "./components/BookingFilters.vue";
 import BookingList from "./components/BookingList.vue";
 import BookingDetailDialog from "./components/BookingDetailDialog.vue";
@@ -19,7 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { RotateCw } from "lucide-vue-next";
 
-type StatusFilter = "all" | "Booked" | "CheckIn" | "Checkout" | "Canceled";
+type StatusFilter = "all" | BookingState;
 type DateFilter = "all" | "today" | "future";
 
 // 原始预约列表与加载态
@@ -375,4 +375,3 @@ onMounted(() => {
     </Dialog>
   </div>
 </template>
-

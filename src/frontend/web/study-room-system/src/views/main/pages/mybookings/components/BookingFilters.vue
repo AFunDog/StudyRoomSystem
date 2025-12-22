@@ -3,17 +3,17 @@ import { computed } from "vue";
 import { Button } from "@/components/ui/button";
 import {
   Select,
-  SelectTrigger,
   SelectContent,
   SelectItem,
+  SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
 
 const props = defineProps<{
   status: string;
   date: string;
-  room: string;          
-  roomOptions: string[]; 
+  room: string;
+  roomOptions: string[];
 }>();
 
 const emit = defineEmits<{
@@ -24,10 +24,11 @@ const emit = defineEmits<{
 
 const statusOptions = [
   { value: "all", label: "全部" },
-  { value: "Booked", label: "已预约" },
-  { value: "CheckIn", label: "已签到" },
-  { value: "Checkout", label: "已签退" },
-  { value: "Canceled", label: "已取消" },
+  { value: "已预约", label: "已预约" },
+  { value: "已签到", label: "已签到" },
+  { value: "已签退", label: "已签退" },
+  { value: "已取消", label: "已取消" },
+  { value: "已超时", label: "已超时" },
 ];
 
 const dateOptions = [
@@ -35,6 +36,21 @@ const dateOptions = [
   { value: "today", label: "今天" },
   { value: "future", label: "未来" },
 ];
+
+// 按房间号降序排序
+const sortedRoomOptions = computed(() => {
+  return [...props.roomOptions].sort((a, b) => {
+    const na = Number(a);
+    const nb = Number(b);
+    const aNum = !Number.isNaN(na);
+    const bNum = !Number.isNaN(nb);
+
+    if (aNum && bNum) return na - nb;              // 101, 102, 104 ...
+    if (aNum) return -1;
+    if (bNum) return 1;
+    return a.localeCompare(b, "zh-CN");            // 非纯数字时用字典序
+  });
+});
 
 const roomModel = computed({
   get: () => props.room,
@@ -85,12 +101,9 @@ const roomModel = computed({
           <SelectValue placeholder="全部" />
         </SelectTrigger>
         <SelectContent>
-          <!-- 特殊的“全部” -->
           <SelectItem value="all">全部</SelectItem>
-
-          <!-- 具体房间 -->
           <SelectItem
-            v-for="name in roomOptions"
+            v-for="name in sortedRoomOptions"
             :key="name"
             :value="name"
           >

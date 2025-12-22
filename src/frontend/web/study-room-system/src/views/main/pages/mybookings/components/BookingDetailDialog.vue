@@ -18,9 +18,9 @@ const emit = defineEmits<{
   (e: "cancel", booking: Booking): void;
 }>();
 
-const canCheckIn = computed(() => props.booking?.state === "Booked");
-const canCheckOut = computed(() => props.booking?.state === "CheckIn");
-const canCancel = computed(() => props.booking?.state === "Booked");
+const canCheckIn = computed(() => props.booking?.state === "已预约");
+const canCheckOut = computed(() => props.booking?.state === "已签到");
+const canCancel = computed(() => props.booking?.state === "已预约");
 
 const innerOpen = computed({
   get: () => props.open,
