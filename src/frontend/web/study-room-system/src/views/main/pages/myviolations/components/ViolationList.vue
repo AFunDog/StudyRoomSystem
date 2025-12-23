@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import type { Violation } from "@/lib/types/Violation";
 import { localizeViolationType } from "@/lib/types/Violation";
-import { Card, CardHeader, CardDescription } from "@/components/ui/card";
+import { Card, CardHeader } from "@/components/ui/card";
 import dayjs from "dayjs";
 
 const props = defineProps<{
   violations: Violation[];
   loading: boolean;
+}>();
+
+const emit = defineEmits<{
+  (e: "view-detail", v: Violation): void;
 }>();
 
 function badgeClass(type: Violation["type"]) {
@@ -37,19 +41,12 @@ function cardClass(type: Violation["type"]) {
   }
 }
 
-// TODO: 处理房间和座位位置的相关信息，考虑使用按guid查询预约条目获取房间和座位信息
 function formatCreate(t?: string | null) {
   return t ? dayjs(t).format("YYYY/MM/DD HH:mm") : "--";
 }
 
-function formatBookingRange(start?: string | null, end?: string | null) {
-  if (!start || !end) return "";
-  return `${dayjs(start).format("YYYY/MM/DD HH:mm")} - ${dayjs(end).format("HH:mm")}`;
-}
-
-function seatNumber(cols?: number | null, row?: number | null, col?: number | null) {
-  if (cols == null || row == null || col == null) return "未知座位";
-  return row * cols + col + 1;
+function hasBooking(v: Violation) {
+  return !!v.bookingId;
 }
 </script>
 
@@ -77,8 +74,8 @@ function seatNumber(cols?: number | null, row?: number | null, col?: number | nu
         <Card
           class="py-2 px-2 bg-background/70 transition-colors"
           :class="cardClass(v.type)"
+          @click="emit('view-detail', v)"
         >
-
           <CardHeader>
             <div class="flex flex-row gap-x-2 items-center">
               <div class="text-base font-semibold">
@@ -92,27 +89,8 @@ function seatNumber(cols?: number | null, row?: number | null, col?: number | nu
               </div>
             </div>
 
-            <CardDescription class="text-sm text-muted-foreground mt-1 whitespace-pre-line break-words">
-              {{ v.content }}
-            </CardDescription>
-
-            <div class="mt-2 text-xs text-muted-foreground flex flex-wrap gap-x-3 gap-y-1">
-              <span>
-                房间：{{ v.booking?.seat?.room?.name || "未知房间" }}
-              </span>
-              <span>
-                座位：
-                {{
-                  seatNumber(
-                    v.booking?.seat?.room?.cols ?? null,
-                    v.booking?.seat?.row ?? null,
-                    v.booking?.seat?.col ?? null
-                  )
-                }}
-              </span>
-              <span v-if="v.booking?.startTime && v.booking?.endTime">
-                预约时间：{{ formatBookingRange(v.booking?.startTime, v.booking?.endTime) }}
-              </span>
+            <div class="mt-2 text-xs text-muted-foreground">
+              {{ hasBooking(v) ? "有关联预约，点击查看详情" : "无关联预约，点击查看详情" }}
             </div>
           </CardHeader>
         </Card>
