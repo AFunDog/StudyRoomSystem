@@ -11,7 +11,9 @@ export const roomRequest = {
 
   // V1 api
   // 获取所有房间信息（包含座位）
-  getRooms: () => http.get("/room"),
+  getRooms: (params?: { page?: number; pageSize?: number 
+  }) =>http.get("/room", { params }),
+
 
   // 获取指定房间信息（包含座位布局）
   getRoom: (id: string) => http.get(`/room/${id}`),
