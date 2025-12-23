@@ -15,7 +15,9 @@ public static class ServiceExtension
         serviceCollection.AddHostedService<PgSqlNotificationsService>().AddHostedService<UpdateDatabaseService>();
 
         serviceCollection
-            .AddTransient<IBookingService,BookingService>()
+            .AddTransient<IComplaintService, ComplaintService>()
+            .AddTransient<IViolationService, ViolationService>()
+            .AddTransient<IBookingService, BookingService>()
             .AddTransient<IRoomService, RoomService>()
             .AddTransient<IBlacklistService, BlacklistService>()
             .AddTransient<IUserService, UserService>();

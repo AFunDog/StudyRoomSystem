@@ -31,4 +31,5 @@ public interface IUserService
 
     Task DeleteUser(Guid userId);
     Task<User> UpdateUser(User user);
+    Task<User> GetUserByUserName(string userName);
 }

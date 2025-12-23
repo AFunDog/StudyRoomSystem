@@ -17,6 +17,7 @@ using Serilog;
 using StudyRoomSystem.Core.Structs;
 using StudyRoomSystem.Core.Structs.Api;
 using StudyRoomSystem.Core.Structs.Api.V1;
+using StudyRoomSystem.Core.Structs.Exceptions;
 using StudyRoomSystem.Server.Contacts;
 using StudyRoomSystem.Server.Controllers.Filters;
 using StudyRoomSystem.Server.Database;
@@ -28,20 +29,16 @@ namespace StudyRoomSystem.Server.Controllers.V1;
 [ApiController]
 [Route("api/v{version:apiVersion}/auth")]
 [ApiVersion("1.0")]
-public class AuthController(IConfiguration configuration, AppDbContext appDbContext, IBlacklistService blacklistService)
-    : ControllerBase
+public class AuthController(
+    IConfiguration configuration,
+    AppDbContext appDbContext,
+    IUserService userService,
+    IBlacklistService blacklistService) : ControllerBase
 {
     private IConfiguration Configuration { get; } = configuration;
     private AppDbContext AppDbContext { get; } = appDbContext;
+    private IUserService UserService { get; } = userService;
     private IBlacklistService BlacklistService { get; } = blacklistService;
-
-    // public static IEndpointRouteBuilder MapAuthController(this IEndpointRouteBuilder builder)
-    // {
-    //     var group = builder.MapGroup("api/v{version:apiVersion}/auth");
-    //     group.MapGet("l", () => { });
-    //     return builder;
-    // }
-
 
     #region Login
 
@@ -53,43 +50,25 @@ public class AuthController(IConfiguration configuration, AppDbContext appDbCont
     [EndpointDescription("登陆后会自动写入Cookie")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        var user = await AppDbContext.Users.SingleOrDefaultAsync(x => x.UserName == request.UserName);
-        if (user is null)
-            return Unauthorized(
-                new ProblemDetails()
-                {
-                    Title = "用户不存在"
-                }
-            );
+        var user = await UserService.GetUserByUserName(request.UserName);
 
         if (PasswordHelper.CheckPassword(request.Password, user.Password) is false)
-            return Unauthorized(
-                new ProblemDetails()
-                {
-                    Title = "密码错误"
-                }
-            );
+            throw new UnauthorizedException("密码错误");
 
         // 检查黑名单
         var blacklists = (await BlacklistService.GetAllValidByUserId(user.Id, 1, 1));
         if (blacklists.Total != 0)
         {
-            return Unauthorized(
-                new ProblemDetails()
-                {
-                    Title = "禁止登录",
-                    Detail = "黑名单用户禁止登录",
-                    Extensions =
-                    {
-                        ["blacklist"] = blacklists
-                    }
-                }
+            throw new UnauthorizedException(
+                "黑名单用户禁止登录",
+                new Dictionary<string, object?> { ["blacklist"] = blacklists }
             );
         }
 
         var claims = new List<Claim>()
         {
-            new Claim(ClaimExtendTypes.Id, user.Id.ToString()), new Claim(ClaimTypes.Name, request.UserName),
+            new Claim(ClaimExtendTypes.Id, user.Id.ToString()),
+            new Claim(ClaimTypes.Name, request.UserName),
             new Claim(ClaimTypes.Role, user.Role.ToString())
         };
 
@@ -108,20 +87,10 @@ public class AuthController(IConfiguration configuration, AppDbContext appDbCont
         Response.Cookies.Append(
             AuthorizationHelper.CookieKey,
             tokenString,
-            new CookieOptions()
-            {
-                MaxAge = TimeSpan.FromMinutes(minutes),
-                IsEssential = true
-            }
+            new CookieOptions() { MaxAge = TimeSpan.FromMinutes(minutes), IsEssential = true }
         );
         Log.Logger.Trace().Information("用户登录 {Id}", user);
-        return Ok(
-            new LoginResponseOk
-            {
-                Expiration = token.ValidTo,
-                User = user
-            }
-        );
+        return Ok(new LoginResponseOk { Expiration = token.ValidTo, User = user });
     }
 
     #endregion
@@ -135,12 +104,10 @@ public class AuthController(IConfiguration configuration, AppDbContext appDbCont
     [EndpointSummary("用户登出")]
     public async Task<IActionResult> Logout()
     {
-        var user = this.GetLoginUserId();
-        if (user == Guid.Empty)
-            return Unauthorized();
+        var user = await UserService.GetUserById(this.GetLoginUserId());
 
         Response.Cookies.Delete(AuthorizationHelper.CookieKey);
-        Log.Logger.Trace().Information("用户登出 {Id}", user);
+        Log.Logger.Trace().Information("用户登出 {Id}", user.Id);
         return Ok();
     }
 
@@ -154,9 +121,7 @@ public class AuthController(IConfiguration configuration, AppDbContext appDbCont
     [EndpointDescription("此接口用于检查登录Token是否失效或者不处于登录状态")]
     public async Task<IActionResult> Check()
     {
-        var userId = this.GetLoginUserId();
-        if (userId == Guid.Empty)
-            return Unauthorized();
+        var user = await UserService.GetUserById(this.GetLoginUserId());
         return Ok();
     }
 }

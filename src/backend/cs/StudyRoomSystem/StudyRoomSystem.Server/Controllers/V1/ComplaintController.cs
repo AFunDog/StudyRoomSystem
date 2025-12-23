@@ -20,10 +20,14 @@ namespace StudyRoomSystem.Server.Controllers.V1;
 [ApiController]
 [Route("api/v{version:apiVersion}/complaint")]
 [ApiVersion("1.0")]
-public class ComplaintController(AppDbContext appDbContext,IUserService userService) : ControllerBase
+public class ComplaintController(
+    AppDbContext appDbContext,
+    IUserService userService,
+    IComplaintService complaintService) : ControllerBase
 {
     private AppDbContext AppDbContext { get; } = appDbContext;
     private IUserService UserService { get; } = userService;
+    private IComplaintService ComplaintService { get; } = complaintService;
 
     [HttpGet]
     [Authorize(AuthorizationHelper.Policy.Admin)]
@@ -33,25 +37,7 @@ public class ComplaintController(AppDbContext appDbContext,IUserService userServ
         [FromQuery] [Range(1, int.MaxValue)] int page = 1,
         [FromQuery] [Range(1, 100)] int pageSize = 20)
     {
-        var query = AppDbContext
-            .Complaints.Include(x => x.Seat)
-            .Include(x => x.SendUser)
-            .Include(x => x.HandleUser)
-            .AsNoTracking();
-
-        var total = await query.CountAsync();
-
-        var items = await query.OrderByDescending(x => x.Id).Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
-
-        return Ok(
-            new ApiPageResult<Complaint>()
-            {
-                Total = total,
-                Page = page,
-                PageSize = pageSize,
-                Items = items
-            }
-        );
+        return Ok(await ComplaintService.GetAll(page, pageSize));
     }
 
     [HttpGet("{id:guid}")]
@@ -61,13 +47,7 @@ public class ComplaintController(AppDbContext appDbContext,IUserService userServ
     [EndpointSummary("获取指定投诉")]
     public async Task<IActionResult> Get(Guid id)
     {
-        var item = await AppDbContext
-            .Complaints.Include(x => x.Seat)
-            .Include(x => x.SendUser)
-            .Include(x => x.HandleUser)
-            .AsNoTracking()
-            .SingleOrDefaultAsync(x => x.Id == id);
-        return item is null ? NotFound() : Ok(item);
+        return Ok(await ComplaintService.GetById(id));
     }
 
     [HttpGet("my")]
@@ -79,31 +59,7 @@ public class ComplaintController(AppDbContext appDbContext,IUserService userServ
         [FromQuery] [Range(1, int.MaxValue)] int page = 1,
         [FromQuery] [Range(1, 100)] int pageSize = 20)
     {
-        var userId = this.GetLoginUserId();
-        if (userId == Guid.Empty)
-            return Unauthorized();
-
-        var query = AppDbContext
-            .Complaints.Include(x => x.Seat)
-            .Include(x => x.SendUser)
-            .Include(x => x.HandleUser)
-            .AsNoTracking()
-            .Where(x => x.SendUserId == userId);
-
-
-        var total = await query.CountAsync();
-
-        var items = await query.OrderByDescending(x => x.Id).Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
-
-        return Ok(
-            new ApiPageResult<Complaint>()
-            {
-                Total = total,
-                Page = page,
-                PageSize = pageSize,
-                Items = items
-            }
-        );
+        return Ok(await ComplaintService.GetAllBySendUserId(this.GetLoginUserId(), page, pageSize));
     }
 
     [HttpPost]
@@ -113,25 +69,19 @@ public class ComplaintController(AppDbContext appDbContext,IUserService userServ
     [EndpointSummary("创建投诉")]
     public async Task<IActionResult> Create([FromBody] CreateComplaintRequest request)
     {
-        var userId = this.GetLoginUserId();
-        if (userId == Guid.Empty)
-            return Unauthorized();
-
-        var track = await AppDbContext.Complaints.AddAsync(
-            new()
-            {
-                Id = Ulid.NewUlid().ToGuid(),
-                SendUserId = userId,
-                SeatId = request.SeatId,
-                State = ComplaintStateEnum.已发起,
-                Type = request.Type,
-                SendContent = request.Content,
-                CreateTime = DateTime.UtcNow,
-                TargetTime = request.TargetTime
-            }
+        return Ok(
+            await ComplaintService.Create(
+                new()
+                {
+                    SendUserId = this.GetLoginUserId(),
+                    SeatId = request.SeatId,
+                    State = ComplaintStateEnum.已发起,
+                    Type = request.Type,
+                    SendContent = request.Content,
+                    TargetTime = request.TargetTime
+                }
+            )
         );
-        await AppDbContext.SaveChangesAsync();
-        return Ok(track.Entity);
     }
 
     [HttpPut]
@@ -142,21 +92,13 @@ public class ComplaintController(AppDbContext appDbContext,IUserService userServ
     [EndpointSummary("修改投诉")]
     public async Task<IActionResult> Edit([FromBody] EditComplaintRequest request)
     {
-        var userId = this.GetLoginUserId();
-        if (userId == Guid.Empty)
-            return Unauthorized();
+        var complaint = await ComplaintService.GetById(request.Id);
 
-        var entity = await AppDbContext.Complaints.SingleOrDefaultAsync(x => x.Id == request.Id);
-        if (entity is null)
-            return NotFound();
+        complaint.Type = request.Type ?? complaint.Type;
+        complaint.SendContent = request.Content ?? complaint.SendContent;
+        complaint.TargetTime = request.TargetTime ?? complaint.TargetTime;
 
-        entity.Type = request.Type ?? entity.Type;
-        entity.SendContent = request.Content ?? entity.SendContent;
-        entity.TargetTime = request.TargetTime ?? entity.TargetTime;
-        var track = AppDbContext.Complaints.Update(entity);
-        await AppDbContext.SaveChangesAsync();
-
-        return Ok(track.Entity);
+        return Ok(await ComplaintService.Update(complaint));
     }
 
     [HttpPut("handle")]
@@ -168,33 +110,16 @@ public class ComplaintController(AppDbContext appDbContext,IUserService userServ
     [EndpointSummary("处理投诉请求")]
     public async Task<IActionResult> Handle([FromBody] HandleComplaintRequest request)
     {
-        var loginUser = await UserService.GetUserById(this.GetLoginUserId());
-        var targetUser = await UserService.GetUserById(request.TargetUserId);
-
-        var entity = await AppDbContext.Complaints.SingleOrDefaultAsync(x => x.Id == request.Id);
-        if (entity is null)
-            return NotFound();
-        if (entity.State is not ComplaintStateEnum.已发起)
-            return BadRequest(new ProblemDetails() { Title = "投诉状态不是已发起状态" });
-        entity.State = ComplaintStateEnum.已处理;
-        entity.HandleContent = request.Content;
-        entity.HandleTime = DateTime.UtcNow;
-        entity.HandleUserId = loginUser.Id;
-
-        var violation = new Violation()
-        {
-            Id = Ulid.NewUlid().ToGuid(),
-            UserId = targetUser.Id,
-            CreateTime = DateTime.UtcNow,
-            State = ViolationStateEnum.Violation,
-            Type = ViolationTypeEnum.管理员,
-            Content = request.ViolationContent
-        };
-        
-        var track = AppDbContext.Complaints.Update(entity);
-        await AppDbContext.Violations.AddAsync(violation);
-        await AppDbContext.SaveChangesAsync();
-        return Ok(track.Entity);
+        return Ok(
+            await ComplaintService.Handle(
+                request.Id,
+                this.GetLoginUserId(),
+                request.TargetUserId,
+                request.Content,
+                request.ViolationContent,
+                request.Score
+            )
+        );
     }
 
     [HttpPut("close")]
@@ -206,21 +131,21 @@ public class ComplaintController(AppDbContext appDbContext,IUserService userServ
     [EndpointSummary("关闭投诉请求")]
     public async Task<IActionResult> Close([FromBody] CloseComplaintRequest request)
     {
-        var userId = this.GetLoginUserId();
-        if (userId == Guid.Empty)
-            return Unauthorized();
-
-        var entity = await AppDbContext.Complaints.SingleOrDefaultAsync(x => x.Id == request.Id);
-        if (entity is null)
-            return NotFound();
-        if (entity.State is not ComplaintStateEnum.已发起)
-            return BadRequest(new ProblemDetails() { Title = "投诉状态不是已发起状态" });
-        entity.State = ComplaintStateEnum.已关闭;
-        entity.HandleTime = DateTime.UtcNow;
-        entity.HandleUserId = userId;
-        var track = AppDbContext.Complaints.Update(entity);
-        await AppDbContext.SaveChangesAsync();
-        return Ok(track.Entity);
+        // var userId = this.GetLoginUserId();
+        // if (userId == Guid.Empty)
+        //     return Unauthorized();
+        //
+        // var entity = await AppDbContext.Complaints.SingleOrDefaultAsync(x => x.Id == request.Id);
+        // if (entity is null)
+        //     return NotFound();
+        // if (entity.State is not ComplaintStateEnum.已发起)
+        //     return BadRequest(new ProblemDetails() { Title = "投诉状态不是已发起状态" });
+        // entity.State = ComplaintStateEnum.已关闭;
+        // entity.HandleTime = DateTime.UtcNow;
+        // entity.HandleUserId = userId;
+        // var track = AppDbContext.Complaints.Update(entity);
+        // await AppDbContext.SaveChangesAsync();
+        return Ok(await ComplaintService.Close(request.Id,this.GetLoginUserId(),request.Content));
     }
 
     [HttpDelete]
@@ -230,11 +155,12 @@ public class ComplaintController(AppDbContext appDbContext,IUserService userServ
     [EndpointSummary("删除指定投诉")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var complaint = await AppDbContext.Complaints.SingleOrDefaultAsync(x => x.Id == id);
-        if (complaint is null)
-            return NotFound();
-        AppDbContext.Complaints.Remove(complaint);
-        await AppDbContext.SaveChangesAsync();
+        // var complaint = await AppDbContext.Complaints.SingleOrDefaultAsync(x => x.Id == id);
+        // if (complaint is null)
+        //     return NotFound();
+        // AppDbContext.Complaints.Remove(complaint);
+        // await AppDbContext.SaveChangesAsync();
+        await ComplaintService.Delete(id);
         return Ok();
     }
 }

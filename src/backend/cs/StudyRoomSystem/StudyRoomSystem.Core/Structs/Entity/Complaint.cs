@@ -20,7 +20,7 @@ public class Complaint
     public required string Type { get; set; }
     public required string SendContent { get; set; }
     public DateTime? TargetTime { get; set; }
-    public required DateTime CreateTime { get; set; }
+    public DateTime CreateTime { get; set; } = DateTime.UtcNow;
     public DateTime? HandleTime { get; set; }
     public Guid? HandleUserId { get; set; }
     public string? HandleContent { get; set; }

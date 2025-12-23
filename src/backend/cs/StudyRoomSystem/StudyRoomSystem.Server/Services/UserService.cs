@@ -20,7 +20,15 @@ internal class UserService(AppDbContext appDbContext) : IUserService
 
     public async Task<User> GetUserById(Guid userId)
     {
-        var user = await AppDbContext.Users.SingleOrDefaultAsync(x => x.Id == userId);
+        var user = await AppDbContext.Users.AsNoTracking().SingleOrDefaultAsync(x => x.Id == userId);
+        if (user is null)
+            throw new NotFoundException("用户不存在");
+        return user;
+    }
+
+    public async Task<User> GetUserByUserName(string userName)
+    {
+        var user = await AppDbContext.Users.AsNoTracking().SingleOrDefaultAsync(x => x.UserName == userName);
         if (user is null)
             throw new NotFoundException("用户不存在");
         return user;
