@@ -62,7 +62,10 @@ internal sealed class BookingService(AppDbContext appDbContext, IUserService use
     public async Task<Booking> Create(Booking booking)
     {
         // 检查座位
-        var seat = await AppDbContext.Seats.AsNoTracking().Include(x => x.Room).SingleOrDefaultAsync(x => x.Id == booking.SeatId);
+        var seat = await AppDbContext
+            .Seats.AsNoTracking()
+            .Include(x => x.Room)
+            .SingleOrDefaultAsync(x => x.Id == booking.SeatId);
         if (seat is null)
             throw new NotFoundException("座位不存在");
 
@@ -73,19 +76,36 @@ internal sealed class BookingService(AppDbContext appDbContext, IUserService use
         // 不允许创建过去的预约
         if (booking.StartTime <= DateTime.UtcNow)
             throw new BadHttpRequestException("不允许创建过去的预约");
-        
-        // 预约不允许超过房间开放时间
-        if (booking.StartTime.TimeOfDay < seat.Room.OpenTime.ToTimeSpan()
-            || seat.Room.CloseTime.ToTimeSpan() < booking.EndTime.TimeOfDay)
-            throw new BadHttpRequestException("不允许超过房间开放时间");
 
-        // 检查座位是否在时间段内被占用
-        var has = await AppDbContext.Bookings.AnyAsync(x
-            => x.SeatId == booking.SeatId
-               && ((x.StartTime <= booking.StartTime && booking.StartTime <= x.EndTime)
-                   || (x.StartTime <= booking.EndTime && booking.EndTime <= x.EndTime))
-               && (x.State == (BookingStateEnum.已预约) || x.State == (BookingStateEnum.已签到))
-        );
+        // 预约不允许超过房间开放时间
+        // var date = booking.StartTime.Date;
+        // var preDate = booking.StartTime.Date - TimeSpan.FromDays(1);
+        // var nextDate = booking.StartTime.Date + TimeSpan.FromDays(1);
+        //
+        // if (!(date.Add(seat.Room.OpenTime.ToTimeSpan()) < booking.StartTime
+        //       && booking.StartTime < date.Add(seat.Room.CloseTime.ToTimeSpan()))
+        //     || !(preDate.Add(seat.Room.OpenTime.ToTimeSpan()) < booking.StartTime
+        //          && booking.StartTime < preDate.Add(seat.Room.CloseTime.ToTimeSpan()))
+        //     || !(nextDate.Add(seat.Room.OpenTime.ToTimeSpan()) < booking.StartTime
+        //          && booking.StartTime < nextDate.Add(seat.Room.CloseTime.ToTimeSpan())))
+        // {
+        //     throw new BadHttpRequestException("不允许超过房间开放时间");
+        // }
+        var start = booking.StartTime.ToLocalTime();
+        var end = booking.EndTime.ToLocalTime();
+        if (!(start.Date.Add(seat.Room.OpenTime.ToTimeSpan()) <= start
+             && end <= start.Date.Add(seat.Room.CloseTime.ToTimeSpan())))
+        {
+            throw new BadHttpRequestException("不允许超过房间开放时间");
+        }
+
+            // 检查座位是否在时间段内被占用
+            var has = await AppDbContext.Bookings.AnyAsync(x
+                => x.SeatId == booking.SeatId
+                   && ((x.StartTime <= booking.StartTime && booking.StartTime <= x.EndTime)
+                       || (x.StartTime <= booking.EndTime && booking.EndTime <= x.EndTime))
+                   && (x.State == (BookingStateEnum.已预约) || x.State == (BookingStateEnum.已签到))
+            );
         if (has)
             throw new ConflictException("座位在时间范围内已被用户预约");
 
@@ -122,6 +142,8 @@ internal sealed class BookingService(AppDbContext appDbContext, IUserService use
                 );
             }
 
+        booking.State = BookingStateEnum.已取消;
+        
         var track = AppDbContext.Bookings.Update(booking);
         var res = await AppDbContext.SaveChangesAsync();
         if (res == 0)
