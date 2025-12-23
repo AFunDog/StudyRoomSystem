@@ -69,6 +69,19 @@ function stateBadgeClass(state: ComplaintState) {
       return base + " bg-muted text-muted-foreground border-border";
   }
 }
+
+function cardClass(state: ComplaintState) {
+  switch (state) {
+    case "已发起":
+      return "border-l-4 border-l-sky-400/80 border border-sky-100";
+    case "已处理":
+      return "border-l-4 border-l-emerald-500/80 border border-emerald-100";
+    case "已关闭":
+      return "border-l-4 border-l-slate-400/80 border border-slate-100";
+    default:
+      return "border";
+  }
+}
 </script>
 
 <template>
@@ -102,12 +115,13 @@ function stateBadgeClass(state: ComplaintState) {
       </div>
       <div
         v-else
-        class="flex flex-col min-w-0 gap-y-2 max-w-full flex-nowrap overflow-y-auto h-full rounded-md"
+        class="flex flex-col min-w-0 gap-y-2 max-w-full flex-nowrap overflow-y-auto flex-1 rounded-md"
       >
         <div
           v-for="c in sortedComplaints"
           :key="c.id"
-          class="border rounded-lg p-3 bg-background cursor-pointer hover:bg-accent/60 transition-colors"
+          class="rounded-lg p-3 bg-background cursor-pointer hover:bg-accent/60 transition-colors"
+          :class="cardClass(c.state)"
           @click="emit('select', c)"
         >
           <div class="flex items-start gap-2">

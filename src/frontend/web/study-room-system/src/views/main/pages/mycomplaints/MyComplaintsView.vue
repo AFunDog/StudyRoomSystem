@@ -269,17 +269,19 @@ onMounted(() => {
     </div>
 
     <template v-if="mode === 'list'">
-      <ComplaintList
-        :complaints="filteredComplaints"
-        :loading="loading"
-        :has-more="hasMore"
-        :loading-more="loadingMore"
-        :state-filter="stateFilter"
-        :rooms="rooms"
-        @update:stateFilter="stateFilter = $event as StateFilter"
-        @select="openEdit"
-        @load-more="loadMore"
-      />
+      <div class="flex-1 min-h-0 h-full overflow-hidden">
+        <ComplaintList
+          :complaints="filteredComplaints"
+          :loading="loading"
+          :has-more="hasMore"
+          :loading-more="loadingMore"
+          :state-filter="stateFilter"
+          :rooms="rooms"
+          @update:stateFilter="stateFilter = $event as StateFilter"
+          @select="openEdit"
+          @load-more="loadMore"
+        />
+      </div>
     </template>
 
     <template v-else-if="mode === 'create'">
