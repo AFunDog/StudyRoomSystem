@@ -264,7 +264,7 @@ function fillTargetFromComplaint(target?: string | null) {
             </Button>
           </PopoverTrigger>
           <PopoverContent class="p-0">
-            <Calendar v-model="form.date" />
+            <Calendar  />
           </PopoverContent>
         </Popover>
         <Select v-model="form.hour">

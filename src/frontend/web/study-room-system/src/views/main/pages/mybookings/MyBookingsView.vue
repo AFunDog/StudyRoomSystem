@@ -91,7 +91,7 @@ async function loadBookings(reset = false) {
   }
 
   try {
-    const res: any = await bookingRequest.getMyBookings(page.value, pageSize);
+    const res: any = await bookingRequest.getMyBookings({ page: page.value, pageSize: pageSize });
 
     const list = Array.isArray(res) ? res : res?.items ?? [];
     const total = Array.isArray(res) ? list.length : res?.total ?? list.length;
@@ -233,93 +233,51 @@ onMounted(() => {
 
       <!-- 右上角刷新按钮：PC端图标按钮，移动端带文字 -->
       <div class="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          class="flex items-center gap-1 md:hidden
+        <Button variant="ghost" size="sm" class="flex items-center gap-1 md:hidden
                   bg-gray-100 hover:bg-gray-200
                   text-gray-600 border border-gray-200
-                  disabled:opacity-60 disabled:cursor-not-allowed"
-          :disabled="loading"
-          @click="loadBookings(true)"
-        >
+                  disabled:opacity-60 disabled:cursor-not-allowed" :disabled="loading" @click="loadBookings(true)">
           <RotateCw class="w-4 h-4" />
           <span class="text-xs">刷新</span>
         </Button>
 
         <!-- PC端：纯图标按钮 -->
-        <Button
-          variant="ghost"
-          size="icon"
-          class="hidden md:inline-flex
+        <Button variant="ghost" size="icon" class="hidden md:inline-flex
                   bg-gray-100 hover:bg-gray-200
                   text-gray-600 border border-gray-200
                   rounded-full
-                  disabled:opacity-60 disabled:cursor-not-allowed"
-          :disabled="loading"
-          @click="loadBookings(true)"
-        >
+                  disabled:opacity-60 disabled:cursor-not-allowed" :disabled="loading" @click="loadBookings(true)">
           <RotateCw class="w-4 h-4" />
         </Button>
       </div>
     </div>
 
-    <BookingFilters
-      :status="statusFilter"
-      :date="dateFilter"
-      :room="roomFilter"
-      :room-options="roomOptions"
-      @update:status="statusFilter = $event as StatusFilter"
-      @update:date="dateFilter = $event as DateFilter"
-      @update:room="roomFilter = $event"
-    />
+    <BookingFilters :status="statusFilter" :date="dateFilter" :room="roomFilter" :room-options="roomOptions"
+      @update:status="statusFilter = $event as StatusFilter" @update:date="dateFilter = $event as DateFilter"
+      @update:room="roomFilter = $event" />
 
     <div class="flex-1 min-h-0 h-full overflow-hidden">
-      <BookingList
-        :bookings="filteredBookings"
-        :loading="loading"
-        @select="openDetail"
-      />
+      <BookingList :bookings="filteredBookings" :loading="loading" @select="openDetail" />
     </div>
 
     <!-- 加载更多 -->
-    <div
-      v-if="hasMore"
-      class="mt-2 flex justify-center"
-    >
-      <Button
-        variant="outline"
-        size="sm"
-        :disabled="loadingMore"
-        @click="loadMore"
-      >
+    <div v-if="hasMore" class="mt-2 flex justify-center">
+      <Button variant="outline" size="sm" :disabled="loadingMore" @click="loadMore">
         {{ loadingMore ? "加载中..." : "加载更多" }}
       </Button>
     </div>
 
     <!-- 没有更多 -->
-    <div
-      v-else
-      class="mt-1 flex justify-center text-sm text-muted-foreground"
-    >
+    <div v-else class="mt-1 flex justify-center text-sm text-muted-foreground">
       没有更多了
     </div>
 
     <!-- 预约详情弹窗-->
-    <BookingDetailDialog
-      :open="detailOpen"
-      :booking="selectedBooking"
-      @update:open="detailOpen = $event"
-      @check-in="handleCheckIn"
-      @check-out="handleCheckOut"
-      @cancel="handleCancel"
-    />
+    <BookingDetailDialog :open="detailOpen" :booking="selectedBooking" @update:open="detailOpen = $event"
+      @check-in="handleCheckIn" @check-out="handleCheckOut" @cancel="handleCancel" />
 
     <!-- 强制取消确认弹窗-->
-    <Dialog
-      :open="forceCancelOpen"
-      @update:open="forceCancelOpen = $event"
-    >
+    <Dialog :open="forceCancelOpen" @update:open="forceCancelOpen = $event">
       <DialogContent>
         <DialogHeader>
           <DialogTitle>确认强制取消预约</DialogTitle>
@@ -336,7 +294,7 @@ onMounted(() => {
             <span class="font-medium">
               {{
                 (pendingForceCancel?.seat?.row ?? 0) *
-                  (pendingForceCancel?.seat?.room?.cols ?? 0) +
+                (pendingForceCancel?.seat?.room?.cols ?? 0) +
                 (pendingForceCancel?.seat?.col ?? 0) +
                 1
               }}
