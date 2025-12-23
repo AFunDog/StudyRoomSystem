@@ -51,6 +51,20 @@ const seatIconClass = computed(() => {
   }
 })
 
+function buildGrid(room: Room | null, seatList: Seat[] | null | undefined) {
+  if (!room) return []
+  const total = (room.rows ?? 0) * (room.cols ?? 0)
+  const grid: (Seat | null)[] = Array(total).fill(null)
+
+  seatList?.forEach((seat) => {
+    const idx = (seat.row ?? 0) * (room.cols ?? 0) + (seat.col ?? 0)
+    if (idx >= 0 && idx < total) {
+      grid[idx] = seat
+    }
+  })
+  return grid
+}
+
 // ========= 根据房间生成网格 =========
 watch(
   () => props.room,
@@ -61,17 +75,7 @@ watch(
       return
     }
 
-    const total = (room.rows ?? 0) * (room.cols ?? 0)
-    const grid: (Seat | null)[] = Array(total).fill(null)
-
-    room.seats?.forEach((seat) => {
-      const idx = seat.row * (room.cols ?? 0) + seat.col
-      if (idx >= 0 && idx < total) {
-        grid[idx] = seat
-      }
-    })
-
-    seats.value = grid
+    seats.value = buildGrid(room, room.seats)
 
     // 初始：所有存在的座位先视为 free
     const status: Record<string, 'free' | 'busy' | 'disabled'> = {}
@@ -102,14 +106,22 @@ async function refreshSeatStatus(
     })
 
     const data = res.data as {
-      room: Room
+      room?: Room
+      Room?: Room
       seats?: string[] | null
+      Seats?: string[] | null
     }
 
-    const openSeatIds = new Set<string>(data.seats ?? [])
+    const roomData = data.room ?? data.Room ?? room
+    const seatList = roomData?.seats ?? room.seats ?? []
+
+    // 用后端返回的座位明细刷新网格（v2 接口会返回 seats 详情）
+    seats.value = buildGrid(roomData, seatList)
+
+    const openSeatIds = new Set<string>(data.seats ?? data.Seats ?? [])
 
     const status: Record<string, 'free' | 'busy' | 'disabled'> = {}
-    room.seats?.forEach((s) => {
+    seatList.forEach((s) => {
       status[s.id] = openSeatIds.has(s.id) ? 'free' : 'busy'
     })
     seatStatusMap.value = status

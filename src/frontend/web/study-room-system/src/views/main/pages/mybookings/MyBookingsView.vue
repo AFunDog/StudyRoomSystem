@@ -91,21 +91,17 @@ async function loadBookings(reset = false) {
   }
 
   try {
-    const res = await bookingRequest.getMyBookings({
-      page: page.value,
-      pageSize,
-    });
+    const res: any = await bookingRequest.getMyBookings(page.value, pageSize);
+
+    const list = Array.isArray(res) ? res : res?.items ?? [];
+    const total = Array.isArray(res) ? list.length : res?.total ?? list.length;
 
     // 少于 pageSize，说明没有更多了
-    if (res.length < pageSize) {
+    if (list.length < pageSize || page.value * pageSize >= total) {
       hasMore.value = false;
     }
 
-    if (page.value === 1) {
-      bookings.value = res;
-    } else {
-      bookings.value = [...bookings.value, ...res];
-    }
+    bookings.value = page.value === 1 ? list : [...bookings.value, ...list];
   } catch (err) {
     console.error("获取预约列表失败", err);
     toast.error("获取预约列表失败，请稍后重试");
@@ -149,6 +145,12 @@ async function handleCheckIn(b: Booking) {
       }
     }
 
+    if (err instanceof Error && err.message) {
+      const msg = err.message === "请求错误" ? "签到失败，请稍后重试" : err.message;
+      toast.error(msg);
+      return;
+    }
+
     toast.error("签到失败，请稍后重试");
   }
 }
@@ -172,6 +174,12 @@ async function handleCheckOut(b: Booking) {
         toast.error(data.message);
         return;
       }
+    }
+
+    if (err instanceof Error && err.message) {
+      const msg = err.message === "请求错误" ? "签退失败，请稍后重试" : err.message;
+      toast.error(msg);
+      return;
     }
 
     toast.error("签退失败，请稍后重试");

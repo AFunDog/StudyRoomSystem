@@ -29,17 +29,6 @@ const stateFilter = ref<StateFilter>("all");
 const rooms = ref<Room[]>([]);
 const loadingSeats = ref(false);
 
-const seatOptions = computed(() => {
-  const list: { id: string; label: string }[] = [];
-  rooms.value.forEach((room) => {
-    room.seats?.forEach((s) => {
-      const seatIdx = (s.row ?? 0) * (room.cols ?? 0) + (s.col ?? 0) + 1;
-      list.push({ id: s.id, label: `${room.name} · ${seatIdx}` });
-    });
-  });
-  return list;
-});
-
 const filteredComplaints = computed(() =>
   complaints.value
     .filter((c) => stateFilter.value === "all" || c.state === stateFilter.value)
@@ -53,7 +42,8 @@ async function loadSeats() {
   loadingSeats.value = true;
   try {
     const res = await roomRequest.getRooms();
-    rooms.value = res.data as Room[];
+    const data: any = res.data;
+    rooms.value = Array.isArray(data) ? data : data?.items ?? [];
   } catch (err) {
     console.error("获取座位列表失败", err);
     toast.error("获取座位列表失败，请稍后重试");
@@ -250,6 +240,7 @@ onMounted(() => {
         :has-more="hasMore"
         :loading-more="loadingMore"
         :state-filter="stateFilter"
+        :rooms="rooms"
         @update:stateFilter="stateFilter = $event as StateFilter"
         @select="openEdit"
         @load-more="loadMore"
@@ -259,7 +250,7 @@ onMounted(() => {
     <template v-else-if="mode === 'create'">
       <ComplaintForm
         mode="create"
-        :seat-options="seatOptions"
+        :rooms="rooms"
         :loading-seats="loadingSeats"
         @submit="handleCreate"
         @cancel="openList"
@@ -269,7 +260,7 @@ onMounted(() => {
     <template v-else>
       <ComplaintForm
         mode="edit"
-        :seat-options="seatOptions"
+        :rooms="rooms"
         :loading-seats="loadingSeats"
         :complaint="selectedComplaint"
         @submit="handleEdit"

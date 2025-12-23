@@ -36,7 +36,8 @@ onMounted(async () => {
   loadingRooms.value = true
   try {
     const res = await roomRequest.getRooms()
-    rooms.value = res.data as Room[]
+    const data: any = res.data
+    rooms.value = Array.isArray(data) ? data : data?.items ?? []
   } catch (err) {
     console.error(err)
     toast.error('获取房间列表失败，请稍后重试')
@@ -54,8 +55,8 @@ async function handleOpenRoomBookings(room: Room) {
 
   bookingsLoading.value = true
   try {
-    const list = await bookingRequest.getMyBookings()
-    bookings.value = list
+    const result: any = await bookingRequest.getMyBookings()
+    bookings.value = Array.isArray(result) ? result : result?.items ?? []
   } catch (err) {
     console.error(err)
     toast.error('获取预约记录失败')
