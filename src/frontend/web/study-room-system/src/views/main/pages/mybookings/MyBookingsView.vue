@@ -117,6 +117,22 @@ async function loadMore() {
   await loadBookings(false);
 }
 
+function extractErrMessage(err: unknown, fallback: string) {
+  if (err && typeof err === "object") {
+    // Axios 响应消息
+    const data = (err as any)?.response?.data;
+    if (data?.detail && typeof data.detail === "string") return data.detail;
+    if (data?.message && typeof data.message === "string") return data.message;
+    if (data?.title && typeof data.title === "string") return data.title;
+  }
+  if (err instanceof Error && err.message) {
+    // 避免通用“请求错误”干扰
+    if (err.message === "请求错误") return fallback;
+    return err.message;
+  }
+  return fallback;
+}
+
 
 function openDetail(b: Booking) {
   selectedBooking.value = b;
@@ -132,26 +148,7 @@ async function handleCheckIn(b: Booking) {
     detailOpen.value = false;
   } catch (err) {
     console.error("签到时发生错误", err);
-
-    if (err instanceof AxiosError) {
-      const data = err.response?.data as any;
-      if (data && typeof data.title === "string") {
-        toast.error(data.title);
-        return;
-      }
-      if (data && typeof data.message === "string") {
-        toast.error(data.message);
-        return;
-      }
-    }
-
-    if (err instanceof Error && err.message) {
-      const msg = err.message === "请求错误" ? "签到失败，请稍后重试" : err.message;
-      toast.error(msg);
-      return;
-    }
-
-    toast.error("签到失败，请稍后重试");
+    toast.error(extractErrMessage(err, "签到失败，请稍后重试"));
   }
 }
 
@@ -163,26 +160,7 @@ async function handleCheckOut(b: Booking) {
     detailOpen.value = false;
   } catch (err) {
     console.error("签退时发生错误", err);
-
-    if (err instanceof AxiosError) {
-      const data = err.response?.data as any;
-      if (data && typeof data.title === "string") {
-        toast.error(data.title);
-        return;
-      }
-      if (data && typeof data.message === "string") {
-        toast.error(data.message);
-        return;
-      }
-    }
-
-    if (err instanceof Error && err.message) {
-      const msg = err.message === "请求错误" ? "签退失败，请稍后重试" : err.message;
-      toast.error(msg);
-      return;
-    }
-
-    toast.error("签退失败，请稍后重试");
+    toast.error(extractErrMessage(err, "签退失败，请稍后重试"));
   }
 }
 
@@ -195,12 +173,17 @@ async function handleCancel(b: Booking) {
     detailOpen.value = false;
   } catch (err) {
     if (err instanceof AxiosError) {
+      const data = err.response?.data as any;
       const msg =
-        err.response?.data?.title || err.response?.data?.message || "";
+        data?.detail ||
+        data?.message ||
+        data?.title ||
+        "";
 
       // 后端提示需要强制取消的情况
       if (
         err.response?.status === 400 &&
+        typeof msg === "string" &&
         msg.includes("强制取消预约将会记录为违规")
       ) {
         pendingForceCancel.value = b;
@@ -211,7 +194,8 @@ async function handleCancel(b: Booking) {
       toast.error(msg || "取消预约失败，请稍后重试");
       return;
     }
-    toast.error("取消预约失败，请稍后重试");
+
+    toast.error(extractErrMessage(err, "取消预约失败，请稍后重试"));
   }
 }
 
@@ -229,13 +213,7 @@ async function confirmForceCancel() {
     detailOpen.value = false;
     await loadBookings(true);
   } catch (err) {
-    if (err instanceof AxiosError) {
-      const msg =
-        err.response?.data?.title || err.response?.data?.message || "";
-      toast.error(msg || "强制取消失败，请稍后重试");
-      return;
-    }
-    toast.error("强制取消失败，请稍后重试");
+    toast.error(extractErrMessage(err, "强制取消失败，请稍后重试"));
   }
 }
 
