@@ -12,21 +12,35 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectGroup, SelectItem, SelectLabel } from "@/components/ui/select";
 import { Eye, Edit, Trash, ClipboardList, Armchair, Loader2 } from "lucide-vue-next";
 
-
-
 // 房间管理
 // 房间列表
 const rooms = ref<Room[]>([]);
+const page = ref(1);
+const pageSize = ref(10); // 每页显示条数
+const total = ref(0);     // 总条数
 
 // 获取房间列表
-onMounted(async () => {
+async function loadRooms() {
   try {
-    const res = await roomRequest.getRooms();
-    rooms.value = res.data;
+    const res = await roomRequest.getRooms({
+      page: page.value,
+      pageSize: pageSize.value
+    });
+    rooms.value = res.data.items;
+    total.value = res.data.total;
   } catch {
     toast.error("获取房间列表失败");
   }
-});
+}
+// 页面加载时获取房间列表
+onMounted(loadRooms);
+
+// 分页刷新函数
+function changePage(newPage: number) {
+  page.value = newPage;
+  loadRooms();
+}
+
 
 // 添加房间
 const isAddingRoom = ref(false); // 添加房间加载状态
@@ -57,8 +71,9 @@ async function handleAddRoom() {
     toast.success("房间创建成功");
     isAddDialogOpen.value = false;
 
-    const roomsRes = await roomRequest.getRooms();
-    rooms.value = roomsRes.data;
+    const roomsRes = await roomRequest.getRooms({ page: 1, pageSize: 20 });
+    rooms.value = roomsRes.data.items;
+
   } catch {
     toast.error("房间创建失败");
   } finally {
@@ -124,8 +139,8 @@ async function handleEditRoom() {
     toast.success("房间修改成功");
     isEditDialogOpen.value = false;
 
-    const res = await roomRequest.getRooms();
-    rooms.value = res.data;
+    const res = await roomRequest.getRooms({ page: 1, pageSize: 20 });
+    rooms.value = res.data.items;
   } catch {
     toast.error("房间修改失败");
   } finally {
@@ -307,7 +322,7 @@ async function saveSeats() {
               </Button>
             </td>
           </tr>
-        
+
           <!-- 重构展开行：使用 transition 包裹，优化动画触发 -->
           <tr>
             <td colspan="6" class="p-0 border">
@@ -357,6 +372,30 @@ async function saveSeats() {
       </tbody>
     </table>
 
+    <!-- 分页控件 -->
+    <div class="flex justify-between items-center mt-4">
+      <Button
+        variant="default"
+        size="sm"
+        class="bg-primary text-white hover:bg-primary/80"
+        :disabled="page <= 1"
+        @click="changePage(page - 1)"
+      >
+        上一页
+      </Button>
+      <span class="text-sm text-muted-foreground">
+        第 {{ page }} 页 / 共 {{ Math.ceil(total / pageSize) }} 页
+      </span>
+      <Button
+        variant="default"
+        size="sm"
+        class="bg-primary text-white hover:bg-primary/80"
+        :disabled="page >= Math.ceil(total / pageSize)"
+        @click="changePage(page + 1)"
+      >
+        下一页
+      </Button>
+    </div>
 
     <!-- 房间管理 -->
     <!-- 查看房间详情 -->

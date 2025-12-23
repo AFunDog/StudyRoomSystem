@@ -137,6 +137,7 @@ async function loadAll(): Promise<void> {
   if (!selectedRoomId.value) return;
 
   try {
+    // 获取房间基础信息
     const room: Room | undefined = rooms.value.find(
       r => r.id === selectedRoomId.value
     );
@@ -144,31 +145,43 @@ async function loadAll(): Promise<void> {
 
     timeSlots.value = generateTimeSlots(room.openTime, room.closeTime, 1);
 
+    // 获取房间详细信息（含座位）
     const roomDetail = await roomRequest.getRoom(selectedRoomId.value);
     seats.value = roomDetail.data.seats ?? [];
     // console.log("房间 seats:", seats.value);
 
-    const result = await bookingRequest.getAllBookings({
-      page: 1,
-      pageSize: 100
+    // 构造筛选参数
+    const targetDate = selectedDate.value; 
+    console.log("当前选中日期:", targetDate);   // 调试选中日期
+    const startTime = new Date(`${targetDate}T00:00:00`).toISOString(); 
+    const endTime = new Date(`${targetDate}T23:59:59`).toISOString();
+
+    // 获取预约数据（已筛选 roomId + 日期）
+    const result = await bookingRequest.getAllBookings({ 
+      page: 1, 
+      pageSize: 100, 
+      roomId: selectedRoomId.value, 
+      startTime, 
+      endTime, 
     });
     const allBookings: Booking[] = result.items;
 
     // 调试：打印所有预约
     // console.log("所有预约（原始）:", allBookings);
 
-    for (const b of allBookings) {
-      if (!b.user) {
-        try {
-          b.user = (await userRequest.getUserById(b.userId)).data;
-        } catch (err) {
-          console.error(`加载用户 ${b.userId} 失败`, err);
-        }
-      }
-    }
-
-    const targetDate = selectedDate.value;
-    console.log("当前选中日期:", targetDate);
+    // 并行加载缺失的用户信息 
+    await Promise.all( 
+      allBookings 
+        .filter(b => !b.user) 
+        .map(async b => { 
+          try { 
+            const res = await userRequest.getUserById(b.userId); 
+            b.user = res.data; 
+          } catch (err) { 
+            console.error(`加载用户 ${b.userId} 失败`, err); 
+          } 
+        }) 
+    );
 
     // 调试：打印每条预约的日期
     // allBookings.forEach(b => {
@@ -181,6 +194,7 @@ async function loadAll(): Promise<void> {
     // 调试：过滤前数量
     // console.log("过滤前预约数量:", allBookings.length);
 
+    // 过滤出当前房间、当前日期的预约
     bookings.value = allBookings.filter(b => {
       if (!b.startTime || !b.seatId) return false;
 
@@ -347,42 +361,68 @@ function renderUsageChart(): void {
     });
   }
 
-  const validBookings = bookings.value.filter(b => b.state !== "已取消");
-  const bookingMap = new Map<string, { start: Date; end: Date }[]>();
+  const usageStates = ["已预约", "已签到", "已签退"];
+  const wasteStates = ["已超时"];
 
-  validBookings.forEach(b => {
-    if (!b.seatId || !b.startTime || !b.endTime) return;
-    if (!bookingMap.has(b.seatId)) bookingMap.set(b.seatId, []);
-    bookingMap.get(b.seatId)!.push({
+  const usageMap = new Map<string, { start: Date; end: Date }[]>();
+  const wasteMap = new Map<string, { start: Date; end: Date }[]>();
+
+  for (const b of bookings.value) {
+    if (!b.seatId || !b.startTime || !b.endTime) continue;
+
+    const entry = {
       start: new Date(b.startTime),
       end: new Date(b.endTime)
-    });
-  });
+    };
+
+    if (usageStates.includes(b.state)) {
+      if (!usageMap.has(b.seatId)) usageMap.set(b.seatId, []);
+      usageMap.get(b.seatId)!.push(entry);
+    } else if (wasteStates.includes(b.state)) {
+      if (!wasteMap.has(b.seatId)) wasteMap.set(b.seatId, []);
+      wasteMap.get(b.seatId)!.push(entry);
+    }
+  }
 
   const totalCells = seats.value.length * timeSlots.value.length;
   let usedCells = 0;
-  const slotUsage: number[] = [];
+  let wastedCells = 0;
+
+  const usageSeries: number[] = [];
+  const wasteSeries: number[] = [];
 
   for (const slot of timeSlots.value) {
     const slotStart = makeSlotDate(selectedDate.value, slot.start);
     const slotEnd = new Date(slotStart.getTime() + 30 * 60 * 1000);
 
-    let slotUsed = 0;
+    let used = 0;
+    let wasted = 0;
 
     for (const seat of seats.value) {
-      const list = bookingMap.get(seat.id) ?? [];
-      const isUsed = list.some(b => b.start < slotEnd && b.end > slotStart);
+      const usageList = usageMap.get(seat.id) ?? [];
+      const wasteList = wasteMap.get(seat.id) ?? [];
+
+      const isUsed = usageList.some(b => b.start < slotEnd && b.end > slotStart);
+      const isWasted = wasteList.some(b => b.start < slotEnd && b.end > slotStart);
+
       if (isUsed) {
+        used++;
         usedCells++;
-        slotUsed++;
+      } else if (isWasted) {
+        wasted++;
+        wastedCells++;
       }
     }
 
-    slotUsage.push(seats.value.length ? (slotUsed / seats.value.length) * 100 : 0);
+    usageSeries.push(seats.value.length ? (used / seats.value.length) * 100 : 0);
+    wasteSeries.push(seats.value.length ? (wasted / seats.value.length) * 100 : 0);
   }
 
   const usageRate = totalCells
     ? (usedCells / totalCells * 100).toFixed(1)
+    : "0.0";
+  const wasteRate = totalCells
+    ? (wastedCells / totalCells * 100).toFixed(1)
     : "0.0";
 
   const xLabels = timeSlots.value.map(slot => {
@@ -395,23 +435,44 @@ function renderUsageChart(): void {
 
   chartInstance.setOption(
     {
-      title: { text: `房间利用率：${usageRate}%` },
+      title: {
+        text: `房间利用率：${usageRate}%   资源浪费率：${wasteRate}%`
+      },
       tooltip: { trigger: "axis" },
+      legend: {
+        data: ["利用率", "浪费率"]
+      },
       xAxis: {
         type: "category",
         data: xLabels,
         axisLabel: { rotate: 30, interval: 0 },
         boundaryGap: false
       },
-      yAxis: { type: "value", max: 100, axisLabel: { formatter: "{value}%" } },
+      yAxis: {
+        type: "value",
+        max: 100,
+        axisLabel: { formatter: "{value}%" }
+      },
       series: [
         {
-          name: "占用率",
+          name: "浪费率",
           type: "line",
-          data: slotUsage,
+          data: wasteSeries,
           smooth: true,
-          areaStyle: { opacity: 0.3 },
-          emphasis: { disabled: true }
+          areaStyle: { opacity: 0.2 },
+          emphasis: { disabled: true },
+          lineStyle: { color: "#ef4444" }, // 红色
+          itemStyle: { color: "#ef4444" }
+        },
+        {
+          name: "利用率",
+          type: "line",
+          data: usageSeries,
+          smooth: true,
+          areaStyle: { opacity: 0.2 },
+          emphasis: { disabled: true },
+          lineStyle: { color: "#3b82f6" }, // 蓝色
+          itemStyle: { color: "#3b82f6" }
         }
       ]
     },
@@ -443,8 +504,8 @@ watch(
 
 onMounted(async () => {
   try {
-    const res = await roomRequest.getRooms();
-    rooms.value = res.data as Room[];
+    const res = await roomRequest.getRooms({ page: 1, pageSize: 20 });
+    rooms.value = res.data.items as Room[];
 
     if (rooms.value.length > 0) {
       selectedRoomId.value = rooms.value[0]?.id ?? "";
@@ -497,15 +558,6 @@ async function checkOut(id: string): Promise<void> {
   }
 }
 
-/* -------------------------------------------------------
-📌 必须放在最底部
-------------------------------------------------------- */
-defineExpose({
-  cancelBooking,
-  checkIn,
-  checkOut
-});
-
 </script>
 
 
@@ -548,6 +600,7 @@ defineExpose({
       <div class="flex items-center gap-1"><div class="w-4 h-4 bg-green-300 rounded" /> 已签到</div>
       <div class="flex items-center gap-1"><div class="w-4 h-4 bg-gray-300 rounded" /> 已签退</div>
       <div class="flex items-center gap-1"><div class="w-4 h-4 bg-yellow-200 rounded" /> 已取消</div>
+      <div class="flex items-center gap-1"><div class="w-4 h-4 bg-red-300 rounded" /> 已超时</div>
     </div>
 
     <!-- 利用率图表 -->
@@ -585,7 +638,8 @@ defineExpose({
                   'bg-blue-200': getCellState(seat.id, slotIndex) === '已预约',
                   'bg-green-300': getCellState(seat.id, slotIndex) === '已签到',
                   'bg-gray-300': getCellState(seat.id, slotIndex) === '已签退',
-                  'bg-yellow-200': getCellState(seat.id, slotIndex) === '已取消'
+                  'bg-yellow-200': getCellState(seat.id, slotIndex) === '已取消',
+                  'bg-red-300': getCellState(seat.id, slotIndex) === '已超时'
                 }"
                 @mouseenter="safeCellEnter(seat.id, slotIndex)"
                 @mouseleave="onCellLeave"

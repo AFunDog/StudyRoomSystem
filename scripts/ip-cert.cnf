@@ -1,0 +1,24 @@
+[req]
+default_bits       = 2048
+prompt             = no
+default_md         = sha256
+distinguished_name = dn
+x509_extensions    = v3_ext
+
+[dn]
+C  = CN             # 国家代码
+ST = ZheJiang       # 省份
+L  = Ningbo         # 城市
+O  = Test Corp      # 组织名称
+OU = Test Dept      # 部门
+CN = 1.92.68.106    # 主名称（填目标 IP）
+
+[v3_ext]
+subjectAltName = @alt_names
+keyUsage = digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth, clientAuth
+basicConstraints = CA:TRUE
+
+[alt_names]
+IP.1 = 1.92.68.106  # 核心：目标 IP（可添加多个，如 IP.2 = 127.0.0.1）
+# 若需同时支持域名，可添加 DNS.1 = your-domain.com
