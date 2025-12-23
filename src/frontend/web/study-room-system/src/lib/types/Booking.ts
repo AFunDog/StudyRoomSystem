@@ -1,7 +1,7 @@
 import type { Seat } from "./Seat";
 import type { User } from "./User";
 
-type BookingState = "Booked" | "CheckIn" | "Checkout" | "Canceled";
+type BookingState = "已预约" | "已签到" | "已签退" | "已取消" | "已超时";
 export interface Booking {
     id: string;
     userId: string;
@@ -22,14 +22,5 @@ export interface Booking {
  * @returns 
  */
 export function localizeState(state : BookingState){
-    switch (state) {
-        case "Booked":
-            return "已预约";
-        case "CheckIn":
-            return "已签到";
-        case "Checkout":
-            return "已签退";
-        case "Canceled":
-            return "已取消";
-    }
+    return state;
 }
