@@ -22,9 +22,9 @@ class BookingRequest {
     }
 
     /** 获取我的预约（支持分页） */
-    public async getMyBookings(page = 1, pageSize = 20) {
+    public async getMyBookings(params?: { page?: number; pageSize?: number }) {
         try {
-            const res = await http.get("/booking/my", { params: { page, pageSize } });
+            const res = await http.get("/booking/my", { params });
             return res.data as Booking[];
         } catch (err) {
             throw this.formatError(err, "获取我的预约失败");
@@ -32,9 +32,9 @@ class BookingRequest {
     }
 
     /** 管理员获取所有预约（分页） */
-    public async getAllBookings(page = 1, pageSize = 20) {
+    public async getAllBookings(params?: { page?: number; pageSize?: number }) {
         try {
-            const res = await http.get("/booking/all", { params: { page, pageSize } });
+            const res = await http.get("/booking/all", { params });
             return res.data;
         } catch (err) {
             throw this.formatError(err, "获取所有预约失败");
