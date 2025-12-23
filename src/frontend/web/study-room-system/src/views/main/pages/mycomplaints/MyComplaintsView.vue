@@ -77,9 +77,13 @@ async function loadComplaints(reset = false) {
     const merged = page.value === 1 ? res.items : [...complaints.value, ...res.items];
     complaints.value = merged;
 
-    // 补全座位/房间信息，避免显示“未知房间”
-    const targets = page.value === 1 ? complaints.value : res.items;
-    await Promise.all(targets.map((c) => enrichSeat(c)));
+    // 补全缺失的座位/房间信息
+    const targets = (page.value === 1 ? complaints.value : res.items).filter(
+      (c) => !c.seat?.room?.name
+    );
+    if (targets.length) {
+      await Promise.all(targets.map((c) => enrichSeat(c)));
+    }
   } catch (err) {
     console.error("获取投诉列表失败", err);
     toast.error("获取投诉列表失败，请稍后重试");
