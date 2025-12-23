@@ -31,8 +31,15 @@ class BookingRequest {
         }
     }
 
-    /** 管理员获取所有预约（分页） */
-    public async getAllBookings(params?: { page?: number; pageSize?: number }) {
+    /** 管理员获取所有预约（分页 + 条件筛选） */
+    public async getAllBookings(params?: {
+        page?: number;
+        pageSize?: number;
+        roomId?: string;
+        startTime?: string;
+        endTime?: string;
+        state?: "已预约" | "已签到" | "已签退" | "已取消" | "已超时";
+    }) {
         try {
             const res = await http.get("/booking/all", { params });
             return res.data;
@@ -40,6 +47,7 @@ class BookingRequest {
             throw this.formatError(err, "获取所有预约失败");
         }
     }
+
 
     /** 获取指定预约 */
     public async getBookingById(id: string): Promise<Booking> {
