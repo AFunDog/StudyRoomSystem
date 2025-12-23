@@ -45,9 +45,13 @@ public class BookingController(AppDbContext appDbContext, IBookingService bookin
     [EndpointSummary("管理员获取所有预约")]
     public async Task<IActionResult> GetAllBookings(
         [FromQuery] [Range(1, int.MaxValue)] int page = 1,
-        [FromQuery] [Range(1, 100)] int pageSize = 20)
+        [FromQuery] [Range(1, 100)] int pageSize = 20,
+        [FromQuery] Guid? roomId = null,
+        [FromQuery] DateTime? startTime = null,
+        [FromQuery] DateTime? endTime = null,
+        [FromQuery] BookingStateEnum? state = null)
     {
-        return Ok(await BookingService.GetAll(page, pageSize));
+        return Ok(await BookingService.GetAll(page, pageSize, roomId, startTime, endTime, state));
     }
 
 
@@ -133,50 +137,6 @@ public class BookingController(AppDbContext appDbContext, IBookingService bookin
 
         return Ok(await BookingService.Cancel(id, this.GetLoginUserId(), isForce));
     }
-
-
-    // [HttpPut]
-    // [Authorize]
-    // [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
-    // [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
-    // [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
-    // [ProducesResponseType<Booking>(StatusCodes.Status200OK)]
-    // [EndpointSummary("修改预约")]
-    // public async Task<IActionResult> EditBooking([FromBody] EditBookingRequest request)
-    // {
-    //     var userId = this.GetLoginUserId();
-    //     var booking = await AppDbContext.Bookings.SingleOrDefaultAsync(b => b.Id == request.Id);
-    //     if (booking is null)
-    //         return NotFound(new ProblemDetails() { Title = "预约不存在" });
-    //     if (booking.UserId != userId)
-    //         return Forbid();
-    //     if (request.StartTime >= request.EndTime)
-    //         return BadRequest(new ProblemDetails() { Title = "开始时间不能大于结束时间" });
-    //     if (booking.State != BookingStateEnum.已预约)
-    //         return BadRequest(new ProblemDetails() { Title = "必须在预约中的才能修改预约" });
-    //
-    //     // 修改后的起始时间距离预约小于3小时
-    //     if (booking.StartTime - DateTime.UtcNow < TimeSpan.FromHours(3))
-    //         return BadRequest(new ProblemDetails() { Title = "距离预约起始时间小于3小时，不可修改" });
-    //
-    //     booking.StartTime = request.StartTime ?? booking.StartTime;
-    //     booking.EndTime = request.EndTime ?? booking.EndTime;
-    //
-    //     // 检查座位是否在时间段内被占用
-    //     var existBooking = await AppDbContext.Bookings.FirstOrDefaultAsync(x
-    //         => x.SeatId == booking.SeatId
-    //            && ((x.StartTime <= request.StartTime && request.StartTime <= x.EndTime)
-    //                || (x.StartTime <= request.EndTime && request.EndTime <= x.EndTime))
-    //            && (x.State == (BookingStateEnum.已预约) || x.State == (BookingStateEnum.已签到))
-    //     );
-    //     if (existBooking is not null)
-    //         return Conflict(new ProblemDetails() { Title = "座位在时间范围内已被用户预约" });
-    //
-    //
-    //     var track = AppDbContext.Bookings.Update(booking);
-    //     await AppDbContext.SaveChangesAsync();
-    //     return Ok(track.Entity);
-    // }
 
 
     [HttpPost("check-in")]

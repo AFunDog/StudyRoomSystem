@@ -24,14 +24,30 @@ internal sealed class BookingService(AppDbContext appDbContext, IUserService use
             .ToApiPageResult(page, pageSize);
     }
 
-    public async Task<ApiPageResult<Booking>> GetAll(int page, int pageSize)
+    public async Task<ApiPageResult<Booking>> GetAll(
+        int page,
+        int pageSize,
+        Guid? roomId = null,
+        DateTime? startTime = null,
+        DateTime? endTime = null,
+        BookingStateEnum? state = null)
     {
-        return await AppDbContext
+        IQueryable<Booking> query = AppDbContext
             .Bookings.AsNoTracking()
             .Include(x => x.Seat)
             .Include(x => x.Seat.Room)
-            .OrderByDescending(x => x.CreateTime)
-            .ToApiPageResult(page, pageSize);
+            .OrderByDescending(x => x.CreateTime);
+
+        if (roomId is not null)
+            query = query.Where(x => x.Seat.Room.Id == roomId);
+
+        if (startTime is not null)
+            query = query.Where(x => startTime <= x.EndTime);
+
+        if (endTime is not null)
+            query = query.Where(x => x.StartTime <= endTime);
+
+        return await query.ToApiPageResult(page, pageSize);
     }
 
 
