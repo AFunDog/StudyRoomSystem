@@ -26,13 +26,13 @@ const innerOpen = computed({
   set: (v) => emit('update:open', v),
 })
 
-// 只保留当前房间、状态为 Booked 的预约
+// 只保留当前房间、状态为“已预约”的记录
 const roomBookings = computed(() => {
   if (!props.room) return []
   return props.bookings.filter(
     (b) =>
       b.seat?.room?.id === props.room?.id &&
-      b.state === 'Booked'
+      b.state === '已预约'
   )
 })
 </script>

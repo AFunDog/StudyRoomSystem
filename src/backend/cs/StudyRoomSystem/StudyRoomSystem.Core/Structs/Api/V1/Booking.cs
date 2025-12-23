@@ -1,4 +1,14 @@
-﻿namespace StudyRoomSystem.Core.Structs.Api.V1;
+﻿using StudyRoomSystem.Core.Structs.Entity;
+
+namespace StudyRoomSystem.Core.Structs.Api.V1;
+
+public record GetBookingFilterRequest
+{
+    public Guid? RoomId { get; set; }
+    public DateTime? StartTime { get; set; }
+    public DateTime? EndTime { get; set; }
+    public BookingStateEnum? State { get; set; }
+}
 
 public class CreateBookingRequest
 {

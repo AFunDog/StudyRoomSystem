@@ -15,13 +15,14 @@ const emit = defineEmits<{
 
 function bookingCardClass(state: Booking["state"]) {
   switch (state) {
-    case "Booked":
+    case "已预约":
       return "border-l-4 border-l-sky-500/80 bg-background hover:bg-accent/40";
-    case "CheckIn":
+    case "已签到":
       return "border-l-4 border-l-emerald-500/80 bg-background hover:bg-accent/40";
-    case "Checkout":
+    case "已签退":
       return "border-l-4 border-l-slate-400/80 bg-background opacity-80 hover:bg-accent/30";
-    case "Canceled":
+    case "已取消":
+    case "已超时":
       return "border-l-4 border-l-red-400/80 bg-background/60 opacity-70 hover:bg-accent/20";
     default:
       return "bg-background hover:bg-accent/40";
@@ -33,13 +34,14 @@ function stateBadgeClass(state: Booking["state"]) {
     "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium border";
 
   switch (state) {
-    case "Booked":
+    case "已预约":
       return base + " bg-sky-50 text-sky-700 border-sky-200";
-    case "CheckIn":
+    case "已签到":
       return base + " bg-emerald-50 text-emerald-700 border-emerald-200";
-    case "Checkout":
+    case "已签退":
       return base + " bg-slate-50 text-slate-600 border-slate-200";
-    case "Canceled":
+    case "已取消":
+    case "已超时":
       return base + " bg-red-50 text-red-600 border-red-200 line-through";
     default:
       return base + " bg-muted text-muted-foreground border-border";

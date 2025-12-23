@@ -20,7 +20,15 @@ internal class UserService(AppDbContext appDbContext) : IUserService
 
     public async Task<User> GetUserById(Guid userId)
     {
-        var user = await AppDbContext.Users.SingleOrDefaultAsync(x => x.Id == userId);
+        var user = await AppDbContext.Users.AsNoTracking().SingleOrDefaultAsync(x => x.Id == userId);
+        if (user is null)
+            throw new NotFoundException("用户不存在");
+        return user;
+    }
+
+    public async Task<User> GetUserByUserName(string userName)
+    {
+        var user = await AppDbContext.Users.AsNoTracking().SingleOrDefaultAsync(x => x.UserName == userName);
         if (user is null)
             throw new NotFoundException("用户不存在");
         return user;
@@ -28,22 +36,7 @@ internal class UserService(AppDbContext appDbContext) : IUserService
 
     public async Task<ApiPageResult<User>> GetUsers(int page, int pageSize)
     {
-        Guard.Against.OutOfRange(page, nameof(page), 1, int.MaxValue, "页码必须大于0");
-        Guard.Against.OutOfRange(pageSize, nameof(pageSize), 1, 100, "页大小必须在1到100");
-
-        var query = AppDbContext.Users.AsQueryable();
-
-        var total = await query.CountAsync();
-
-        var items = await query.OrderByDescending(u => u.CreateTime).Page(page, pageSize).ToListAsync();
-
-        return new ApiPageResult<User>
-        {
-            Total = total,
-            Page = page,
-            PageSize = pageSize,
-            Items = items
-        };
+        return await AppDbContext.Users.AsNoTracking().OrderBy(x => x.Id).ToApiPageResult(page, pageSize);
     }
 
     public async Task CheckUserInfoValid(User user)
@@ -65,12 +58,12 @@ internal class UserService(AppDbContext appDbContext) : IUserService
             is not null)
             throw new ConflictException("邮箱已存在");
     }
-    
+
     public async Task<User> RegisterUser(User user)
     {
         await CheckUserInfoValid(user);
 
-        var track =  await AppDbContext.Users.AddAsync(user);
+        var track = await AppDbContext.Users.AddAsync(user);
         var res = await AppDbContext.SaveChangesAsync();
         if (res == 0)
             throw new ConflictException("用户注册失败");
@@ -85,9 +78,9 @@ internal class UserService(AppDbContext appDbContext) : IUserService
         if (res == 0)
             throw new ConflictException("用户删除失败");
     }
-    
+
     public async Task<User> UpdateUser(User user)
-    { 
+    {
         // var oldUser = await GetUserById(user.Id);
         // oldUser.DisplayName = user.DisplayName;
         // oldUser.Email = user.Email;

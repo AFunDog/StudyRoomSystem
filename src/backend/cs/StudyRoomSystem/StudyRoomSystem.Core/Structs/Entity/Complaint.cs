@@ -13,14 +13,14 @@ public enum ComplaintStateEnum
 /// </summary>
 public class Complaint
 {
-    public required Guid Id { get; set; }
+    public Guid Id { get; set; } = Ulid.NewUlid().ToGuid();
     public required Guid SendUserId { get; set; }
     public required Guid SeatId { get; set; }
     public required ComplaintStateEnum State { get; set; }
     public required string Type { get; set; }
     public required string SendContent { get; set; }
     public DateTime? TargetTime { get; set; }
-    public required DateTime CreateTime { get; set; }
+    public DateTime CreateTime { get; set; } = DateTime.UtcNow;
     public DateTime? HandleTime { get; set; }
     public Guid? HandleUserId { get; set; }
     public string? HandleContent { get; set; }

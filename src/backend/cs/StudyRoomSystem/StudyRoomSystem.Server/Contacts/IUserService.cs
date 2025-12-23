@@ -28,6 +28,8 @@ public interface IUserService
     /// </summary>
     Task<User> RegisterUser(User user);
 
+
     Task DeleteUser(Guid userId);
     Task<User> UpdateUser(User user);
+    Task<User> GetUserByUserName(string userName);
 }

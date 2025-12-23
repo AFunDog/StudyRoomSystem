@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
-import { House, CalendarDays, UserRound, ShieldAlert } from 'lucide-vue-next'
+import { House, CalendarDays, UserRound, ShieldAlert, Megaphone } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 
 const router = useRouter()
@@ -9,6 +9,7 @@ const route = useRoute()
 const navItems = [
   { label: '座位预约', path: '/seatbooking', icon: House },
   { label: '我的预约', path: '/mybookings', icon: CalendarDays },
+  { label: '我的投诉', path: '/mycomplaints', icon: Megaphone },
   { label: '违规记录', path: '/myviolations', icon: ShieldAlert },
   { label: "用户中心", path: "/usercenter", icon: UserRound },
 

@@ -19,13 +19,13 @@ public enum ViolationTypeEnum
 /// <summary>
 /// 违规记录
 /// </summary>
-public class Violation
+public record Violation
 {
-    public required Guid Id { get; set; }
+    public Guid Id { get; set; } = Ulid.NewUlid().ToGuid();
 
     public Guid? BookingId { get; set; }
     public required Guid UserId { get; set; }
-    public required DateTime CreateTime { get; set; }
+    public DateTime CreateTime { get; set; } = DateTime.UtcNow;
     public required ViolationStateEnum State { get; set; }
     public required ViolationTypeEnum Type { get; set; }
     public required string Content { get; set; }

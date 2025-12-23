@@ -5,13 +5,12 @@ import LoginView from '@/views/login/LoginView.vue'
 import MainView from '@/views/main/layout/MainView.vue'
 import RegisterView from '@/views/register/RegisterView.vue'
 import AdminLoginView from '@/views/admin/login/AdminLoginView.vue'
-import CalendarView from '@/views/main/pages/calendar/CalendarView.vue'
 import SettingView from '@/views/setting/SettingView.vue'
 import MyUserView from '@/views/main/pages/usercenter/UserCenterView.vue'
-import MainHomeView from '@/views/main/pages/mainhome/MainHomeView.vue'
 import SeatBookingView from '@/views/main/pages/seatbooking/SeatBookingView.vue'
 import MyBookingsView from '@/views/main/pages/mybookings/MyBookingsView.vue'
 import MyViolationsView from '@/views/main/pages/myviolations/MyViolationsView.vue'
+import MyComplaintsView from '@/views/main/pages/mycomplaints/MyComplaintsView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -23,12 +22,10 @@ const router = createRouter({
       children: [
         { path: '/seatbooking', component: SeatBookingView },
         { path: '/mybookings', component: MyBookingsView },
+        { path: '/mycomplaints', component: MyComplaintsView },
         { path: '/myviolations', component: MyViolationsView },
         { path: '/usercenter', component: MyUserView },
 
-        // 弃用
-        { path: '/calendar', component: CalendarView },
-        // { path: '/setting', component: SettingView },
       ]
     },
     // 静态引入
