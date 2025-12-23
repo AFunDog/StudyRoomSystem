@@ -8,7 +8,7 @@ using StudyRoomSystem.Server.Helpers;
 
 namespace StudyRoomSystem.Server.Services;
 
-internal sealed class BookingService(AppDbContext appDbContext,IUserService userService) : IBookingService
+internal sealed class BookingService(AppDbContext appDbContext, IUserService userService) : IBookingService
 {
     private AppDbContext AppDbContext { get; } = appDbContext;
     private IUserService UserService { get; } = userService;
@@ -42,7 +42,7 @@ internal sealed class BookingService(AppDbContext appDbContext,IUserService user
             throw new NotFoundException("预约不存在");
         return booking;
     }
-    
+
     public async Task<Booking> Create(Booking booking)
     {
         // 检查座位
@@ -73,7 +73,7 @@ internal sealed class BookingService(AppDbContext appDbContext,IUserService user
         return track.Entity;
     }
 
-    public async Task<Booking> Cancel(Guid bookingId,Guid userId,bool isForce = false)
+    public async Task<Booking> Cancel(Guid bookingId, Guid userId, bool isForce = false)
     {
         var booking = await GetById(bookingId);
         var user = await UserService.GetUserById(userId);
@@ -81,7 +81,7 @@ internal sealed class BookingService(AppDbContext appDbContext,IUserService user
             throw new ForbidException("没有权限");
         if (booking.State is not BookingStateEnum.已预约)
             throw new BadHttpRequestException("必须已预约的才能取消预约");
-        
+
         if (booking.StartTime - DateTime.UtcNow < TimeSpan.FromHours(3))
             if (!isForce)
                 throw new BadHttpRequestException("距离预约起始时间小于3小时，若强制取消预约将会记录为违规");
@@ -90,8 +90,11 @@ internal sealed class BookingService(AppDbContext appDbContext,IUserService user
                 await AppDbContext.Violations.AddAsync(
                     new Violation()
                     {
-                        Id = Ulid.NewUlid().ToGuid(), UserId = userId, BookingId = booking.Id,
-                        Type = ViolationTypeEnum.强制取消, Content = "在预约开始前3个小时内强制取消预约违规",
+                        Id = Ulid.NewUlid().ToGuid(),
+                        UserId = userId,
+                        BookingId = booking.Id,
+                        Type = ViolationTypeEnum.强制取消,
+                        Content = "在预约开始前3个小时内强制取消预约违规",
                         CreateTime = DateTime.UtcNow,
                         State = ViolationStateEnum.Violation
                     }
@@ -106,17 +109,23 @@ internal sealed class BookingService(AppDbContext appDbContext,IUserService user
         return track.Entity;
     }
 
-    public async Task<Booking> CheckIn(Guid booingId,Guid userId)
+    public async Task<Booking> CheckIn(Guid booingId, Guid userId)
     {
         var booking = await GetById(booingId);
         var user = await UserService.GetUserById(userId);
         if (user.Role is not UserRoleEnum.Admin && booking.UserId != user.Id)
             throw new ForbidException("没有权限");
-        
-        if(booking.State is not BookingStateEnum.已预约)
+
+        if (booking.State is not BookingStateEnum.已预约)
             throw new BadHttpRequestException("必须已预约的才能签到");
 
+        if ((booking.StartTime - DateTime.UtcNow).Duration() > TimeSpan.FromMinutes(15))
+            throw new BadHttpRequestException("距离开始时间超过15分钟，不可签到");
+
+
         booking.State = BookingStateEnum.已签到;
+        booking.CheckInTime = DateTime.UtcNow;
+
         var track = AppDbContext.Bookings.Update(booking);
         var res = await AppDbContext.SaveChangesAsync();
         if (res == 0)
@@ -124,17 +133,24 @@ internal sealed class BookingService(AppDbContext appDbContext,IUserService user
 
         return track.Entity;
     }
-    public async Task<Booking> CheckOut(Guid booingId,Guid userId)
+
+    public async Task<Booking> CheckOut(Guid booingId, Guid userId)
     {
         var booking = await GetById(booingId);
         var user = await UserService.GetUserById(userId);
         if (user.Role is not UserRoleEnum.Admin && booking.UserId != user.Id)
             throw new ForbidException("没有权限");
-        
-        if(booking.State is not BookingStateEnum.已签到)
+
+        if (booking.State is not BookingStateEnum.已签到)
             throw new BadHttpRequestException("必须已预约的才能签到");
 
+        if ((booking.EndTime - DateTime.UtcNow).Duration() > TimeSpan.FromMinutes(15))
+            throw new BadHttpRequestException("距离结束时间超过15分钟，不可签退");
+
+
         booking.State = BookingStateEnum.已签退;
+        booking.CheckOutTime = DateTime.UtcNow;
+
         var track = AppDbContext.Bookings.Update(booking);
         var res = await AppDbContext.SaveChangesAsync();
         if (res == 0)
