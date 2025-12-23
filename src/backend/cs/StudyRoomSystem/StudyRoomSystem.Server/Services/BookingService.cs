@@ -62,8 +62,8 @@ internal sealed class BookingService(AppDbContext appDbContext, IUserService use
     public async Task<Booking> Create(Booking booking)
     {
         // 检查座位
-        var containSeat = await AppDbContext.Seats.AsNoTracking().AnyAsync(x => x.Id == booking.SeatId);
-        if (containSeat is false)
+        var seat = await AppDbContext.Seats.AsNoTracking().Include(x => x.Room).SingleOrDefaultAsync(x => x.Id == booking.SeatId);
+        if (seat is null)
             throw new NotFoundException("座位不存在");
 
         // 检查输入时间是否合法
@@ -73,6 +73,11 @@ internal sealed class BookingService(AppDbContext appDbContext, IUserService use
         // 不允许创建过去的预约
         if (booking.StartTime <= DateTime.UtcNow)
             throw new BadHttpRequestException("不允许创建过去的预约");
+        
+        // 预约不允许超过房间开放时间
+        if (booking.StartTime.TimeOfDay < seat.Room.OpenTime.ToTimeSpan()
+            || seat.Room.CloseTime.ToTimeSpan() < booking.EndTime.TimeOfDay)
+            throw new BadHttpRequestException("不允许超过房间开放时间");
 
         // 检查座位是否在时间段内被占用
         var has = await AppDbContext.Bookings.AnyAsync(x
