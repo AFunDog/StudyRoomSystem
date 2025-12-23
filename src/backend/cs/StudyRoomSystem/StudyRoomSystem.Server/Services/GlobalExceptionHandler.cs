@@ -14,6 +14,7 @@ internal sealed class GlobalExceptionHandler : IExceptionHandler
     {
         var (statusCode, errorMessage) = exception switch
         {
+            BadHttpRequestException badHttpRequestException => (StatusCodes.Status400BadRequest,"请求错误"),
             UnauthorizedException unauthorizedException => (StatusCodes.Status401Unauthorized, "未授权"),
             ForbidException forbidException => (StatusCodes.Status403Forbidden, "禁止访问"),
             NotFoundException notFoundException => (StatusCodes.Status404NotFound,"未找到"),
@@ -34,7 +35,7 @@ internal sealed class GlobalExceptionHandler : IExceptionHandler
                 ["traceId"] = httpContext.TraceIdentifier
             }
         };
-
+        httpContext.Response.StatusCode = statusCode;
         await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
 
         return true;
