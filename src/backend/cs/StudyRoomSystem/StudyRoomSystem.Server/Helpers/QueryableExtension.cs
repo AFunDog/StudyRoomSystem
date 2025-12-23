@@ -7,28 +7,26 @@ namespace StudyRoomSystem.Server.Helpers;
 
 public static class QueryableExtension
 {
-    extension<T>(IQueryable<T> queryable)
+    [Pure]
+    public static IQueryable<T> Page<T>(this IQueryable<T> queryable, int page = 1, int pageSize = 20)
     {
-        [Pure]
-        public IQueryable<T> Page(int page = 1, int pageSize = 20)
-        {
-            Guard.Against.NegativeOrZero(page);
-            Guard.Against.OutOfRange(pageSize, nameof(pageSize), 1, 100, "页大小必须在1到1000");
+        Guard.Against.NegativeOrZero(page);
+        Guard.Against.OutOfRange(pageSize, nameof(pageSize), 1, 100, "页大小必须在1到1000");
 
-            return queryable.Skip((page - 1) * pageSize).Take(pageSize);
-        }
+        return queryable.Skip((page - 1) * pageSize).Take(pageSize);
+    }
 
-        public async Task<ApiPageResult<T>> ToApiPageResult(
-            int page = 1,
-            int pageSize = 20)
+    public static async Task<ApiPageResult<T>> ToApiPageResult<T>(
+        this IQueryable<T> queryable,
+        int page = 1,
+        int pageSize = 20)
+    {
+        return new ApiPageResult<T>()
         {
-            return new ApiPageResult<T>()
-            {
-                Total = await queryable.CountAsync(),
-                Page = page,
-                PageSize = pageSize,
-                Items = await queryable.Page(page, pageSize).ToListAsync()
-            };
-        }
+            Total = await queryable.CountAsync(),
+            Page = page,
+            PageSize = pageSize,
+            Items = await queryable.Page(page, pageSize).ToListAsync()
+        };
     }
 }
