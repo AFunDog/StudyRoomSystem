@@ -94,8 +94,17 @@ async function loadMore() {
 
 async function openDetail(v: Violation) {
   detailViolation.value = v;
-  detailBooking.value = null;
+  // 优先使用后端返回的预约信息
+  detailBooking.value = v.booking ?? null;
   detailOpen.value = true;
+
+  // 若已有完整预约信息且包含座位房间，直接展示，无需额外请求
+  if (detailBooking.value?.seat?.room) {
+    return;
+  }
+
+  // 无 bookingId 也无需请求
+  if (!v.bookingId) return;
 
   if (v.bookingId) {
     try {

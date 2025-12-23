@@ -8,6 +8,7 @@ import type { Complaint, ComplaintState } from "@/lib/types/Complaint";
 import type { Room } from "@/lib/types/Room";
 import { complaintRequest } from "@/lib/api/complaintRequest";
 import { roomRequest } from "@/lib/api/roomRequest";
+import { seatRequest } from "@/lib/api/seatRequest";
 import ComplaintList from "./components/ComplaintList.vue";
 import ComplaintForm from "./components/ComplaintForm.vue";
 
@@ -32,10 +33,7 @@ const loadingSeats = ref(false);
 const filteredComplaints = computed(() =>
   complaints.value
     .filter((c) => stateFilter.value === "all" || c.state === stateFilter.value)
-    .sort(
-      (a, b) =>
-        dayjs(b.createTime).valueOf() - dayjs(a.createTime).valueOf()
-    )
+    .sort((a, b) => dayjs(b.createTime).valueOf() - dayjs(a.createTime).valueOf())
 );
 
 async function loadSeats() {
@@ -76,8 +74,12 @@ async function loadComplaints(reset = false) {
       hasMore.value = false;
     }
 
-    complaints.value =
-      page.value === 1 ? res.items : [...complaints.value, ...res.items];
+    const merged = page.value === 1 ? res.items : [...complaints.value, ...res.items];
+    complaints.value = merged;
+
+    // 补全座位/房间信息，避免显示“未知房间”
+    const targets = page.value === 1 ? complaints.value : res.items;
+    await Promise.all(targets.map((c) => enrichSeat(c)));
   } catch (err) {
     console.error("获取投诉列表失败", err);
     toast.error("获取投诉列表失败，请稍后重试");
@@ -96,9 +98,9 @@ async function loadMore() {
 function seatDisplay(c: Complaint | null) {
   if (!c) return "";
   const room = c.seat?.room?.name || "未知房间";
-  const seatIdx =
-    (c.seat?.row ?? 0) * (c.seat?.room?.cols ?? 0) + (c.seat?.col ?? 0) + 1;
-  return `${room} · ${seatIdx}`;
+  const cols = c.seat?.room?.cols ?? 0;
+  const seatIdx = (c.seat?.row ?? 0) * cols + (c.seat?.col ?? 0) + 1;
+  return `${room} - ${seatIdx}`;
 }
 
 function openList() {
@@ -180,6 +182,35 @@ async function handleEdit(payload: { type: string; content: string; targetTime?:
   }
 }
 
+// 尝试补全单条投诉的座位/房间信息
+async function enrichSeat(c: Complaint) {
+  // 已有房间信息则不处理
+  if (c.seat?.room?.name) return;
+
+  // 若 rooms 中包含座位数据则尝试补充（兼容后端不返回 room 的情况）
+  if (rooms.value.length) {
+    for (const r of rooms.value) {
+      const seat = r.seats?.find((s) => s.id === c.seatId);
+      if (seat) {
+        c.seat = {
+          ...seat,
+          room: { ...r, seats: undefined },
+        } as any;
+        return;
+      }
+    }
+  }
+
+  // 兜底：调用 seat 接口获取座位和房间
+  try {
+    const seatRes = await seatRequest.getSeat(c.seatId);
+    const seatData: any = (seatRes as any).data ?? seatRes;
+    c.seat = seatData;
+  } catch (err) {
+    console.warn("获取座位信息失败", c.seatId, err);
+  }
+}
+
 onMounted(() => {
   loadComplaints(true);
   loadSeats();
@@ -190,7 +221,7 @@ onMounted(() => {
   <div class="flex flex-col h-full w-full px-4 py-4 gap-4 min-h-0">
     <div class="flex items-center justify-between gap-2">
       <div class="text-lg font-semibold">
-        {{ mode === 'create' ? '发起投诉' : mode === 'edit' ? '修改投诉' : '我的投诉' }}
+        {{ mode === "create" ? "发起投诉" : mode === "edit" ? "修改投诉" : "我的投诉" }}
       </div>
 
       <Button

@@ -22,12 +22,10 @@ const emit = defineEmits<{
   (e: "load-more"): void;
 }>();
 
-const filters = ["all", "已发起", "已处理", "已关闭"];
+const filters: Array<"all" | ComplaintState> = ["all", "已发起", "已处理", "已关闭"];
 
 const sortedComplaints = computed(() =>
-  [...props.complaints].sort(
-    (a, b) => dayjs(b.createTime).valueOf() - dayjs(a.createTime).valueOf()
-  )
+  [...props.complaints].sort((a, b) => dayjs(b.createTime).valueOf() - dayjs(a.createTime).valueOf())
 );
 
 function seatDisplay(c: Complaint) {
@@ -59,8 +57,7 @@ function seatDisplay(c: Complaint) {
 }
 
 function stateBadgeClass(state: ComplaintState) {
-  const base =
-    "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium border";
+  const base = "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium border";
   switch (state) {
     case "已发起":
       return base + " bg-sky-50 text-sky-700 border-sky-200";
@@ -87,7 +84,7 @@ function stateBadgeClass(state: ComplaintState) {
             size="sm"
             @click="emit('update:stateFilter', item)"
           >
-            {{ item === 'all' ? '全部' : item }}
+            {{ item === "all" ? "全部" : item }}
           </Button>
         </div>
       </div>
@@ -119,7 +116,7 @@ function stateBadgeClass(state: ComplaintState) {
             <span :class="stateBadgeClass(c.state)">{{ localizeComplaintState(c.state) }}</span>
           </div>
           <div class="mt-1 text-sm text-muted-foreground">
-            标题：{{ c.type || '无' }}
+            标题：{{ c.type || "无" }}
           </div>
           <div class="mt-2 text-xs text-muted-foreground flex flex-wrap gap-3">
             <span>创建：{{ dayjs(c.createTime).format("YYYY/MM/DD HH:mm") }}</span>
@@ -134,19 +131,11 @@ function stateBadgeClass(state: ComplaintState) {
       </div>
 
       <div v-if="hasMore" class="mt-3 flex justify-center">
-        <Button
-          variant="outline"
-          size="sm"
-          :disabled="loadingMore"
-          @click="emit('load-more')"
-        >
+        <Button variant="outline" size="sm" :disabled="loadingMore" @click="emit('load-more')">
           {{ loadingMore ? "加载中..." : "加载更多" }}
         </Button>
       </div>
-      <div
-        v-else
-        class="mt-1 flex justify-center text-sm text-muted-foreground"
-      >
+      <div v-else class="mt-1 flex justify-center text-sm text-muted-foreground">
         没有更多了
       </div>
     </div>
