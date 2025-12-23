@@ -59,13 +59,13 @@ internal sealed class BookingService(AppDbContext appDbContext,IUserService user
             throw new BadHttpRequestException("不允许创建过去的预约");
 
         // 检查座位是否在时间段内被占用
-        var valid = await AppDbContext.Bookings.AnyAsync(x
+        var has = await AppDbContext.Bookings.AnyAsync(x
             => x.SeatId == booking.SeatId
                && ((x.StartTime <= booking.StartTime && booking.StartTime <= x.EndTime)
                    || (x.StartTime <= booking.EndTime && booking.EndTime <= x.EndTime))
                && (x.State == (BookingStateEnum.已预约) || x.State == (BookingStateEnum.已签到))
         );
-        if (valid is false)
+        if (has)
             throw new ConflictException("座位在时间范围内已被用户预约");
 
         var track = await AppDbContext.Bookings.AddAsync(booking);
