@@ -221,7 +221,10 @@ async function confirmBooking() {
     }
   } catch (err) {
     console.error(err)
-    toast.error('预约失败，请稍后重试')
+    const msg =
+      (err && typeof err === 'object' && (err as any).message) ||
+      '预约失败，请稍后重试'
+    toast.error(msg)
   }
 }
 </script>

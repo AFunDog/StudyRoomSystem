@@ -10,6 +10,9 @@ class BookingRequest {
         if (axios.isAxiosError(err)) {
             const data = err.response?.data as any;
 
+            if (data?.detail && typeof data.detail === "string") {
+                return new Error(data.detail);
+            }
             if (data?.title && typeof data.title === "string") {
                 return new Error(data.title);
             }
