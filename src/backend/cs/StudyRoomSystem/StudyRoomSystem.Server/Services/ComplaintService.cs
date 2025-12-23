@@ -24,16 +24,21 @@ internal sealed class ComplaintService(
             .OrderByDescending(x => x.CreateTime)
             .Include(x => x.SendUser)
             .Include(x => x.HandleUser)
+            .Include(x => x.Seat)
+            .ThenInclude(x => x.Room)
             .ToApiPageResult(page, pageSize);
     }
 
     public async Task<Complaint> GetById(Guid id)
     {
         var item = await AppDbContext
-            .Complaints.Include(x => x.Seat)
+            .Complaints
+            .AsNoTracking()
+            .Include(x => x.Seat)
             .Include(x => x.SendUser)
             .Include(x => x.HandleUser)
-            .AsNoTracking()
+            .Include(x => x.Seat)
+            .ThenInclude(x => x.Room)
             .SingleOrDefaultAsync(x => x.Id == id);
         return item ?? throw new NotFoundException("投诉不存在");
     }
@@ -44,6 +49,8 @@ internal sealed class ComplaintService(
             .Complaints.AsNoTracking()
             .OrderByDescending(x => x.CreateTime)
             .Include(x => x.HandleUser)
+            .Include(x => x.Seat)
+            .ThenInclude(x => x.Room)
             .Where(x => x.SendUserId == userId)
             .ToApiPageResult(page, pageSize);
     }
@@ -54,6 +61,8 @@ internal sealed class ComplaintService(
             .Complaints.AsNoTracking()
             .OrderByDescending(x => x.CreateTime)
             .Include(x => x.SendUser)
+            .Include(x => x.Seat)
+            .ThenInclude(x => x.Room)
             .Where(x => x.HandleUserId == userId)
             .ToApiPageResult(page, pageSize);
     }
