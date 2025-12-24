@@ -18,7 +18,7 @@ import AdminResetPasswordDialog from '@/components/user/AdminResetPasswordDialog
 
 const users = ref<User[]>([]);
 const page = ref(1);
-const pageSize = ref(10);
+const pageSize = ref(20);
 const total = ref(0);
 
 // 页面加载时获取用户列表
@@ -117,9 +117,9 @@ function openChangePassword(user: User) {
       <Button class="hover:brightness-110" @click="openAdd('admin')">添加管理员</Button>
     </div>
 
-    <div class="overflow-x-auto overflow-y-auto max-h-150 border border-gray-300 rounded-lg relative">
+    <div class="overflow-x-auto overflow-y-auto max-h-[75vh] border border-gray-300 rounded-lg relative">
       <!-- 用户表格 -->
-      <table class="w-full border-collapse">
+      <table class="w-full  border-separate border-spacing-0">
         <thead class="sticky top-0 z-50 bg-gray-100">
           <tr class="bg-gray-100">
             <th class="border p-2">用户名</th>

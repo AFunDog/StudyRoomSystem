@@ -81,43 +81,10 @@ const menus = [
         <UsersView v-else-if="currentMenu === 'users'" />
         <RoomsView v-else-if="currentMenu === 'rooms'" />
         <BookingsView v-else-if="currentMenu === 'bookings'" />
-        <!-- <ComplaintsView v-else-if="currentMenu === 'complaints'" />
-        <ViolationsView v-else-if="currentMenu === 'violations'" />
-        <FilesView v-else-if="currentMenu === 'files'" /> -->
+        <!-- <ComplaintsView v-else-if="currentMenu === 'complaints'" /> -->
+        <ViolationsView v-else-if="currentMenu === 'violations'" /> 
+        <!-- <FilesView v-else-if="currentMenu === 'files'" /> -->
 
-
-        <!-- 投诉处理 -->
-        <!-- <div v-else-if="currentMenu === 'complaints'">
-          <h2 class="text-xl font-bold mb-4">投诉处理</h2>
-          <p class="text-muted-foreground">
-            - GET /api/v1/complaint 获取所有投诉<br>
-            - POST /api/v1/complaint 创建投诉<br>
-            - PUT /api/v1/complaint 修改投诉<br>
-            - GET /api/v1/complaint/{id} 获取指定投诉
-          </p>
-        </div> -->
-
-        <!-- 违规记录 -->
-        <!-- <div v-else-if="currentMenu === 'violations'">
-          <h2 class="text-xl font-bold mb-4">违规记录</h2>
-          <p class="text-muted-foreground">
-            - GET /api/v1/violation 查看所有违规记录<br>
-            - POST /api/v1/violation 创建违规记录<br>
-            - PUT /api/v1/violation 修改违规记录<br>
-            - GET /api/v1/violation/{id} 查看指定违规记录<br>
-            - DELETE /api/v1/violation/{id} 删除违规记录
-          </p>
-        </div> -->
-
-        <!-- 文件管理 -->
-        <!-- <div v-else-if="currentMenu === 'files'">
-          <h2 class="text-xl font-bold mb-4">文件管理</h2>
-          <p class="text-muted-foreground">
-            - POST /api/v1/file 上传文件<br>
-            - GET /api/v1/file/{file} 获取文件<br>
-            - DELETE /api/v1/file/{file} 删除文件
-          </p>
-        </div> -->
       </main>
     </div>
   </div>
