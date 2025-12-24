@@ -29,4 +29,16 @@ public static class QueryableExtension
             Items = await queryable.Page(page, pageSize).ToListAsync()
         };
     }
+
+    public static ApiPageResult<T> ToApiPageResult<T>(this IEnumerable<T> enumerable, int page = 1, int pageSize = 20)
+    {
+        var list = enumerable.ToList();
+        return new ApiPageResult<T>()
+        {
+            Total = list.Count,
+            Page = page,
+            PageSize = pageSize,
+            Items = list.Skip((page - 1) * pageSize).Take(pageSize).ToList()
+        };
+    }
 }
