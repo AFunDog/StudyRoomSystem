@@ -563,6 +563,10 @@ async function checkOut(id: string): Promise<void> {
 
 <template>
   <div class="space-y-4">
+
+    <!-- 页面标题 -->
+    <h2 class="text-xl font-bold mb-4">预约管理</h2>
+
     <!-- 顶部控制区 -->
     <div class="flex items-center gap-4">
       <div class="flex flex-col gap-1">

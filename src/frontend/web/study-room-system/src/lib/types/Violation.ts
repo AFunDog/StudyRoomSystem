@@ -6,14 +6,14 @@ export type ViolationType = "超时" | "强制取消" | "管理员";
 
 export interface Violation {
   id: string;
-  bookingId: string;
+  bookingId: string | null;
   userId: string;
   createTime: string;
   state: ViolationState;
   type: ViolationType;
   content: string;
-  user?: User | null;
-  booking?: Booking | null;
+  user: User;
+  booking: Booking | null;
 }
 
 export interface ViolationPage {
@@ -23,7 +23,20 @@ export interface ViolationPage {
   items: Violation[];
 }
 
-export function localizeViolationType(type: ViolationType) {
+export interface ViolationCreateDto { 
+  userId: string; 
+  bookingId?: string | null; 
+  type: "超时" | "强制取消" | "管理员"; 
+  content: string; 
+} 
+
+export interface ViolationUpdateDto { 
+  id: string; 
+  type?: "超时" | "强制取消" | "管理员" | null; 
+  content?: string | null; 
+}
+
+export function localizeViolationType(type: ViolationType): string {
   switch (type) {
     case "超时":
       return "超时";
@@ -31,5 +44,7 @@ export function localizeViolationType(type: ViolationType) {
       return "强制取消";
     case "管理员":
       return "管理员处理";
+    default:
+      return type; // 兜底
   }
 }

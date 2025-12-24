@@ -281,96 +281,98 @@ async function saveSeats() {
       <Button class="hover:brightness-110" @click="isAddDialogOpen = true">添加房间</Button>
     </div>
 
-    <table class="w-full border-collapse border border-gray-300">
-      <thead>
-        <tr class="bg-gray-100">
-          <th class="border p-2">房间名称</th>
-          <th class="border p-2">开放时间</th>
-          <th class="border p-2">关闭时间</th>
-          <th class="border p-2">房间大小</th>
-          <th class="border p-2">座位数量</th>
-          <th class="border p-2">操作</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- 移除 transition-group，改用普通循环 -->
-        <template v-for="room in rooms" :key="room.id">
-          <!-- 房间信息行 -->
-          <tr>
-            <td class="border p-2">{{ room.name }}</td>
-            <td class="border p-2">{{ room.openTime }}</td>
-            <td class="border p-2">{{ room.closeTime }}</td>
-            <td class="border p-2">{{ room.rows * room.cols }}</td>
-            <td class="border p-2">{{ room.seats?.length || 0 }}</td>
-            <td class="border p-2 flex gap-x-2">
-              <!-- 原有按钮保持不变 -->
-              <Button class="bg-green-500 hover:bg-green-500 hover:brightness-110 text-white px-2 py-1 rounded flex items-center gap-x-1"
-                      @click="viewRoom(room)">
-                <Eye class="size-4" /> 查看
-              </Button>
-              <Button class="bg-yellow-500 hover:bg-yellow-500 hover:brightness-110 text-white px-2 py-1 rounded flex items-center gap-x-1"
-                      @click="openEdit(room)">
-                <Edit class="size-4" /> 编辑
-              </Button>
-              <Button class="bg-red-600 hover:bg-red-600 hover:brightness-110 text-white px-2 py-1 rounded flex items-center gap-x-1"
-                      @click="openDeleteDialog(room.id)">
-                <Trash class="size-4" />删除
-              </Button>
-              <Button class="bg-primary hover:brightness-110 text-white px-2 py-1 rounded flex items-center gap-x-1"
-                      @click="toggleSeatManagement(room)">
-                <ClipboardList class="size-4" /> 座位管理
-              </Button>
-            </td>
+    <div class="overflow-x-auto overflow-y-auto max-h-[75vh] border border-gray-300 rounded-lg relative">
+      <table class="w-full  border-separate border-spacing-0">
+        <thead>
+          <tr class="bg-gray-100">
+            <th class="border p-2">房间名称</th>
+            <th class="border p-2">开放时间</th>
+            <th class="border p-2">关闭时间</th>
+            <th class="border p-2">房间大小</th>
+            <th class="border p-2">座位数量</th>
+            <th class="border p-2">操作</th>
           </tr>
+        </thead>
+        <tbody>
+          <!-- 移除 transition-group，改用普通循环 -->
+          <template v-for="room in rooms" :key="room.id">
+            <!-- 房间信息行 -->
+            <tr>
+              <td class="border p-2">{{ room.name }}</td>
+              <td class="border p-2">{{ room.openTime }}</td>
+              <td class="border p-2">{{ room.closeTime }}</td>
+              <td class="border p-2">{{ room.rows * room.cols }}</td>
+              <td class="border p-2">{{ room.seats?.length || 0 }}</td>
+              <td class="border p-2 flex gap-x-2">
+                <!-- 原有按钮保持不变 -->
+                <Button class="bg-green-500 hover:bg-green-500 hover:brightness-110 text-white px-2 py-1 rounded flex items-center gap-x-1"
+                        @click="viewRoom(room)">
+                  <Eye class="size-4" /> 查看
+                </Button>
+                <Button class="bg-yellow-500 hover:bg-yellow-500 hover:brightness-110 text-white px-2 py-1 rounded flex items-center gap-x-1"
+                        @click="openEdit(room)">
+                  <Edit class="size-4" /> 编辑
+                </Button>
+                <Button class="bg-red-600 hover:bg-red-600 hover:brightness-110 text-white px-2 py-1 rounded flex items-center gap-x-1"
+                        @click="openDeleteDialog(room.id)">
+                  <Trash class="size-4" />删除
+                </Button>
+                <Button class="bg-primary hover:brightness-110 text-white px-2 py-1 rounded flex items-center gap-x-1"
+                        @click="toggleSeatManagement(room)">
+                  <ClipboardList class="size-4" /> 座位管理
+                </Button>
+              </td>
+            </tr>
 
-          <!-- 重构展开行：使用 transition 包裹，优化动画触发 -->
-          <tr>
-            <td colspan="6" class="p-0 border">
-              <!-- 核心修改：用 transition 包裹，添加动画容器类 -->
-              <transition name="slide-fade">
-                <div 
-                  v-show="room.id === currentRoomId" 
-                  class="slide-fade-transition"
-                >
-                  <div class="p-4 bg-muted">
-                    <h3 class="text-lg font-bold mb-2">座位管理 - {{ room.name }}</h3>
-                    <p>
-                      最大座位数：{{ room.rows * room.cols }}，
-                      已开放座位数：{{ currentRoomSeats.filter(s => s.open).length }}
-                    </p>
-                    <p class="text-sm text-muted-foreground mt-2">
-                      修改座位状态后请点击“保存”按钮，否则不会生效
-                    </p>
-                  
-                    <!-- 座位区域加滚动条 -->
-                    <div class="max-h-96 overflow-y-auto border rounded p-2 mt-2">
-                      <div :class="cn('grid gap-1')"
-                           :style="{ 'grid-template-columns': `repeat(${room.cols},1fr)` }">
-                        <div v-for="(seat, i) in currentRoomSeats" :key="i">
-                          <Armchair
-                            class="size-12 cursor-pointer transition-colors ease-in-out"
-                            :class="seat.open ? 'text-green-500' : 'text-gray-400'"
-                            @click="toggleSeat(i)"
-                          />
+            <!-- 重构展开行：使用 transition 包裹，优化动画触发 -->
+            <tr>
+              <td colspan="6" class="p-0 border">
+                <!-- 核心修改：用 transition 包裹，添加动画容器类 -->
+                <transition name="slide-fade">
+                  <div 
+                    v-show="room.id === currentRoomId" 
+                    class="slide-fade-transition"
+                  >
+                    <div class="p-4 bg-muted">
+                      <h3 class="text-lg font-bold mb-2">座位管理 - {{ room.name }}</h3>
+                      <p>
+                        最大座位数：{{ room.rows * room.cols }}，
+                        已开放座位数：{{ currentRoomSeats.filter(s => s.open).length }}
+                      </p>
+                      <p class="text-sm text-muted-foreground mt-2">
+                        修改座位状态后请点击“保存”按钮，否则不会生效
+                      </p>
+                    
+                      <!-- 座位区域加滚动条 -->
+                      <div class="max-h-96 overflow-y-auto border rounded p-2 mt-2">
+                        <div :class="cn('grid gap-1')"
+                             :style="{ 'grid-template-columns': `repeat(${room.cols},1fr)` }">
+                          <div v-for="(seat, i) in currentRoomSeats" :key="i">
+                            <Armchair
+                              class="size-12 cursor-pointer transition-colors ease-in-out"
+                              :class="seat.open ? 'text-green-500' : 'text-gray-400'"
+                              @click="toggleSeat(i)"
+                            />
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  
-                    <!-- 保存按钮 -->
-                    <div class="mt-4 flex justify-end">
-                      <Button class="bg-primary hover:brightness-110 text-white px-4 py-2 rounded"
-                              @click="saveSeats">
-                        <Loader2 v-if="isSavingSeats" class="size-4 animate-spin mr-2" />{{ isSavingSeats ? '保存中...' : '保存座位设置' }}
-                      </Button>
+                    
+                      <!-- 保存按钮 -->
+                      <div class="mt-4 flex justify-end">
+                        <Button class="bg-primary hover:brightness-110 text-white px-4 py-2 rounded"
+                                @click="saveSeats">
+                          <Loader2 v-if="isSavingSeats" class="size-4 animate-spin mr-2" />{{ isSavingSeats ? '保存中...' : '保存座位设置' }}
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </transition>
-            </td>
-          </tr>
-        </template>
-      </tbody>
-    </table>
+                </transition>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
 
     <!-- 分页控件 -->
     <div class="flex justify-between items-center mt-4">

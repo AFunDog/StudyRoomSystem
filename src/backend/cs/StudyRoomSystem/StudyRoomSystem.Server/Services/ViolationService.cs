@@ -25,12 +25,20 @@ internal sealed class ViolationService(AppDbContext appDbContext) : IViolationSe
 
     public async Task<ApiPageResult<Violation>> GetAll(int page, int pageSize)
     {
-        return await AppDbContext.Violations.AsNoTracking().Include(x => x.Booking).ToApiPageResult(page, pageSize);
+        return await AppDbContext
+            .Violations.AsNoTracking()
+            .Include(x => x.Booking)
+            .Include(x => x.User)
+            .ToApiPageResult(page, pageSize);
     }
 
     public async Task<Violation> GetById(Guid violationId)
     {
-        return await AppDbContext.Violations.AsNoTracking().SingleOrDefaultAsync(x => x.Id == violationId)
+        return await AppDbContext
+                   .Violations.AsNoTracking()
+                   .Include(x => x.Booking)
+                   .Include(x => x.User)
+                   .SingleOrDefaultAsync(x => x.Id == violationId)
                ?? throw new NotFoundException("违规记录不存在");
     }
 
@@ -46,10 +54,8 @@ internal sealed class ViolationService(AppDbContext appDbContext) : IViolationSe
             if (containBooking is false)
                 throw new NotFoundException("预约记录不存在");
         }
-        
-        var track = await AppDbContext.Violations.AddAsync(
-            violation
-        );
+
+        var track = await AppDbContext.Violations.AddAsync(violation);
         var res = await AppDbContext.SaveChangesAsync();
         if (res == 0)
             throw new ConflictException("违规记录添加失败");

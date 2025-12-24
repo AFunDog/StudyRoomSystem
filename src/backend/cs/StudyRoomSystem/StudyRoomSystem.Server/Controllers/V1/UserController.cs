@@ -165,7 +165,7 @@ public class UserController(AppDbContext appDbContext, IUserService userService)
     #region Delete
 
     // 用户不能自己注销
-    [HttpDelete]
+    [HttpDelete("{id:guid}")]
     [Authorize(AuthorizationHelper.Policy.Admin)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status200OK)]
