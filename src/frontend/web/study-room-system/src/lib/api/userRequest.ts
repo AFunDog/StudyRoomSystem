@@ -20,7 +20,7 @@ export const userRequest = {
   getUserById: (id: string) => http.get(`/user/${id}`),
 
   // 更新用户信息
-  updateUser: (data: {id: string; displayName: string; campusId: string; phone: string; email?: string}) => 
+  updateUser: (data: {id: string; displayName: string; campusId: string; phone: string; email?: string; avatar?: string}) => 
     http.put('/user/information', data),
 
   // 删除用户
