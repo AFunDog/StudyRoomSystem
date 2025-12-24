@@ -20,4 +20,5 @@ public interface IBookingService
     Task<Booking> Cancel(Guid bookingId, Guid userId, bool isForce = false);
     Task<Booking> CheckIn(Guid booingId, Guid userId);
     Task<Booking> CheckOut(Guid booingId, Guid userId);
+    Task Delete(Guid bookingId);
 }

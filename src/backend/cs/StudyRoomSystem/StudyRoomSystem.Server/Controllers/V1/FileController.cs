@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Data;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -62,12 +63,38 @@ public class FileController : ControllerBase
         return PhysicalFile(filePath, contentType);
     }
 
+    [HttpGet("list")]
+    [Authorize(AuthorizationHelper.Policy.Admin)]
+    [EndpointSummary("管理员获取文件列表")]
+    public async Task<IActionResult> GetList(
+        [FromQuery] [Range(1, int.MaxValue)] int page = 1,
+        [FromQuery] [Range(1, 100)] int pageSize = 20)
+    {
+        return Ok(
+            Directory
+                .EnumerateFiles(Path.Combine(Environment.CurrentDirectory, "files"))
+                .Select(Path.GetFileName)
+                .ToApiPageResult(page, pageSize)
+        );
+    }
+
 
     [HttpDelete("{file:file}")]
     [Authorize(AuthorizationHelper.Policy.Admin)]
     [EndpointSummary("删除指定路径下的文件")]
     public async Task<IActionResult> Delete(string file)
     {
-        throw new NotImplementedException();
+        var fileId = Guid.TryParse(file.Split('.')[0], out var id) ? id : Guid.Empty;
+        if (fileId == Guid.Empty)
+            throw new BadHttpRequestException("请求文件格式不正确");
+
+        // var filePath = $"{Environment.CurrentDirectory}/files/{file}";
+        var filePath = Path.Combine(Environment.CurrentDirectory, "files", file);
+        if (System.IO.File.Exists(filePath) is false)
+            throw new NotFoundException("文件不存在");
+
+        System.IO.File.Delete(filePath);
+
+        return Ok();
     }
 }

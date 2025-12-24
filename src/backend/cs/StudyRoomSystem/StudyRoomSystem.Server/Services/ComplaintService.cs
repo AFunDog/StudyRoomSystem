@@ -112,6 +112,8 @@ internal sealed class ComplaintService(
         complaint.HandleTime = DateTime.UtcNow;
         complaint.HandleUserId = handleUser.Id;
 
+        await using var transaction = await AppDbContext.Database.BeginTransactionAsync();
+
         await ViolationService.Create(
             new Violation()
             {
@@ -123,9 +125,10 @@ internal sealed class ComplaintService(
         );
 
         await UserService.UpdateUser(targetUser with { Credits = targetUser.Credits - score });
-
-        // TODO 扣除分数
-        return await Update(complaint);
+        
+        var res = await Update(complaint);
+        await transaction.CommitAsync();
+        return res;
     }
 
     public async Task<Complaint> Close(Guid complaintId, Guid handleUserId, string handleContent)

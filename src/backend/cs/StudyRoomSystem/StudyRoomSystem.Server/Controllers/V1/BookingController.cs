@@ -160,4 +160,11 @@ public class BookingController(AppDbContext appDbContext, IBookingService bookin
     {
         return Ok(await BookingService.CheckOut(request.Id, this.GetLoginUserId()));
     }
+
+    [HttpDelete("delete/{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        await BookingService.Delete(id);
+        return Ok();
+    }
 }
