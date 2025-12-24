@@ -288,11 +288,7 @@ function getYMD(v: CalendarModelValue | undefined): { year: number; month: numbe
             </Button>
           </PopoverTrigger>
           <PopoverContent class="p-0">
-<<<<<<< HEAD
             <Calendar :model-value="calendarValue" @update:modelValue="onDateChange" />
-=======
-            <Calendar  />
->>>>>>> bf64c6d16e2c779c68bd9ccbeee0d36870057b5a
           </PopoverContent>
         </Popover>
 
@@ -307,14 +303,16 @@ function getYMD(v: CalendarModelValue | undefined): { year: number; month: numbe
           </SelectContent>
         </Select>
 
-        <Input
-          v-model="form.minute"
-          type="number"
-          min="0"
-          max="59"
-          class="w-full sm:w-20"
-          placeholder="分钟"
-        />
+        <Select v-model="form.minute">
+          <SelectTrigger class="w-full sm:w-20">
+            <SelectValue placeholder="分钟" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem v-for="m in 60" :key="m" :value="String(m - 1).padStart(2, '0')">
+              {{ String(m - 1).padStart(2, "0") }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
       </div>
       <div class="text-xs text-muted-foreground">
         用于说明问题发生的时间点，可只选日期或精确到分钟。
