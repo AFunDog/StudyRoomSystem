@@ -10,9 +10,11 @@ using NotFoundException = StudyRoomSystem.Core.Structs.Exceptions.NotFoundExcept
 
 namespace StudyRoomSystem.Server.Services;
 
-internal sealed class ViolationService(AppDbContext appDbContext) : IViolationService
+internal sealed class ViolationService(AppDbContext appDbContext,IRoomService roomService) : IViolationService
 {
     private AppDbContext AppDbContext { get; } = appDbContext;
+    
+    private IRoomService RoomService { get; } = roomService;
 
     public async Task<ApiPageResult<Violation>> GetAllByUserId(Guid userId, int page, int pageSize)
     {
@@ -25,11 +27,20 @@ internal sealed class ViolationService(AppDbContext appDbContext) : IViolationSe
 
     public async Task<ApiPageResult<Violation>> GetAll(int page, int pageSize)
     {
-        return await AppDbContext
+        var res = await AppDbContext
             .Violations.AsNoTracking()
             .Include(x => x.Booking)
             .Include(x => x.User)
             .ToApiPageResult(page, pageSize);
+        foreach (var item in res.Items)
+        {
+            if (item.Booking is not null)
+            {
+                item.Booking.Seat = await RoomService.GetSeatById(item.Booking.SeatId);
+            }
+        }
+
+        return res;
     }
 
     public async Task<Violation> GetById(Guid violationId)
