@@ -46,6 +46,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: "submit", payload: { seatId?: string; type: string; content: string; targetTime?: string | null }): void;
+  (e: "delete"): void;
   (e: "cancel"): void;
 }>();
 
@@ -335,6 +336,14 @@ function getYMD(v: CalendarModelValue | undefined): { year: number; month: numbe
       </Button>
       <Button class="w-full md:flex-1" @click="handleSubmit">
         {{ submitText }}
+      </Button>
+      <Button
+        v-if="mode === 'edit'"
+        variant="destructive"
+        class="w-full md:flex-1"
+        @click="emit('delete')"
+      >
+        删除投诉
       </Button>
     </div>
   </div>

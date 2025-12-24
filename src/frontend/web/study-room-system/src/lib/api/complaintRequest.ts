@@ -26,10 +26,16 @@ class ComplaintRequest {
     return res.data as Complaint;
   }
 
-  // 修改投诉（仅普通用户使用）
+  // 修改投诉
   public async editComplaint(data: { id: string; type?: string; content?: string; targetTime?: string | null }) {
     const res = await http.put("/complaint", data);
     return res.data as Complaint;
+  }
+
+  // 删除投诉
+  public async deleteComplaint(id: string) {
+    const res = await http.delete('/complaint', { params: { id } });
+    return res.data;
   }
 }
 

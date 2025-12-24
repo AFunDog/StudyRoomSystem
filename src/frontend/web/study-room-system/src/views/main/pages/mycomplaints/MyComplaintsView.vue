@@ -186,6 +186,19 @@ async function handleEdit(payload: { type: string; content: string; targetTime?:
   }
 }
 
+async function handleDelete() {
+  if (!selectedComplaint.value) return;
+  try {
+    await complaintRequest.deleteComplaint(selectedComplaint.value.id);
+    toast.success("投诉已删除");
+    await loadComplaints(true);
+    openList();
+  } catch (err) {
+    console.error("删除投诉失败", err);
+    toast.error("删除失败，请稍后重试");
+  }
+}
+
 // 尝试补全单条投诉的座位/房间信息
 async function enrichSeat(c: Complaint) {
   // 已有房间信息则不处理
@@ -323,6 +336,7 @@ onMounted(() => {
         :loading-seats="loadingSeats"
         :complaint="selectedComplaint"
         @submit="handleEdit"
+        @delete="handleDelete"
         @cancel="openList"
       >
         <template #badge>
