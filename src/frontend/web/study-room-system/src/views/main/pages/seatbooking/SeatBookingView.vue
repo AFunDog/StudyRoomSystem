@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { ArrowLeft } from 'lucide-vue-next'
+import { ArrowLeft, RotateCw } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 
 import type { Room } from '@/lib/types/Room'
@@ -32,7 +32,7 @@ const bookings = ref<Booking[]>([])
 const bookingsRoom = ref<Room | null>(null)
 
 /** 初始化加载房间列表 */
-onMounted(async () => {
+async function loadRooms() {
   loadingRooms.value = true
   try {
     const res = await roomRequest.getRooms()
@@ -44,6 +44,10 @@ onMounted(async () => {
   } finally {
     loadingRooms.value = false
   }
+}
+
+onMounted(() => {
+  loadRooms()
 })
 
 /** 打开“该房间我的预约”弹窗 */
@@ -88,6 +92,37 @@ function handleBack() {
       <div class="flex items-center justify-between">
         <div class="text-lg font-semibold">
           自习室列表
+        </div>
+        <!-- 右上角刷新按钮：PC端图标按钮，移动端带文字 -->
+        <div class="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            class="flex items-center gap-1 md:hidden
+                    bg-gray-100 hover:bg-gray-200
+                    text-gray-600 border border-gray-200
+                    disabled:opacity-60 disabled:cursor-not-allowed"
+            :disabled="loadingRooms"
+            @click="loadRooms()"
+          >
+            <RotateCw class="w-4 h-4" />
+            <span class="text-xs">刷新</span>
+          </Button>
+
+          <!-- PC端：纯图标按钮 -->
+          <Button
+            variant="ghost"
+            size="icon"
+            class="hidden md:inline-flex
+                    bg-gray-100 hover:bg-gray-200
+                    text-gray-600 border border-gray-200
+                    rounded-full
+                    disabled:opacity-60 disabled:cursor-not-allowed"
+            :disabled="loadingRooms"
+            @click="loadRooms()"
+          >
+            <RotateCw class="w-4 h-4" />
+          </Button>
         </div>
       </div>
 

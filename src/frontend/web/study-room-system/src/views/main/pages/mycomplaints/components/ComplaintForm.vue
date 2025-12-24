@@ -21,8 +21,21 @@ import { Calendar } from "@/components/ui/calendar";
 import type { Room } from "@/lib/types/Room";
 import type { Complaint } from "@/lib/types/Complaint";
 import { roomRequest } from "@/lib/api/roomRequest";
+import type { CalendarRootProps } from "reka-ui";
+import { parseDate } from "@internationalized/date";
 
 type Mode = "create" | "edit";
+type CalendarModelValue = CalendarRootProps["modelValue"];
+
+interface FormState {
+  roomId: string;
+  seatId: string;
+  seatManual: string;
+  type: string;
+  content: string;
+  hour: string;
+  minute: string;
+}
 
 const props = defineProps<{
   mode: Mode;
@@ -36,15 +49,24 @@ const emit = defineEmits<{
   (e: "cancel"): void;
 }>();
 
-const form = reactive({
+const form = reactive<FormState>({
   roomId: "",
   seatId: "",
   seatManual: "",
   type: "",
   content: "",
-  date: null as Date | null,
   hour: "",
   minute: "",
+});
+
+// 日历当前值（与 Calendar v-model 绑定）
+const calendarValue = ref<CalendarModelValue>();
+const dateText = computed(() => {
+  const ymd = getYMD(calendarValue.value);
+  if (!ymd) return "选择日期";
+  const mm = String(ymd.month).padStart(2, "0");
+  const dd = String(ymd.day).padStart(2, "0");
+  return `${ymd.year}-${mm}-${dd}`;
 });
 
 const titleText = computed(() => (props.mode === "create" ? "发起投诉" : "修改投诉"));
@@ -133,9 +155,9 @@ function reset() {
   form.seatManual = "";
   form.type = "";
   form.content = "";
-  form.date = null;
   form.hour = "";
   form.minute = "";
+  calendarValue.value = undefined;
 }
 
 function handleSubmit() {
@@ -150,31 +172,57 @@ function handleSubmit() {
 }
 
 function buildTargetIso(): string | null {
-  if (!form.date) return null;
+  if (!calendarValue.value) return null;
+  const ymd = getYMD(calendarValue.value);
+  if (!ymd) return null;
   const hourNum = form.hour ? Number(form.hour) : 0;
   const minuteNum = form.minute ? Number(form.minute) : 0;
-  const dt = dayjs(form.date).hour(hourNum).minute(minuteNum).second(0).millisecond(0);
-  if (!dt.isValid()) return null;
-  return dt.toDate().toISOString();
+  return new Date(Date.UTC(ymd.year, ymd.month - 1, ymd.day, hourNum, minuteNum, 0, 0)).toISOString();
 }
 
 function fillTargetFromComplaint(target?: string | null) {
   if (!target) {
-    form.date = null;
+    calendarValue.value = undefined;
     form.hour = "";
     form.minute = "";
     return;
   }
-  const d = dayjs(target);
-  if (!d.isValid()) {
-    form.date = null;
+
+  const dt = new Date(target);
+  if (Number.isNaN(dt.getTime())) {
+    calendarValue.value = undefined;
     form.hour = "";
     form.minute = "";
     return;
   }
-  form.date = d.toDate();
-  form.hour = d.format("HH");
-  form.minute = d.format("mm");
+
+  const y = dt.getUTCFullYear();
+  const m = dt.getUTCMonth() + 1;
+  const d = dt.getUTCDate();
+  const mm = String(m).padStart(2, "0");
+  const dd = String(d).padStart(2, "0");
+
+  // reka-ui 的 DateValue 与 @internationalized/date 的 CalendarDate 类型不完全兼容，显式断言以消除类型差异
+  calendarValue.value = parseDate(`${y}-${mm}-${dd}`) as unknown as CalendarModelValue;
+  form.hour = String(dt.getUTCHours()).padStart(2, "0");
+  form.minute = String(dt.getUTCMinutes()).padStart(2, "0");
+}
+
+function onDateChange(val: CalendarModelValue) {
+  calendarValue.value = val;
+}
+
+function getYMD(v: CalendarModelValue | undefined): { year: number; month: number; day: number } | null {
+  if (!v) return null;
+  const single = Array.isArray(v) ? v[0] : v;
+  const anyV = single as any;
+  if (typeof anyV?.year === "number" && typeof anyV?.month === "number" && typeof anyV?.day === "number") {
+    return { year: anyV.year, month: anyV.month, day: anyV.day };
+  }
+  if (anyV instanceof Date) {
+    return { year: anyV.getUTCFullYear(), month: anyV.getUTCMonth() + 1, day: anyV.getUTCDate() };
+  }
+  return null;
 }
 </script>
 
@@ -235,14 +283,15 @@ function fillTargetFromComplaint(target?: string | null) {
             <Button variant="outline" class="w-full justify-start text-left font-normal">
               <CalendarIcon class="mr-2 h-4 w-4" />
               <span>
-                {{ form.date ? dayjs(form.date).format("YYYY-MM-DD") : "选择日期" }}
+                {{ dateText }}
               </span>
             </Button>
           </PopoverTrigger>
           <PopoverContent class="p-0">
-            <Calendar  />
+            <Calendar :model-value="calendarValue" @update:modelValue="onDateChange" />
           </PopoverContent>
         </Popover>
+
         <Select v-model="form.hour">
           <SelectTrigger class="w-full sm:w-20">
             <SelectValue placeholder="小时" />
@@ -253,14 +302,17 @@ function fillTargetFromComplaint(target?: string | null) {
             </SelectItem>
           </SelectContent>
         </Select>
-        <Input
-          v-model="form.minute"
-          type="number"
-          min="0"
-          max="59"
-          class="w-full sm:w-20"
-          placeholder="分钟"
-        />
+
+        <Select v-model="form.minute">
+          <SelectTrigger class="w-full sm:w-20">
+            <SelectValue placeholder="分钟" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem v-for="m in 60" :key="m" :value="String(m - 1).padStart(2, '0')">
+              {{ String(m - 1).padStart(2, "0") }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
       </div>
       <div class="text-xs text-muted-foreground">
         用于说明问题发生的时间点，可只选日期或精确到分钟。

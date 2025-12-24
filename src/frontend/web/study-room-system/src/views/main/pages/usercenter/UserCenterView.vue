@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { toast } from "vue-sonner"
+import { RotateCw } from "lucide-vue-next"
 
 import { userRequest } from "@/lib/api/userRequest"
 import type { User } from "@/lib/types/User"
@@ -83,6 +84,8 @@ const pwdErrors = ref<PwdErrors>({
 })
 
 const savingPwd = ref(false)
+const loadingUser = ref(false)
+const refreshingBasic = ref(false)
 
 function resetBasicErrors() {
   basicErrors.value = {
@@ -151,7 +154,10 @@ function validatePwd() {
 }
 
 // 从后端获取当前登录用户
-async function fetchUser() {
+async function fetchUser(showBasicOverlay = false) {
+  if (showBasicOverlay) refreshingBasic.value = true
+  loadingUser.value = true
+
   try {
     const res = await userRequest.getUser()
     const data = res.data as User
@@ -170,6 +176,9 @@ async function fetchUser() {
   } catch (err) {
     console.error("获取用户信息失败", err)
     toast.error("获取用户信息失败，请稍后重试")
+  } finally {
+    loadingUser.value = false
+    refreshingBasic.value = false
   }
 }
 
@@ -252,10 +261,53 @@ onMounted(() => {
 
 <template>
   <div class="w-full h-full px-4 py-4 flex flex-col gap-4 overflow-auto">
-    <h1 class="text-xl font-semibold">用户中心</h1>
+    <div class="flex items-center justify-between">
+      <h1 class="text-xl font-semibold">用户中心</h1>
+      <div class="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          class="flex items-center gap-1 md:hidden
+                  bg-gray-100 hover:bg-gray-200
+                  text-gray-600 border border-gray-200
+                  disabled:opacity-60 disabled:cursor-not-allowed"
+          :disabled="loadingUser"
+          @click="fetchUser(true)"
+        >
+          <RotateCw class="w-4 h-4" />
+          <span class="text-xs">刷新</span>
+        </Button>
+
+        <!-- PC端：纯图标按钮 -->
+        <Button
+          variant="ghost"
+          size="icon"
+          class="hidden md:inline-flex
+                  bg-gray-100 hover:bg-gray-200
+                  text-gray-600 border border-gray-200
+                  rounded-full
+                  disabled:opacity-60 disabled:cursor-not-allowed"
+          :disabled="loadingUser"
+          @click="fetchUser(true)"
+        >
+          <RotateCw class="w-4 h-4" />
+        </Button>
+      </div>
+    </div>
 
     <!-- 基本信息 -->
-    <Card>
+    <Card class="relative">
+      <!-- 遮罩层 -->
+      <div
+        v-if="refreshingBasic"
+        class="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-white/70 backdrop-blur-sm"
+      >
+        <div class="flex flex-col items-center gap-2 text-sm text-gray-600">
+          <!-- <RotateCw class="h-5 w-5 animate-spin" /> -->
+          <span>正在加载中...</span>
+        </div>
+      </div> 
+      <!-- 基本信息 -->
       <CardHeader>
         <CardTitle>基本信息</CardTitle>
         <CardDescription>
@@ -325,7 +377,7 @@ onMounted(() => {
         </div>
       </CardContent>
       <CardFooter class="flex justify-end">
-        <Button :disabled="savingBasic" @click="saveBasicInfo">
+        <Button :disabled="savingBasic || loadingUser" @click="saveBasicInfo">
           {{ savingBasic ? "保存中..." : "保存修改" }}
         </Button>
       </CardFooter>

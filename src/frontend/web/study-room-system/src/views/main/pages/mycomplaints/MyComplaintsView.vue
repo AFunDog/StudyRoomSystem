@@ -228,15 +228,37 @@ onMounted(() => {
         {{ mode === "create" ? "发起投诉" : mode === "edit" ? "修改投诉" : "我的投诉" }}
       </div>
 
-      <Button
-        variant="ghost"
-        size="icon"
-        class="bg-gray-100 hover:bg-gray-200 text-gray-600 border border-gray-200 rounded-full disabled:opacity-60"
-        :disabled="loading"
-        @click="loadComplaints(true)"
-      >
-        <RotateCw class="w-4 h-4" />
-      </Button>
+      <!-- 右上角刷新按钮：PC端图标按钮，移动端带文字 -->
+      <div class="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          class="flex items-center gap-1 md:hidden
+                  bg-gray-100 hover:bg-gray-200
+                  text-gray-600 border border-gray-200
+                  disabled:opacity-60 disabled:cursor-not-allowed"
+          :disabled="loading"
+          @click="loadComplaints(true)"
+        >
+          <RotateCw class="w-4 h-4" />
+          <span class="text-xs">刷新</span>
+        </Button>
+
+        <!-- PC端：纯图标按钮 -->
+        <Button
+          variant="ghost"
+          size="icon"
+          class="hidden md:inline-flex
+                  bg-gray-100 hover:bg-gray-200
+                  text-gray-600 border border-gray-200
+                  rounded-full
+                  disabled:opacity-60 disabled:cursor-not-allowed"
+          :disabled="loading"
+          @click="loadComplaints(true)"
+        >
+          <RotateCw class="w-4 h-4" />
+        </Button>
+      </div>
     </div>
 
     <div class="flex items-center gap-2">
