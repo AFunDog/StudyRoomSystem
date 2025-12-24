@@ -1,20 +1,19 @@
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
-import { House, CalendarDays, UserRound, ShieldAlert, Megaphone } from 'lucide-vue-next'
+import { House, CalendarCheck, UserRound, ShieldAlert, Megaphone, Armchair } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 
 const router = useRouter()
 const route = useRoute()
 
 const navItems = [
-  { label: '座位预约', path: '/seatbooking', icon: House },
-  { label: '我的预约', path: '/mybookings', icon: CalendarDays },
+  { label: '首页',     path: '/userhome', icon: House},
+  { label: '座位预约', path: '/seatbooking', icon: Armchair },
+  { label: '我的预约', path: '/mybookings', icon: CalendarCheck },
   { label: '我的投诉', path: '/mycomplaints', icon: Megaphone },
   { label: '违规记录', path: '/myviolations', icon: ShieldAlert },
   { label: "用户中心", path: "/usercenter", icon: UserRound },
 
-  // 弃用
-  // { label: '我的预约', path: '/calendar', icon: CalendarDays },
 ]
 
 function goTo(path: string) {
