@@ -176,9 +176,12 @@ function buildTargetIso(): string | null {
   if (!calendarValue.value) return null;
   const ymd = getYMD(calendarValue.value);
   if (!ymd) return null;
+
   const hourNum = form.hour ? Number(form.hour) : 0;
   const minuteNum = form.minute ? Number(form.minute) : 0;
-  return new Date(Date.UTC(ymd.year, ymd.month - 1, ymd.day, hourNum, minuteNum, 0, 0)).toISOString();
+
+  const localDate = new Date(ymd.year, ymd.month - 1, ymd.day, hourNum, minuteNum, 0, 0);
+  return dayjs(localDate).toISOString();
 }
 
 function fillTargetFromComplaint(target?: string | null) {
@@ -189,24 +192,23 @@ function fillTargetFromComplaint(target?: string | null) {
     return;
   }
 
-  const dt = new Date(target);
-  if (Number.isNaN(dt.getTime())) {
+  const d = dayjs(target);
+  if (!d.isValid()) {
     calendarValue.value = undefined;
     form.hour = "";
     form.minute = "";
     return;
   }
 
-  const y = dt.getUTCFullYear();
-  const m = dt.getUTCMonth() + 1;
-  const d = dt.getUTCDate();
+  const y = d.year();
+  const m = d.month() + 1;
+  const day = d.date();
   const mm = String(m).padStart(2, "0");
-  const dd = String(d).padStart(2, "0");
+  const dd = String(day).padStart(2, "0");
 
-  // reka-ui 的 DateValue 与 @internationalized/date 的 CalendarDate 类型不完全兼容，显式断言以消除类型差异
   calendarValue.value = parseDate(`${y}-${mm}-${dd}`) as unknown as CalendarModelValue;
-  form.hour = String(dt.getUTCHours()).padStart(2, "0");
-  form.minute = String(dt.getUTCMinutes()).padStart(2, "0");
+  form.hour = d.format("HH");
+  form.minute = d.format("mm");
 }
 
 function onDateChange(val: CalendarModelValue) {
@@ -221,7 +223,8 @@ function getYMD(v: CalendarModelValue | undefined): { year: number; month: numbe
     return { year: anyV.year, month: anyV.month, day: anyV.day };
   }
   if (anyV instanceof Date) {
-    return { year: anyV.getUTCFullYear(), month: anyV.getUTCMonth() + 1, day: anyV.getUTCDate() };
+    const d = dayjs(anyV);
+    return { year: d.year(), month: d.month() + 1, day: d.date() };
   }
   return null;
 }
