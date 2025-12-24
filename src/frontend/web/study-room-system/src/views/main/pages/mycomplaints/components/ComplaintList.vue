@@ -22,12 +22,10 @@ const emit = defineEmits<{
   (e: "load-more"): void;
 }>();
 
-const filters = ["all", "已发起", "已处理", "已关闭"];
+const filters: Array<"all" | ComplaintState> = ["all", "已发起", "已处理", "已关闭"];
 
 const sortedComplaints = computed(() =>
-  [...props.complaints].sort(
-    (a, b) => dayjs(b.createTime).valueOf() - dayjs(a.createTime).valueOf()
-  )
+  [...props.complaints].sort((a, b) => dayjs(b.createTime).valueOf() - dayjs(a.createTime).valueOf())
 );
 
 function seatDisplay(c: Complaint) {
@@ -59,8 +57,7 @@ function seatDisplay(c: Complaint) {
 }
 
 function stateBadgeClass(state: ComplaintState) {
-  const base =
-    "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium border";
+  const base = "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium border";
   switch (state) {
     case "已发起":
       return base + " bg-sky-50 text-sky-700 border-sky-200";
@@ -70,6 +67,19 @@ function stateBadgeClass(state: ComplaintState) {
       return base + " bg-slate-50 text-slate-600 border-slate-200";
     default:
       return base + " bg-muted text-muted-foreground border-border";
+  }
+}
+
+function cardClass(state: ComplaintState) {
+  switch (state) {
+    case "已发起":
+      return "border-l-4 border-l-sky-400/80 border border-sky-100";
+    case "已处理":
+      return "border-l-4 border-l-emerald-500/80 border border-emerald-100";
+    case "已关闭":
+      return "border-l-4 border-l-slate-400/80 border border-slate-100";
+    default:
+      return "border";
   }
 }
 </script>
@@ -87,7 +97,7 @@ function stateBadgeClass(state: ComplaintState) {
             size="sm"
             @click="emit('update:stateFilter', item)"
           >
-            {{ item === 'all' ? '全部' : item }}
+            {{ item === "all" ? "全部" : item }}
           </Button>
         </div>
       </div>
@@ -105,12 +115,13 @@ function stateBadgeClass(state: ComplaintState) {
       </div>
       <div
         v-else
-        class="flex flex-col min-w-0 gap-y-2 max-w-full flex-nowrap overflow-y-auto h-full rounded-md"
+        class="flex flex-col min-w-0 gap-y-2 max-w-full flex-nowrap overflow-y-auto flex-1 rounded-md"
       >
         <div
           v-for="c in sortedComplaints"
           :key="c.id"
-          class="border rounded-lg p-3 bg-background cursor-pointer hover:bg-accent/60 transition-colors"
+          class="rounded-lg p-3 bg-background cursor-pointer hover:bg-accent/60 transition-colors"
+          :class="cardClass(c.state)"
           @click="emit('select', c)"
         >
           <div class="flex items-start gap-2">
@@ -119,7 +130,7 @@ function stateBadgeClass(state: ComplaintState) {
             <span :class="stateBadgeClass(c.state)">{{ localizeComplaintState(c.state) }}</span>
           </div>
           <div class="mt-1 text-sm text-muted-foreground">
-            标题：{{ c.type || '无' }}
+            标题：{{ c.type || "无" }}
           </div>
           <div class="mt-2 text-xs text-muted-foreground flex flex-wrap gap-3">
             <span>创建：{{ dayjs(c.createTime).format("YYYY/MM/DD HH:mm") }}</span>
@@ -134,19 +145,11 @@ function stateBadgeClass(state: ComplaintState) {
       </div>
 
       <div v-if="hasMore" class="mt-3 flex justify-center">
-        <Button
-          variant="outline"
-          size="sm"
-          :disabled="loadingMore"
-          @click="emit('load-more')"
-        >
+        <Button variant="outline" size="sm" :disabled="loadingMore" @click="emit('load-more')">
           {{ loadingMore ? "加载中..." : "加载更多" }}
         </Button>
       </div>
-      <div
-        v-else
-        class="mt-1 flex justify-center text-sm text-muted-foreground"
-      >
+      <div v-else class="mt-1 flex justify-center text-sm text-muted-foreground">
         没有更多了
       </div>
     </div>

@@ -91,10 +91,13 @@ async function loadBookings(reset = false) {
   }
 
   try {
-    const res: any = await bookingRequest.getMyBookings(page.value, pageSize);
+    const res: any = await bookingRequest.getMyBookings({
+      page: page.value,
+      pageSize,
+    });
 
-    const list = Array.isArray(res) ? res : res?.items ?? [];
-    const total = Array.isArray(res) ? list.length : res?.total ?? list.length;
+    const list = Array.isArray(res) ? res : res?.items ?? res?.Items ?? [];
+    const total = Array.isArray(res) ? list.length : res?.total ?? res?.Total ?? list.length;
 
     // 少于 pageSize，说明没有更多了
     if (list.length < pageSize || page.value * pageSize >= total) {
@@ -195,7 +198,17 @@ async function handleCancel(b: Booking) {
       return;
     }
 
-    toast.error(extractErrMessage(err, "取消预约失败，请稍后重试"));
+    const msg = extractErrMessage(err, "取消预约失败，请稍后重试");
+    if (
+      typeof msg === "string" &&
+      (msg.includes("强制取消预约将会记录为违规") ||
+        msg.includes("距离预约起始时间小于3小时"))
+    ) {
+      pendingForceCancel.value = b;
+      forceCancelOpen.value = true;
+      return;
+    }
+    toast.error(msg);
   }
 }
 
@@ -208,7 +221,7 @@ async function confirmForceCancel() {
 
   try {
     const res = await bookingRequest.cancelBooking(b.id, true);
-    toast.success(res?.message || "已强制取消并记录违规");
+    toast.warning(res?.message || "已强制取消并记录违规");
     forceCancelOpen.value = false;
     detailOpen.value = false;
     await loadBookings(true);

@@ -85,7 +85,7 @@ async function loadSeatsForRoom(roomId: string) {
   }
 }
 
-// 选中房间变化时，重置座位
+// 房间切换时重置座位
 watch(
   () => form.roomId,
   () => {
@@ -126,16 +126,6 @@ watch(
   },
   { immediate: true }
 );
-
-function toDatetimeLocal(str?: string | null) {
-  if (!str) return "";
-  const d = new Date(str);
-  if (isNaN(d.getTime())) return "";
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(
-    d.getMinutes()
-  )}`;
-}
 
 function reset() {
   form.roomId = roomOptions.value[0]?.id ?? "";
@@ -203,11 +193,7 @@ function fillTargetFromComplaint(target?: string | null) {
             <SelectValue placeholder="选择房间" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem
-              v-for="r in roomOptions"
-              :key="r.id"
-              :value="r.id"
-            >
+            <SelectItem v-for="r in roomOptions" :key="r.id" :value="r.id">
               {{ r.name }}
             </SelectItem>
           </SelectContent>
@@ -221,11 +207,7 @@ function fillTargetFromComplaint(target?: string | null) {
             <SelectValue :placeholder="seatLoading ? '加载中...' : seatOptions.length ? '选择座位' : '该房间暂无座位'" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem
-              v-for="s in seatOptions"
-              :key="s.id"
-              :value="s.id"
-            >
+            <SelectItem v-for="s in seatOptions" :key="s.id" :value="s.id">
               {{ s.label }}
             </SelectItem>
           </SelectContent>
@@ -242,10 +224,7 @@ function fillTargetFromComplaint(target?: string | null) {
 
     <div class="space-y-2">
       <div class="text-sm text-muted-foreground">投诉标题（必填）</div>
-      <Input
-        v-model="form.type"
-        placeholder="如：座位被占用 / 环境嘈杂"
-      />
+      <Input v-model="form.type" placeholder="如：座位被占用 / 环境嘈杂" />
     </div>
 
     <div class="space-y-2">
@@ -253,27 +232,24 @@ function fillTargetFromComplaint(target?: string | null) {
       <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-2 items-center">
         <Popover>
           <PopoverTrigger as-child>
-            <Button
-              variant="outline"
-              class="w-full justify-start text-left font-normal"
-            >
+            <Button variant="outline" class="w-full justify-start text-left font-normal">
               <CalendarIcon class="mr-2 h-4 w-4" />
               <span>
-                {{ form.date ? dayjs(form.date).format('YYYY-MM-DD') : '选择日期' }}
+                {{ form.date ? dayjs(form.date).format("YYYY-MM-DD") : "选择日期" }}
               </span>
             </Button>
           </PopoverTrigger>
           <PopoverContent class="p-0">
-            <Calendar v-model="form.date" />
+            <Calendar  />
           </PopoverContent>
         </Popover>
         <Select v-model="form.hour">
           <SelectTrigger class="w-full sm:w-20">
-            <SelectValue placeholder="时" />
+            <SelectValue placeholder="小时" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem v-for="h in 24" :key="h" :value="String(h - 1).padStart(2, '0')">
-              {{ String(h - 1).padStart(2, '0') }}
+              {{ String(h - 1).padStart(2, "0") }}
             </SelectItem>
           </SelectContent>
         </Select>
@@ -283,10 +259,12 @@ function fillTargetFromComplaint(target?: string | null) {
           min="0"
           max="59"
           class="w-full sm:w-20"
-          placeholder="分"
+          placeholder="分钟"
         />
       </div>
-      <div class="text-xs text-muted-foreground">用于说明问题发生的时间点，可只选日期或精确到分钟。</div>
+      <div class="text-xs text-muted-foreground">
+        用于说明问题发生的时间点，可只选日期或精确到分钟。
+      </div>
     </div>
 
     <div class="space-y-2">

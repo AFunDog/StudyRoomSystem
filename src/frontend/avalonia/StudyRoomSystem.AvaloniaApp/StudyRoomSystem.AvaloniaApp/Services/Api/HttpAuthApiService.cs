@@ -9,6 +9,7 @@ using Serilog;
 using ShadUI;
 using StudyRoomSystem.AvaloniaApp.Contacts;
 using StudyRoomSystem.Core.Structs.Api;
+using StudyRoomSystem.Core.Structs.Api.V1;
 using Zeng.CoreLibrary.Toolkit.Logging;
 
 namespace StudyRoomSystem.AvaloniaApp.Services.Api;
