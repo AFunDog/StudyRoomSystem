@@ -96,7 +96,7 @@ internal sealed class BookingService(AppDbContext appDbContext, IUserService use
         );
         if (has)
             throw new ConflictException("座位在时间范围内已被用户预约");
-        
+
         // 检查用户最长预约时间
         var user = await UserService.GetUserById(booking.UserId);
         if (user.GetBookingLimit() < booking.EndTime - booking.StartTime)
@@ -186,6 +186,11 @@ internal sealed class BookingService(AppDbContext appDbContext, IUserService use
 
         booking.State = BookingStateEnum.已签退;
         booking.CheckOutTime = DateTime.UtcNow;
+
+        await using var transaction = await AppDbContext.Database.BeginTransactionAsync();
+
+        // 完成一次预约添加积分
+        await UserService.UpdateUser(user with { Credits = Math.Min(user.Credits + 5, 100) });
 
         var track = AppDbContext.Bookings.Update(booking);
         var res = await AppDbContext.SaveChangesAsync();

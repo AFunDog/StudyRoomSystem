@@ -149,7 +149,7 @@ public class ComplaintController(
     }
 
     [HttpDelete]
-    [Authorize(AuthorizationHelper.Policy.Admin)]
+    [Authorize]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [EndpointSummary("删除指定投诉")]
@@ -160,7 +160,7 @@ public class ComplaintController(
         //     return NotFound();
         // AppDbContext.Complaints.Remove(complaint);
         // await AppDbContext.SaveChangesAsync();
-        await ComplaintService.Delete(id);
+        await ComplaintService.Delete(id,this.GetLoginUserId());
         return Ok();
     }
 }

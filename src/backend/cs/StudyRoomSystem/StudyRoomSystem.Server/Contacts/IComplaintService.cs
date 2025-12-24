@@ -21,5 +21,5 @@ public interface IComplaintService
         int score);
 
     Task<Complaint> Close(Guid complaintId, Guid handleUserId, string handleContent);
-    Task Delete(Guid id);
+    Task Delete(Guid complaintId,Guid userId);
 }

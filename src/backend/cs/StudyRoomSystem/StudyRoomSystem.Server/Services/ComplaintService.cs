@@ -147,11 +147,16 @@ internal sealed class ComplaintService(
         return await Update(complaint);
     }
 
-    public async Task Delete(Guid id)
+    public async Task Delete(Guid complaintId,Guid userId)
     {
-        var complaint = await AppDbContext.Complaints.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id);
+        var user = await UserService.GetUserById(userId);
+        var complaint = await AppDbContext.Complaints.AsNoTracking().SingleOrDefaultAsync(x => x.Id == complaintId);
         if (complaint is null)
             throw new NotFoundException("投诉不存在");
+        
+        if (!(user.Role is UserRoleEnum.Admin || user.Id == complaint.SendUserId))
+            throw new ForbidException("权限不足");
+        
         AppDbContext.Complaints.Remove(complaint);
         var res = await AppDbContext.SaveChangesAsync();
         if (res == 0)
