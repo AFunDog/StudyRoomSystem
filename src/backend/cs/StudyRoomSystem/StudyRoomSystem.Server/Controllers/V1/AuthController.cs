@@ -74,12 +74,14 @@ public class AuthController(
 
         var key = Encoding.UTF8.GetBytes(Configuration["Jwt:Key"]!);
         var cred = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256);
-        var minutes = double.TryParse(Configuration["Jwt:ExpireMinutes"], out var mins) ? mins : 7 * 24 * 60;
+        var expires = request.Long
+            ? TimeSpan.FromHours(double.TryParse(Configuration["Jwt:ExpireHours"], out var hours) ? hours : 3)
+            : TimeSpan.FromDays(double.TryParse(Configuration["Jwt:LongExpireDays"], out var days) ? days : 3);
         var token = new JwtSecurityToken(
             issuer: Configuration["Jwt:Issuer"],
             audience: Configuration["Jwt:Audience"],
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(minutes),
+            expires: DateTime.UtcNow.Add(expires),
             signingCredentials: cred
         );
         var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
@@ -87,7 +89,7 @@ public class AuthController(
         Response.Cookies.Append(
             AuthorizationHelper.CookieKey,
             tokenString,
-            new CookieOptions() { MaxAge = TimeSpan.FromMinutes(minutes), IsEssential = true }
+            new CookieOptions() { MaxAge = expires, IsEssential = true }
         );
         Log.Logger.Trace().Information("用户登录 {Id}", user);
         return Ok(new LoginResponseOk { Expiration = token.ValidTo, User = user });

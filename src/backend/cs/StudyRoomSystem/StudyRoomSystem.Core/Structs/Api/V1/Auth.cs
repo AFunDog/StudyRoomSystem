@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using StudyRoomSystem.Core.Structs.Entity;
 
 namespace StudyRoomSystem.Core.Structs.Api.V1;
@@ -14,6 +15,9 @@ public class LoginRequest
     [MinLength(8,ErrorMessage = "密码至少8位")]
     [MaxLength(32,ErrorMessage = "密码不能超过32位")]
     public required string Password { get; set; }
+    
+    [Description("是否需要长期登录")]
+    public bool Long { get; set; }
 }
 
 public sealed class LoginResponseOk 
