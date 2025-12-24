@@ -190,7 +190,7 @@ internal sealed class BookingService(AppDbContext appDbContext, IUserService use
         await using var transaction = await AppDbContext.Database.BeginTransactionAsync();
 
         // 完成一次预约添加积分
-        await UserService.UpdateUser(user with { Credits = Math.Min(user.Credits + 5, 100) });
+        await UserService.UpdateUser(user with { Credits = user.Credits + 5 });
 
         var track = AppDbContext.Bookings.Update(booking);
         var res = await AppDbContext.SaveChangesAsync();
