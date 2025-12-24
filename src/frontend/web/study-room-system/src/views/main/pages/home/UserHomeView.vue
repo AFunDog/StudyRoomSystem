@@ -250,7 +250,18 @@ const creditText = computed(() => {
     case "FORBIDDEN":
       return "不可使用";
   }
+  return "不可使用";
 });
+
+// ---------- 状态染色 ----------
+function statusBadgeClass(b: Booking) {
+  const t = statusText(b);
+  if (t === "已签到") return "bg-emerald-50 text-emerald-700 border border-emerald-200";
+  if (t === "进行中") return "bg-orange-50 text-orange-700 border border-orange-200";
+  if (t === "即将开始") return "bg-amber-50 text-amber-700 border border-amber-200";
+  return "bg-slate-100 text-slate-600 border border-slate-200";
+}
+
 
 const creditHint = computed(() => {
   switch (creditLevel.value) {
@@ -261,18 +272,21 @@ const creditHint = computed(() => {
     case "FORBIDDEN":
       return "40分以下：不可进行预约";
   }
+  return "40分以下：不可进行预约";
 });
 
 const creditBoxClass = computed(() => {
   switch (creditLevel.value) {
     case "NORMAL":
-      return "bg-emerald-50 border-emerald-200 text-emerald-800";
+      return "bg-emerald-50 border-emerald-200 text-emerald-800 ring-1 ring-emerald-100 shadow-sm";
     case "LIMITED":
-      return "bg-amber-50 border-amber-200 text-amber-800";
+      return "bg-amber-50 border-amber-200 text-amber-800 ring-1 ring-amber-100 shadow-sm";
     case "FORBIDDEN":
-      return "bg-red-50 border-red-200 text-red-800";
+      return "bg-red-50 border-red-200 text-red-800 ring-1 ring-red-100 shadow-sm";
   }
+  return "bg-red-50 border-red-200 text-red-800 ring-1 ring-red-100 shadow-sm";
 });
+
 
 // ---------- 快捷入口 ----------
 const quickLinks = computed(() => [
@@ -362,6 +376,7 @@ onUnmounted(() => {
           :seat-row-col-text="seatRowColText"
           :seat-no-text="seatNoText"
           :status-text="statusText"
+          :status-badge-class="statusBadgeClass"
           @goBookings="go('/mybookings')"
           @goSeatBooking="go('/seatbooking')"
           @checkIn="doCheckIn"

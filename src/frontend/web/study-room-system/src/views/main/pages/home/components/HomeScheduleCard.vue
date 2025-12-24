@@ -12,6 +12,7 @@ const props = defineProps<{
   seatRowColText: (b: Booking) => string;
   seatNoText: (b: Booking) => number | null;
   statusText: (b: Booking) => string;
+  statusBadgeClass: (b: Booking) => string;
 }>();
 
 const emit = defineEmits<{
@@ -30,10 +31,12 @@ const emit = defineEmits<{
 
         <span
           v-if="activeBooking"
-          class="text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-600"
+          class="text-xs px-2 py-1 rounded-full"
+          :class="statusBadgeClass(activeBooking)"
         >
           {{ statusText(activeBooking) }}
         </span>
+
       </div>
 
       <div v-if="!activeBooking" class="mt-3 text-sm text-slate-600 space-y-2">
