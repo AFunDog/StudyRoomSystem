@@ -194,4 +194,12 @@ internal sealed class BookingService(AppDbContext appDbContext, IUserService use
 
         return track.Entity;
     }
+
+    public async Task Delete(Guid bookingId)
+    {
+        var booking = await GetById(bookingId);
+        AppDbContext.Bookings.Remove(booking);
+        await AppDbContext.SaveChangesAsync();
+        return;
+    }
 }
