@@ -14,6 +14,11 @@ public interface IUserService
     Task<User> GetUserById(Guid userId);
 
     /// <summary>
+    /// 根据用户名获取用户实体。
+    /// </summary>
+    Task<User> GetUserByUserName(string userName);
+
+    /// <summary>
     /// 分页获取用户列表。
     /// </summary>
     Task<ApiPageResult<User>> GetUsers(int page, int pageSize);
@@ -28,8 +33,15 @@ public interface IUserService
     /// </summary>
     Task<User> RegisterUser(User user);
 
-
+    /// <summary>
+    /// 删除指定用户。
+    /// </summary>
     Task DeleteUser(Guid userId);
+
+    /// <summary>
+    /// 更新用户信息并返回更新后的实体。
+    /// </summary>
     Task<User> UpdateUser(User user);
-    Task<User> GetUserByUserName(string userName);
+
+
 }
