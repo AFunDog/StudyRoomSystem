@@ -45,8 +45,8 @@ internal sealed class RoomService(AppDbContext appDbContext) : IRoomService
 
     public async Task<Seat> AddSeat(Seat seat)
     {
-        Guard.Against.NegativeOrZero(seat.Row);
-        Guard.Against.NegativeOrZero(seat.Col);
+        Guard.Against.Negative(seat.Row);
+        Guard.Against.Negative(seat.Col);
 
         var room = await GetRoomById(seat.RoomId);
         if (room.HasSeat(seat.Row, seat.Col))
