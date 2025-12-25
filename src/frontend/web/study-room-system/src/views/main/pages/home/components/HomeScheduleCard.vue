@@ -55,10 +55,10 @@ const emit = defineEmits<{
 
       <div v-else class="mt-4 space-y-2">
         <div class="text-lg font-semibold text-slate-900 truncate">
-          {{ activeBooking.seat?.room?.name || "未知房间" }}
-          <span class="text-slate-400 mx-1">·</span>
+          房间 : {{ activeBooking.seat?.room?.name || "未知房间" }}
+          <span class="text-slate-400 mx-1">-</span>
           {{ seatRowColText(activeBooking) }}
-          <span v-if="seatNoText(activeBooking) != null" class="text-slate-400 mx-1">·</span>
+          <span v-if="seatNoText(activeBooking) != null" class="text-slate-400 mx-1">-</span>
           <span v-if="seatNoText(activeBooking) != null" class="text-sm text-slate-700">
             座位号 {{ seatNoText(activeBooking) }}
           </span>
@@ -74,10 +74,10 @@ const emit = defineEmits<{
           </span>
         </div>
 
-        <div class="text-sm text-slate-700 flex items-center gap-1">
+        <!-- <div class="text-sm text-slate-700 flex items-center gap-1">
           <MapPin class="w-4 h-4" />
           房间：{{ activeBooking.seat?.room?.name || "未知" }}
-        </div>
+        </div> -->
 
         <div class="flex flex-wrap gap-2 pt-3">
           <Button size="sm" variant="outline" @click="emit('goBookings')">
