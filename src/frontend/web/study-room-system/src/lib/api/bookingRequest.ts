@@ -51,6 +51,16 @@ class BookingRequest {
         }
     }
 
+    /** 删除预约（管理员强制删除） */
+    public async deleteBooking(id: string): Promise<{ message: string }> {
+        try {
+            const res = await http.delete(`/booking/delete/${id}`);
+            return res.data as { message: string };
+        } catch (err) {
+            throw this.formatError(err, "删除预约失败");
+        }
+    }
+
 
     /** 获取指定预约 */
     public async getBookingById(id: string): Promise<Booking> {

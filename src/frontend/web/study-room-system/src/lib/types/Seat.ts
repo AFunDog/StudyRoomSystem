@@ -1,16 +1,18 @@
 import type { Room } from "./Room";
+import type { Booking } from "./Booking";
 
 export interface Seat {
     id : string;
     row : number;
     col : number;
-
     room : Room | null;
+    bookings?: Booking[];
 }
 
 export interface SeatState {
-    id: string | null;     // 可能还没保存
+    id: string | null;
     row: number;
     col: number;
-    open: boolean;         // 是否启用
+    open: boolean;     // 是否创建
+    booked: boolean;   // 是否被预约
 }

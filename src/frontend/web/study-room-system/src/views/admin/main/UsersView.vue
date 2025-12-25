@@ -4,7 +4,7 @@ import { ref, onMounted } from 'vue';
 import { userRequest } from '@/lib/api/userRequest';
 import { toast } from 'vue-sonner';
 import { Button } from '@/components/ui/button';
-import { Edit, Trash, Loader2 } from "lucide-vue-next";
+import { Edit, Trash, Loader2, Eye, Copy } from "lucide-vue-next";
 import type { User, UserEditInput } from "@/lib/types/User";
 
 // 表单相关
@@ -15,6 +15,26 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import AddUserDialog from '@/components/user/AddUserDialog.vue'
 import EditUserDialog from '@/components/user/EditUserDialog.vue'
 import AdminResetPasswordDialog from '@/components/user/AdminResetPasswordDialog.vue'
+
+// 复制函数
+function copyText(text?: string) {
+  if (!text) return;
+  navigator.clipboard.writeText(text);
+  toast.success("复制成功");
+}
+
+// 日期转换函数
+function formatDate(dateStr: string) {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  return date.toLocaleString("zh-CN", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
 
 const users = ref<User[]>([]);
 const page = ref(1);
@@ -51,6 +71,16 @@ function openAdd(role: 'user' | 'admin') {
   addRole.value = role
   showAddDialog.value = true
 }
+
+// 查看详情
+const showDetailDialog = ref(false);
+const detailUser = ref<User | null>(null);
+
+function openDetail(user: User) {
+  detailUser.value = user;
+  showDetailDialog.value = true;
+}
+
 
 // 编辑弹窗状态
 const showEditDialog = ref(false);
@@ -146,6 +176,10 @@ function openChangePassword(user: User) {
             <td class="border p-2">{{ user.email }}</td>
             <td class="border-t border-b border-l sticky right-0 bg-white z-10 p-0">
               <div class="h-full flex items-center gap-x-2 px-4 py-3">
+                <Button class="bg-green-500 hover:bg-green-500 hover:brightness-110 text-white px-2 py-1 rounded flex items-center gap-x-1"
+                        @click="openDetail(user)">
+                  <Eye class="size-4" /> 查看
+                </Button>
                 <Button 
                   class="bg-yellow-500 hover:bg-yellow-500 hover:brightness-110 text-white px-2 py-1 rounded flex items-center gap-x-1"
                   @click="handleEdit(user)">
@@ -199,6 +233,77 @@ function openChangePassword(user: User) {
       :role="addRole"
       @success="loadUsers"
     />
+
+    <!-- 查看详情弹窗 -->
+    <Dialog v-model:open="showDetailDialog">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>用户详情</DialogTitle>
+        </DialogHeader>
+        <div v-if="detailUser" class="flex flex-col gap-y-3 text-sm">
+          <!-- 头像 -->
+          <div class="flex items-center gap-2">
+            <span class="font-semibold">头像：</span>
+            <img
+              :src="detailUser.avatar"
+              alt="用户头像"
+              class="w-16 h-16 rounded-full border object-cover"
+            />
+          </div>
+          <!-- 用户 ID -->
+          <div class="flex items-center gap-2">
+            <span class="font-semibold">用户 ID：</span>
+            <span>{{ detailUser.id }}</span>
+            <Copy class="size-4 cursor-pointer" @click="copyText(detailUser.id)" />
+          </div>
+          <!-- 用户名 -->
+          <div class="flex items-center gap-2">
+            <span class="font-semibold">用户名：</span>
+            <span>{{ detailUser.userName }}</span>
+            <Copy class="size-4 cursor-pointer" @click="copyText(detailUser.userName)" />
+          </div>
+          <!-- 昵称 -->
+          <div class="flex items-center gap-2">
+            <span class="font-semibold">昵称：</span>
+            <span>{{ detailUser.displayName }}</span>
+            <Copy class="size-4 cursor-pointer" @click="copyText(detailUser.displayName)" />
+          </div>
+          <!-- 角色（不允许复制） -->
+          <div class="flex items-center gap-2">
+            <span class="font-semibold">角色：</span>
+            <span>{{ detailUser.role }}</span>
+          </div>
+          <!-- 学号/工号 -->
+          <div class="flex items-center gap-2">
+            <span class="font-semibold">学号/工号：</span>
+            <span>{{ detailUser.campusId }}</span>
+            <Copy class="size-4 cursor-pointer" @click="copyText(detailUser.campusId)" />
+          </div>
+          <!-- 手机号 -->
+          <div class="flex items-center gap-2">
+            <span class="font-semibold">手机号：</span>
+            <span>{{ detailUser.phone }}</span>
+            <Copy class="size-4 cursor-pointer" @click="copyText(detailUser.phone)" />
+          </div>
+          <!-- 邮箱 -->
+          <div class="flex items-center gap-2">
+            <span class="font-semibold">邮箱：</span>
+            <span>{{ detailUser.email }}</span>
+            <Copy class="size-4 cursor-pointer" @click="copyText(detailUser.email)" />
+          </div>
+                    <!-- 创建时间 -->
+          <div class="flex items-center gap-2">
+            <span class="font-semibold">创建时间：</span>
+            <span>{{ formatDate(detailUser.createTime) }}</span>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="secondary" @click="showDetailDialog = false">
+            关闭
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
 
     <!-- 编辑用户弹窗组件 -->
     <EditUserDialog

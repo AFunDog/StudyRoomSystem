@@ -81,7 +81,7 @@ const menus = [
         <UsersView v-else-if="currentMenu === 'users'" />
         <RoomsView v-else-if="currentMenu === 'rooms'" />
         <BookingsView v-else-if="currentMenu === 'bookings'" />
-        <!-- <ComplaintsView v-else-if="currentMenu === 'complaints'" /> -->
+        <ComplaintsView v-else-if="currentMenu === 'complaints'" />
         <ViolationsView v-else-if="currentMenu === 'violations'" /> 
         <!-- <FilesView v-else-if="currentMenu === 'files'" /> -->
 

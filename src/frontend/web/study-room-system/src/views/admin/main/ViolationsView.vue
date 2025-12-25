@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from "vue";
+import { toast } from "vue-sonner";
 import { violationRequest } from "@/lib/api/violationRequest";
 import type { Violation, ViolationCreateDto, ViolationUpdateDto } from "@/lib/types/Violation";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectGroup, SelectItem, SelectLabel } from "@/components/ui/select";
-import { Eye, Edit, Trash, ClipboardList, Armchair, Loader2 } from "lucide-vue-next";
+import { Eye, Edit, Trash, Loader2, Copy } from "lucide-vue-next";
 
 /* -----------------------------
   列表数据
@@ -20,6 +21,19 @@ const keyword = ref("");
 
 const totalPages = computed(() => Math.ceil(total.value / pageSize.value));
 
+// 日期转换函数
+function formatDate(dateStr: string) {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  return date.toLocaleString("zh-CN", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
 /* -----------------------------
   获取列表
 ------------------------------ */
@@ -28,6 +42,7 @@ async function fetchList() {
     page: page.value,
     pageSize: pageSize.value
   });
+  console.log(res); //测试违规记录返回
 
   let items = res.items ?? [];
 
@@ -65,11 +80,17 @@ function viewDetail(v: Violation) {
   isDetailDialogOpen.value = true;
 }
 
+// 复制文本函数
+function copyText(text: string) { 
+  if (!text) return; 
+  navigator.clipboard.writeText(text); 
+  toast.success("复制成功"); 
+}
+
 /* -----------------------------
-  新建 / 编辑
+  编辑违约记录
 ------------------------------ */
 const isEditDialogOpen = ref(false);
-const editMode = ref<"create" | "edit">("create");
 
 const editForm = reactive<Partial<ViolationCreateDto & ViolationUpdateDto>>({
   id: undefined,
@@ -87,20 +108,20 @@ const bookingIdString = computed({
 });
 
 
-function openCreate() {
-  editMode.value = "create";
-  Object.assign(editForm, {
-    id: undefined,
-    userId: "",
-    bookingId: null,
-    type: "超时",
-    content: ""
-  });
-  isEditDialogOpen.value = true;
+// 修改违约记录确认弹窗
+const isConfirmViolationDialogOpen = ref(false);
+// 正在保存违约修改
+const isSavingViolation = ref(false);
+// 当前正在编辑的违约记录
+const editingViolation = ref(null as Violation | null);
+
+//打开确认弹窗方法
+function openConfirmViolationDialog(violation: Violation) {
+  editingViolation.value = violation;
+  isConfirmViolationDialogOpen.value = true;
 }
 
 function openEdit(v: Violation) {
-  editMode.value = "edit";
   Object.assign(editForm, {
     id: v.id,
     userId: v.userId,
@@ -111,42 +132,90 @@ function openEdit(v: Violation) {
   isEditDialogOpen.value = true;
 }
 
+
 async function submitEdit() {
-  if (editMode.value === "create") {
-    const payload: ViolationCreateDto = {
-      userId: String(editForm.userId),
-      bookingId: editForm.bookingId ?? null,
-      type: editForm.type as any,
-      content: editForm.content ?? ""
-    };
-    await violationRequest.createViolation(payload);
-  } else {
+  // 打开确认弹窗 
+  isConfirmViolationDialogOpen.value = true;
+}
+
+//执行保存函数
+async function confirmEditViolation() {
+  isSavingViolation.value = true;
+
+  try {
     const payload: ViolationUpdateDto = {
       id: String(editForm.id),
       type: editForm.type as any,
       content: editForm.content ?? null
     };
-    await violationRequest.updateViolation(payload);
-  }
 
-  isEditDialogOpen.value = false;
-  fetchList();
+    await violationRequest.updateViolation(payload);
+
+    toast.success("保存成功");
+
+    isConfirmViolationDialogOpen.value = false;
+    isEditDialogOpen.value = false;
+    fetchList();
+
+  } catch (err: any) {
+    toast.error(err.message || "保存失败");
+  } finally {
+    isSavingViolation.value = false;
+  }
 }
+
+
 
 /* -----------------------------
   删除
 ------------------------------ */
-async function confirmDelete(id: string) {
-  if (!confirm("确认删除该违规记录吗？")) return;
-  await violationRequest.deleteViolation(id);
-  fetchList();
+// 删除违约记录弹窗
+const isDeleteViolationDialogOpen = ref(false);
+// 正在删除的违约记录 ID
+const deletingViolationId = ref<string | null>(null);
+// 准备删除的违约记录 ID
+const pendingDeleteViolationId = ref<string | null>(null);
+
+// 打开删除弹窗方法
+function openDeleteViolationDialog(id: string) {
+  pendingDeleteViolationId.value = id;
+  isDeleteViolationDialogOpen.value = true;
 }
+
+// 确认删除方法
+async function confirmDeleteViolation() {
+  if (!pendingDeleteViolationId.value) return;
+
+  deletingViolationId.value = pendingDeleteViolationId.value;
+
+  try {
+    await violationRequest.deleteViolation(pendingDeleteViolationId.value);
+
+    toast.success("删除成功");
+
+    // 关闭弹窗
+    isDeleteViolationDialogOpen.value = false;
+
+    // 清空状态
+    pendingDeleteViolationId.value = null;
+    deletingViolationId.value = null;
+
+    // 刷新列表
+    fetchList();
+
+  } catch (err: any) {
+    toast.error(err.message || "删除失败");
+  } finally {
+    deletingViolationId.value = null;
+  }
+}
+
 </script>
 
 <template>
   <div>
     <!-- 页面标题 -->
-    <h2 class="text-xl font-bold mb-4">违规记录管理</h2>
+    <h2 class="text-xl font-bold mb-4">违规记录</h2>
 
     <!-- 顶部工具栏 -->
     <div class="flex items-center justify-between mb-4">
@@ -155,34 +224,27 @@ async function confirmDelete(id: string) {
         placeholder="搜索用户 / 内容"
         class="w-64"
       />
-
-      <Button class="bg-primary text-white hover:brightness-110"
-              @click="openCreate">
-        添加违规记录
-      </Button>
     </div>
 
     <div class="overflow-x-auto overflow-y-auto max-h-[75vh] border border-gray-300 rounded-lg relative">
       <!-- 表格 -->
       <table class="w-full  border-separate border-spacing-0">
-        <thead>
+        <thead class="sticky top-0 z-50 bg-gray-100">
           <tr class="bg-gray-100">
-            <th class="border p-2">用户</th>
+            <th class="border p-2">用户名</th>
             <th class="border p-2">类型</th>
             <th class="border p-2">内容</th>
-            <th class="border p-2">时间</th>
+            <th class="border p-2">违规时间</th>
             <th class="border p-2">操作</th>
           </tr>
         </thead>
 
         <tbody>
           <tr v-for="v in violations" :key="v.id">
-            <td class="border p-2">
-              {{ v.user?.displayName ?? v.user?.userName ?? v.userId }}
-            </td>
+            <td class="border p-2">{{ v.user?.userName}}</td>
             <td class="border p-2">{{ v.type }}</td>
             <td class="border p-2">{{ v.content }}</td>
-            <td class="border p-2">{{ v.createTime }}</td>
+            <td class="border p-2">{{ formatDate(v.createTime) }}</td>
 
             <td class="border p-2 flex gap-x-2">
               <Button class="bg-green-500 hover:bg-green-500 hover:brightness-110 text-white px-2 py-1 rounded flex items-center gap-x-1"
@@ -194,7 +256,7 @@ async function confirmDelete(id: string) {
                 <Edit class="size-4" /> 编辑
               </Button>
               <Button class="bg-red-600 hover:bg-red-600 hover:brightness-110 text-white px-2 py-1 rounded flex items-center gap-x-1"
-                      @click="confirmDelete(v.id)">
+                      @click="openDeleteViolationDialog(v.id)">
                 <Trash class="size-4" />删除
               </Button>
             </td>
@@ -227,7 +289,7 @@ async function confirmDelete(id: string) {
     </div>
   </div>
 
-  <!-- 查看详情弹窗（只需要一份） -->
+  <!-- 查看详情弹窗 -->
   <Dialog v-model:open="isDetailDialogOpen">
     <DialogContent>
       <DialogHeader>
@@ -235,56 +297,94 @@ async function confirmDelete(id: string) {
       </DialogHeader>
 
       <div v-if="currentViolation" class="flex flex-col gap-y-3 text-sm">
-        <div>
-          <span class="font-semibold">用户：</span>
-          {{ currentViolation.user?.displayName ?? currentViolation.user?.userName ?? currentViolation.userId }}
+      
+        <div class="flex items-center gap-2">
+          <span class="font-semibold">用户名：</span>
+          <span>{{ currentViolation.user?.userName }}</span>
+          <Copy class="size-4 cursor-pointer text-gray-500 hover:text-black"
+                @click="copyText(currentViolation.user?.userName)" />
         </div>
-
+      
+        <div class="flex items-center gap-2">
+          <span class="font-semibold">用户ID：</span>
+          <span>{{ currentViolation.user?.id }}</span>
+          <Copy class="size-4 cursor-pointer text-gray-500 hover:text-black"
+                @click="copyText(currentViolation.user?.id)" />
+        </div>
+      
         <div>
           <span class="font-semibold">类型：</span>
           {{ currentViolation.type }}
         </div>
-
+      
         <div>
           <span class="font-semibold">内容：</span>
           {{ currentViolation.content }}
         </div>
-
+      
         <div>
-          <span class="font-semibold">时间：</span>
-          {{ currentViolation.createTime }}
+          <span class="font-semibold">违规时间：</span>
+          {{ formatDate(currentViolation.createTime) }}
         </div>
-
-        <div>
+      
+        <div class="flex items-center gap-2">
+          <span class="font-semibold">房间：</span>
+          <span>{{ currentViolation.booking?.seat?.room?.name }}</span>
+        </div>
+      
+        <div class="flex items-center gap-2">
+          <span class="font-semibold">房间ID：</span>
+          <span>{{ currentViolation.booking?.seat?.room?.id }}</span>
+          <Copy class="size-4 cursor-pointer text-gray-500 hover:text-black"
+                @click="copyText(currentViolation.booking?.seat?.room?.id ?? '')" />
+        </div>
+      
+        <div class="flex items-center gap-2">
+          <span class="font-semibold">座位：</span>
+          <span>{{ currentViolation.booking?.seat?.row }}-{{ currentViolation.booking?.seat?.col }}</span>
+        </div>
+      
+        <div class="flex items-center gap-2">
+          <span class="font-semibold">座位ID：</span>
+          <span>{{ currentViolation.booking?.seatId }}</span>
+          <Copy class="size-4 cursor-pointer text-gray-500 hover:text-black"
+                @click="copyText(currentViolation.booking?.seatId ?? '')" />
+        </div>
+      
+        <div class="flex items-center gap-2">
           <span class="font-semibold">关联预约：</span>
           <span v-if="currentViolation.booking">
-            {{ currentViolation.booking.id }}（{{ currentViolation.booking.startTime }} ~ {{ currentViolation.booking.endTime }}）
+            {{ currentViolation.booking.id }}
           </span>
-          <span v-else>无</span>
+          <Copy v-if="currentViolation.booking"
+                class="size-4 cursor-pointer text-gray-500 hover:text-black"
+                @click="copyText(currentViolation.booking.id)" />
         </div>
+      
       </div>
 
+
       <DialogFooter>
-        <Button variant="secondary" @click="isDetailDialogOpen = false">关闭</Button>
+        <Button class="bg-primary hover:bg-primary hover:brightness-110 text-white flex items-center gap-x-2" variant="secondary" @click="isDetailDialogOpen = false">关闭</Button>
       </DialogFooter>
     </DialogContent>
   </Dialog>
 
-  <!-- 新建 / 编辑违规记录弹窗（只需要一份） -->
+  <!-- 编辑违规记录弹窗 -->
   <Dialog v-model:open="isEditDialogOpen">
     <DialogContent>
       <DialogHeader>
-        <DialogTitle>
-          {{ editMode === 'create' ? '添加违规记录' : '编辑违规记录' }}
-        </DialogTitle>
+        <DialogTitle>编辑违规记录</DialogTitle>
       </DialogHeader>
 
       <div class="flex flex-col gap-y-3">
+        <!-- 用户 ID（只读） -->
         <div>
           <label class="text-sm font-medium">用户 ID</label>
-          <Input v-model="editForm.userId" placeholder="请输入用户 ID" />
+          <Input v-model="editForm.userId" disabled />
         </div>
 
+        <!-- 违规类型 -->
         <div>
           <label class="text-sm font-medium">违规类型</label>
           <Select v-model="editForm.type">
@@ -301,11 +401,13 @@ async function confirmDelete(id: string) {
           </Select>
         </div>
 
+        <!-- 关联预约 ID（只读） -->
         <div>
-          <label class="text-sm font-medium">关联预约 ID（可选）</label>
-          <Input v-model="bookingIdString" placeholder="可为空" />
+          <label class="text-sm font-medium">关联预约 ID</label>
+          <Input v-model="bookingIdString" disabled />
         </div>
 
+        <!-- 内容 -->
         <div>
           <label class="text-sm font-medium">内容</label>
           <Input v-model="editForm.content" placeholder="违规内容描述" />
@@ -313,12 +415,72 @@ async function confirmDelete(id: string) {
       </div>
 
       <DialogFooter>
-        <Button variant="secondary" @click="isEditDialogOpen = false">取消</Button>
         <Button class="bg-primary text-white hover:brightness-110"
                 @click="submitEdit">
-          {{ editMode === 'create' ? '提交' : '保存修改' }}
+          保存
         </Button>
       </DialogFooter>
     </DialogContent>
   </Dialog>
+
+  <!-- 确认修改弹窗 -->
+  <Dialog v-model:open="isConfirmViolationDialogOpen">
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>确认保存</DialogTitle>
+      </DialogHeader>
+
+      <p class="text-sm text-muted-foreground">确定要保存修改吗？</p>
+
+      <DialogFooter>
+        <Button class="hover:brightness-90" variant="secondary" @click="isConfirmViolationDialogOpen = false">
+          取消
+        </Button>
+        <Button
+          class="bg-primary hover:brightness-90 text-white flex items-center gap-x-2"
+          :disabled="isSavingViolation"
+          @click="confirmEditViolation"
+        >
+          <Loader2 v-if="isSavingViolation" class="size-4 animate-spin" />
+          {{ isSavingViolation ? "保存中..." : "确定" }}
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+
+  <!-- 删除违约记录确认弹窗 -->
+  <Dialog v-model:open="isDeleteViolationDialogOpen">
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>确认删除</DialogTitle>
+      </DialogHeader>
+
+      <p class="text-sm text-muted-foreground">
+        确定要删除这条违规记录吗？此操作不可恢复。
+      </p>
+
+      <DialogFooter>
+        <Button
+          class="hover:brightness-90"
+          variant="secondary"
+          @click="isDeleteViolationDialogOpen = false"
+        >
+          取消
+        </Button>
+
+        <Button
+          class="bg-red-600 hover:bg-red-600 hover:brightness-90 text-white flex items-center gap-x-2"
+          :disabled="deletingViolationId === pendingDeleteViolationId"
+          @click="confirmDeleteViolation"
+        >
+          <Loader2
+            v-if="deletingViolationId === pendingDeleteViolationId"
+            class="size-4 animate-spin"
+          />
+          {{ deletingViolationId === pendingDeleteViolationId ? "删除中..." : "确认删除" }}
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+
 </template>

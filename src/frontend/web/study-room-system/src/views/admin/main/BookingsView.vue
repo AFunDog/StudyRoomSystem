@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { debounce } from "lodash";
 import { toast } from "vue-sonner";
-import { CalendarIcon } from "lucide-vue-next";
+import { CalendarIcon, Loader2, Copy } from "lucide-vue-next";
 import {
   Select,
   SelectTrigger,
@@ -10,6 +10,10 @@ import {
   SelectContent,
   SelectItem
 } from "@/components/ui/select";
+
+// 表单相关
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+
 import { Button } from "@/components/ui/button";
 
 import * as echarts from "echarts";
@@ -21,6 +25,13 @@ import { roomRequest } from "@/lib/api/roomRequest";
 import type { Booking } from "@/lib/types/Booking";
 import type { Room } from "@/lib/types/Room";
 import type { Seat } from "@/lib/types/Seat";
+
+// 复制文本函数
+function copyText(text: string) { 
+  if (!text) return; 
+  navigator.clipboard.writeText(text); 
+  toast.success("复制成功"); 
+}
 
 /* -------------------------------------------------------
 类型声明
@@ -67,6 +78,28 @@ const makeSlotDate = (dateStr: string, timeStr: string): Date => {
   return new Date(`${dateStr}T${time}`);
 };
 
+// 日期转换函数
+function formatDate(dateStr: string) {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  return date.toLocaleString("zh-CN", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
+function formatTimeOnly(dateStr: string) {
+  const d = new Date(dateStr);
+  return d.toLocaleTimeString("zh-CN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  });
+}
+
 /* -------------------------------------------------------
 页面状态
 ------------------------------------------------------- */
@@ -84,7 +117,7 @@ const selectedCell = ref<HeatmapCell | null>(null);
 const selectedBooking = ref<Booking | null>(null);
 
 const hoverCell = ref<HeatmapCell | null>(null);
-const hoverTimer = ref<number | null>(null);
+let hoverTimer: number | null = null;
 
 const chartRef = ref<HTMLDivElement | null>(null);
 
@@ -110,25 +143,36 @@ function generateTimeSlots(
   const result: TimeSlot[] = [];
   let slotCount = 0;
 
-  while (h < endH || (h === endH && m < endM)) {
+  while (true) {
     const start = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 
-    m += 30;
-    if (m >= 60) {
-      m = 0;
-      h++;
+    // 计算 end
+    let nextH = h;
+    let nextM = m + 30;
+    if (nextM >= 60) {
+      nextM = 0;
+      nextH++;
     }
 
-    const end = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+    // 如果 end >= closeTime，则停止，不 push
+    if (nextH > endH || (nextH === endH && nextM > endM)) break;
+
+    const end = `${String(nextH).padStart(2, "0")}:${String(nextM).padStart(2, "0")}`;
+
     const showLabel = slotCount % (labelInterval * 2) === 0;
     const label = showLabel ? `${start}-${end}` : "";
 
     result.push({ start, end, label });
     slotCount++;
+
+    // 更新 h,m
+    h = nextH;
+    m = nextM;
   }
 
   return result;
 }
+
 
 /* -------------------------------------------------------
 加载数据
@@ -144,10 +188,20 @@ async function loadAll(): Promise<void> {
     if (!room) return;
 
     timeSlots.value = generateTimeSlots(room.openTime, room.closeTime, 1);
+    console.log("打印时间段",timeSlots.value);
+    console.log("数量:", timeSlots.value.length);
+
 
     // 获取房间详细信息（含座位）
     const roomDetail = await roomRequest.getRoom(selectedRoomId.value);
     seats.value = roomDetail.data.seats ?? [];
+
+    // 座位排序
+    seats.value.sort((a, b) => {
+      if (a.row !== b.row) return a.row - b.row;
+      return a.col - b.col;
+    });
+
     // console.log("房间 seats:", seats.value);
 
     // 构造筛选参数
@@ -266,7 +320,7 @@ function buildHeatmap() {
 
       // 只遍历当前座位的预约（极大提升性能）
       for (const b of seatBookings) {
-        if (b.start < slotEnd && b.end >= slotStart) {
+        if (slotStart >= b.start && slotStart < b.end) {
           matched = b.raw;
           break;
         }
@@ -312,38 +366,97 @@ function buildHeatmap() {
 /* -------------------------------------------------------
 热力图辅助函数
 ------------------------------------------------------- */
-function getCell(seatId: string, slotIndex: number): HeatmapCell | null {
-  const row = heatmap.value.find(r => r.seat.id === seatId);
-  return row?.cells[slotIndex] ?? null;
-}
-
+// 查找是否有预约覆盖当前半小时格子
 function getCellState(seatId: string, slotIndex: number): CellState {
-  return getCell(seatId, slotIndex)?.state ?? "空闲";
-}
+  const slot = timeSlots.value[slotIndex];
+  if (!slot) return "空闲";
 
-function onCellEnter(cell: HeatmapCell): void {
-  hoverTimer.value = window.setTimeout(() => {
-    hoverCell.value = cell;
-  }, 300);
+  const slotStart = makeSlotDate(selectedDate.value, slot.start).getTime();
+  const list = bookingMap.get(seatId);
+  if (!list) return "空闲";
+
+  const booking = list.find(b => slotStart >= b.start && slotStart < b.end)?.raw;
+  return booking?.state ?? "空闲";
 }
 
 function onCellLeave(): void {
-  if (hoverTimer.value !== null) window.clearTimeout(hoverTimer.value);
+  if (hoverTimer !== null) {
+    clearTimeout(hoverTimer);
+    hoverTimer = null;
+  }
   hoverCell.value = null;
 }
 
+
+// 包含预约
 function safeCellEnter(seatId: string, slotIndex: number): void {
-  const cell = getCell(seatId, slotIndex);
-  if (cell) onCellEnter(cell);
+  // 清除旧的延迟
+  if (hoverTimer !== null) {
+    clearTimeout(hoverTimer);
+    hoverTimer = null;
+  }
+
+  // 设置新的延迟（300ms 后显示悬浮提示）
+  hoverTimer = window.setTimeout(() => {
+    const slot = timeSlots.value[slotIndex];
+    if (!slot) return;
+
+    const seat = seats.value.find(s => s.id === seatId);
+    if (!seat) return;
+
+    const slotStart = makeSlotDate(selectedDate.value, slot.start).getTime();
+    const list = bookingMap.get(seatId);
+
+    let booking: Booking | null = null;
+    if (list) {
+      booking = list.find(b => slotStart >= b.start && slotStart < b.end)?.raw || null;
+    }
+
+    hoverCell.value = {
+      seat,
+      slot,
+      slotIndex,
+      booking,
+      state: getCellState(seatId, slotIndex)
+    };
+  }, 300); // ← 悬停延迟时间（300ms）
 }
 
+
+//点击格子详情面板
 function safeCellClick(seatId: string, slotIndex: number): void {
-  const cell = getCell(seatId, slotIndex);
-  if (cell) {
-    selectedCell.value = cell;
-    selectedBooking.value = cell.booking;
+  // 测试该函数是否被触发
+  console.log("点击触发:", seatId, slotIndex);
+
+
+  const slot = timeSlots.value[slotIndex];
+  const seat = seats.value.find(s => s.id === seatId);
+  if (!slot || !seat) return;
+
+  const slotStart = makeSlotDate(selectedDate.value, slot.start).getTime();
+  const list = bookingMap.get(seatId);
+
+  let booking: Booking | null = null;
+  if (list) {
+    booking = list.find(b => slotStart >= b.start && slotStart < b.end)?.raw || null;
   }
+
+  // 测试booking是否为空
+  console.log("找到的 booking:", booking);
+
+
+  selectedCell.value = {
+    seat,
+    slot,
+    slotIndex,
+    booking,
+    state: getCellState(seatId, slotIndex)
+  };
+
+  // 单独存储预约对象，方便按钮操作（取消/签到/签退）
+  selectedBooking.value = booking;
 }
+
 
 /* -------------------------------------------------------
 利用率图表
@@ -525,16 +638,50 @@ onUnmounted(() => {
   }
 });
 
-async function cancelBooking(id: string): Promise<void> {
+// 删除弹窗状态
+const isDeleteDialogOpen = ref(false);
+// 当前准备删除的预约 ID
+const pendingDeleteBookingId = ref<string | null>(null);
+// 正在删除的预约 ID（用于 loading）
+const deletingBookingId = ref<string | null>(null);
+
+//打开删除弹窗方法
+function openDeleteDialog(bookingId: string) {
+  pendingDeleteBookingId.value = bookingId;
+  isDeleteDialogOpen.value = true;
+}
+
+//确认删除
+async function confirmDeleteBooking() {
+  if (!pendingDeleteBookingId.value) return;
+
+  deletingBookingId.value = pendingDeleteBookingId.value;
+
   try {
-    await bookingRequest.cancelBooking(id, true);
-    toast.success("取消成功");
-    await loadAll();
-  } catch (error) {
-    toast.error("取消失败");
-    console.error(error);
+    await bookingRequest.deleteBooking(pendingDeleteBookingId.value);
+    toast.success("删除成功");
+
+    // 关闭弹窗
+    isDeleteDialogOpen.value = false;
+
+    // 清空状态
+    pendingDeleteBookingId.value = null;
+    deletingBookingId.value = null;
+
+    // 刷新热力图
+    loadAll();
+
+    // 清空右侧详情面板
+    selectedCell.value = null;
+    selectedBooking.value = null;
+
+  } catch (err: any) {
+    toast.error(err.message || "删除失败");
+  } finally {
+    deletingBookingId.value = null;
   }
 }
+
 
 async function checkIn(id: string): Promise<void> {
   try {
@@ -610,95 +757,178 @@ async function checkOut(id: string): Promise<void> {
     <!-- 利用率图表 -->
     <div ref="chartRef" class="w-full h-64 border rounded-xl" />
 
-    <!-- 热力图容器 -->
-    <div class="w-full border rounded-xl bg-white p-4">
-      <div v-if="!seats.length || !timeSlots.length" class="p-8 text-center text-gray-500">
-        暂无数据，请选择房间并等待加载
-      </div>
-
-      <div v-else class="overflow-auto max-h-[45vh] p-2">
-        <!-- 顶部座位编号 -->
-        <div class="flex sticky top-0 bg-white z-10">
-          <div class="w-16"></div>
-          <div class="grid gap-0.5" :style="{ gridTemplateColumns: `repeat(${seats.length}, 20px)` }">
-            <div v-for="seat in seats" :key="seat.id" class="text-[10px] text-gray-600 origin-bottom-left rotate-45">
-              {{ seat.row }}-{{ seat.col }}
+    <div class="flex gap-4">
+      <!-- 热力图容器 -->
+      <div class="w-full border rounded-xl bg-white p-4">
+        <div v-if="!heatmap.length || !timeSlots.length" class="p-8 text-center text-gray-500">
+          暂无数据，请选择房间并等待加载
+        </div>
+      
+        <div v-else class="overflow-auto max-h-[45vh] p-2">
+        
+          <!-- 顶部座位编号 -->
+          <div class="flex sticky top-0 bg-white z-10">
+            <div class="w-16"></div>
+            <div class="grid gap-0.5" :style="{ gridTemplateColumns: `repeat(${heatmap.length}, 20px)` }">
+              <div
+                v-for="row in heatmap"
+                :key="row.seat.id"
+                class="text-[10px] text-gray-600 origin-bottom-left rotate-45"
+              >
+                {{ row.seat.row }}-{{ row.seat.col }}
+              </div>
             </div>
           </div>
-        </div>
-
-        <!-- 热力图主体 -->
-        <div class="space-y-1 mt-1">
-          <div v-for="(slot, slotIndex) in timeSlots" :key="slot.start" class="flex items-center gap-x-1">
-            <div class="w-16 text-xs text-right pr-1 text-gray-700">{{ slot.label }}</div>
-
-            <div class="grid gap-0.5" :style="{ gridTemplateColumns: `repeat(${seats.length}, 20px)` }">
-              <div
-                v-for="seat in seats"
-                :key="seat.id"
-                class="w-4 h-4 rounded-[3px] cursor-pointer relative group"
-                :class="{
-                  'bg-gray-100': getCellState(seat.id, slotIndex) === '空闲',
-                  'bg-blue-200': getCellState(seat.id, slotIndex) === '已预约',
-                  'bg-green-300': getCellState(seat.id, slotIndex) === '已签到',
-                  'bg-gray-300': getCellState(seat.id, slotIndex) === '已签退',
-                  'bg-yellow-200': getCellState(seat.id, slotIndex) === '已取消',
-                  'bg-red-300': getCellState(seat.id, slotIndex) === '已超时'
-                }"
-                @mouseenter="safeCellEnter(seat.id, slotIndex)"
-                @mouseleave="onCellLeave"
-                @click="safeCellClick(seat.id, slotIndex)"
-              >
-                <!-- 悬浮提示 -->
+        
+          <!-- 热力图主体 -->
+          <div class="space-y-1 mt-1">
+            <div
+              v-for="(slot, slotIndex) in timeSlots"
+              :key="slot.start"
+              class="flex items-center gap-x-1"
+            >
+              <!-- 左侧时间标签 -->
+              <div class="w-16 text-xs text-right pr-1 text-gray-700">
+                {{ slot.label }}
+              </div>
+            
+              <!-- 每行的格子 -->
+              <div class="grid gap-0.5" :style="{ gridTemplateColumns: `repeat(${heatmap.length}, 20px)` }">
                 <div
-                  v-if="hoverCell && hoverCell.seat.id === seat.id && hoverCell.slotIndex === slotIndex"
-                  class="absolute bg-black text-white text-xs p-1 rounded shadow-lg z-50 -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap"
+                  v-for="row in heatmap"
+                  :key="row.seat.id"
+                  class="w-4 h-4 rounded-[3px] cursor-pointer relative"
+                  :class="{
+                    'bg-gray-100': row.cells[slotIndex]?.state === '空闲',
+                    'bg-blue-200': row.cells[slotIndex]?.state === '已预约',
+                    'bg-green-300': row.cells[slotIndex]?.state === '已签到',
+                    'bg-gray-300': row.cells[slotIndex]?.state === '已签退',
+                    'bg-yellow-200': row.cells[slotIndex]?.state === '已取消',
+                    'bg-red-300': row.cells[slotIndex]?.state === '已超时'
+                  }"
+                  @mouseenter="safeCellEnter(row.seat.id, slotIndex)"
+                  @mouseleave="onCellLeave"
+                  @click="safeCellClick(row.seat.id, slotIndex)"
                 >
-                  <div>座位：{{ seat.row }}-{{ seat.col }}</div>
-                  <div>时间：{{ slot.start }}-{{ slot.end }}</div>
-
-                  <template v-if="hoverCell.booking">
-                    <div>用户：{{ hoverCell.booking.user?.userName }}</div>
-                    <div>状态：{{ hoverCell.booking.state }}</div>
-                  </template>
-
-                  <template v-else>
-                    <div>状态：空闲</div>
-                  </template>
+                  <!-- 悬浮提示 -->
+                  <div
+                    v-if="hoverCell && hoverCell.seat.id === row.seat.id && hoverCell.slotIndex === slotIndex"
+                    class="absolute bg-black text-white text-xs p-1 rounded shadow-lg z-50 -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap"
+                  >
+                    <div>座位：{{ row.seat.row }}-{{ row.seat.col }}</div>
+                
+                    <div>
+                      时间：
+                      <template v-if="hoverCell.booking">
+                        {{ formatTimeOnly(hoverCell.booking.startTime) }} - {{ formatTimeOnly(hoverCell.booking.endTime) }}
+                      </template>
+                      <template v-else>
+                        {{ slot.start }} - {{ slot.end }}
+                      </template>
+                    </div>
+                  
+                    <template v-if="hoverCell.booking">
+                      <div>用户：{{ hoverCell.booking.user?.userName }}</div>
+                      <div>状态：{{ hoverCell.booking.state }}</div>
+                    </template>
+                  
+                    <template v-else>
+                      <div>状态：空闲</div>
+                    </template>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      <!-- 详情面板 -->
+      <div v-if="selectedCell" class="w-200 p-4 border rounded-xl space-y-2 bg-gray-50">
+        <h3 class="font-bold">预约详情</h3>
+
+        <template v-if="selectedBooking">
+          <div class="space-y-2 text-sm">
+            <!-- 预约 ID -->
+            <div class="flex items-center gap-2">
+              <strong>预约 ID：</strong>
+              <span>{{ selectedBooking.id }}</span>
+              <Copy class="size-4 cursor-pointer" @click="copyText(selectedBooking.id)" />
+            </div>
+            <!-- 用户 -->
+            <div class="flex items-center gap-2">
+              <strong>用户：</strong>
+              <span>{{ selectedBooking.user?.userName }}</span>
+              <Copy class="size-4 cursor-pointer" @click="copyText(selectedBooking.user?.userName ?? '')" />
+            </div>
+            <!-- 用户 ID -->
+            <div class="flex items-center gap-2">
+              <strong>用户 ID：</strong>
+              <span>{{ selectedBooking.userId }}</span>
+              <Copy class="size-4 cursor-pointer" @click="copyText(selectedBooking.userId)" />
+            </div>
+            <!-- 座位 ID -->
+            <div class="flex items-center gap-2">
+              <strong>座位 ID：</strong>
+              <span>{{ selectedBooking.seatId }}</span>
+              <Copy class="size-4 cursor-pointer" @click="copyText(selectedBooking.seatId)" />
+            </div>
+            <!-- 座位 -->
+            <div>
+              <strong>座位：</strong>
+              {{ selectedBooking.seat?.row }}-{{ selectedBooking.seat?.col }}
+            </div>
+            <!-- 开始时间 -->
+            <div>
+              <strong>开始时间：</strong>
+              {{ formatDate(selectedBooking.startTime) }}
+            </div>
+            <!-- 结束时间 -->
+            <div>
+              <strong>结束时间：</strong>
+              {{ formatDate(selectedBooking.endTime) }}
+            </div>
+            <!-- 状态 -->
+            <div>
+              <strong>状态：</strong>
+              {{ selectedBooking.state }}
+            </div>
+          </div>
+
+
+          <div class="flex gap-2 mt-3">
+            <Button class="bg-green-500 hover:bg-green-500 hover:brightness-110 text-white" @click="checkIn(selectedBooking.id)">签到</Button>
+            <Button class="bg-gray-500 hover:bg-gray-500 hover:brightness-110 text-white" @click="checkOut(selectedBooking.id)">签退</Button>
+            <Button class="bg-red-600 hover:bg-red-600 hover:brightness-110 text-white" @click="openDeleteDialog(selectedBooking.id)">删除预约</Button>
+          </div>
+        </template>
+
+        <template v-else>
+          <div class="text-muted-foreground">该时间段当前无预约（空闲）</div>
+        </template>
+      </div>
     </div>
 
-    <!-- 详情面板 -->
-    <div v-if="selectedCell" class="p-4 border rounded space-y-2 bg-gray-50">
-      <h3 class="font-bold">预约详情</h3>
-
-      <template v-if="selectedBooking">
-        <div class="space-y-1 text-sm">
-          <div><strong>预约 ID：</strong>{{ selectedBooking.id }}</div>
-          <div><strong>用户：</strong>{{ selectedBooking.user?.userName }}</div>
-          <div><strong>用户 ID：</strong>{{ selectedBooking.userId }}</div>
-          <div><strong>座位：</strong>{{ selectedBooking.seatId }}</div>
-          <div><strong>开始时间：</strong>{{ selectedBooking.startTime }}</div>
-          <div><strong>结束时间：</strong>{{ selectedBooking.endTime }}</div>
-          <div><strong>状态：</strong>{{ selectedBooking.state }}</div>
-        </div>
-
-        <div class="flex gap-2 mt-3">
-          <Button class="bg-red-500 text-white" @click="cancelBooking(selectedBooking.id)">取消预约</Button>
-          <Button class="bg-green-500 text-white" @click="checkIn(selectedBooking.id)">签到</Button>
-          <Button class="bg-blue-500 text-white" @click="checkOut(selectedBooking.id)">签退</Button>
-        </div>
-      </template>
-
-      <template v-else>
-        <div class="text-muted-foreground">该时间段当前无预约（空闲）</div>
-      </template>
-    </div>
+    <!-- 删除确认弹窗 -->
+    <Dialog v-model:open="isDeleteDialogOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>确认删除</DialogTitle>
+        </DialogHeader>
+        <p class="text-sm text-muted-foreground">确定要删除这个预约吗？此操作不可恢复。</p>
+        <DialogFooter>
+          <Button class="hover:brightness-90" variant="secondary" @click="isDeleteDialogOpen = false">取消</Button>
+          <Button
+            class="bg-red-600 hover:bg-red-600 hover:brightness-90 text-white flex items-center gap-x-2"
+            :disabled="deletingBookingId === pendingDeleteBookingId"
+            @click="confirmDeleteBooking"
+          >
+            <Loader2 v-if="deletingBookingId === pendingDeleteBookingId" class="size-4 animate-spin" />
+            {{ deletingBookingId === pendingDeleteBookingId ? '删除中...' : '确认删除' }}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>
 

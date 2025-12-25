@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "vue-sonner";
 import type { Room,RoomEdit } from "@/lib/types/Room";
 import type { Seat,SeatState } from "@/lib/types/Seat";
+import type { Booking } from "@/lib/types/Booking";
 import { roomRequest } from "@/lib/api/roomRequest";
 import { seatRequest } from "@/lib/api/seatRequest";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,7 @@ import { Eye, Edit, Trash, ClipboardList, Armchair, Loader2 } from "lucide-vue-n
 // 房间列表
 const rooms = ref<Room[]>([]);
 const page = ref(1);
-const pageSize = ref(10); // 每页显示条数
+const pageSize = ref(20); // 每页显示条数
 const total = ref(0);     // 总条数
 
 // 获取房间列表
@@ -28,6 +29,7 @@ async function loadRooms() {
     });
     rooms.value = res.data.items;
     total.value = res.data.total;
+    console.log("房间 seats：", rooms.value[0]?.seats);
   } catch {
     toast.error("获取房间列表失败");
   }
@@ -81,25 +83,73 @@ async function handleAddRoom() {
   }
 }
 
-// 查看房间详情
-const selectedRoom = ref<Room | null>(null);
-const selectedRoomSeats = ref<SeatState[]>([]);
+// 当前展开的房间 ID
+const detailRoomId = ref<string | null>(null);
+// 当前房间的 seats（包含预约状态）
+const detailRoomSeats = ref<SeatState[]>([]);
 
+// 展示房间详情函数
 async function viewRoom(room: Room) {
-  if (selectedRoom.value?.id === room.id) {
-    // 如果当前已展开的是同一个房间，再次点击则收起
-    selectedRoom.value = null;
-    selectedRoomSeats.value = [];
+  if (detailRoomId.value === room.id) {
+    detailRoomId.value = null;
+    detailRoomSeats.value = [];
     return;
   }
   try {
     const res = await roomRequest.getRoom(room.id);
-    selectedRoom.value = res.data;
-    selectedRoomSeats.value = toSeatStateArray(res.data);
+    const roomData = res.data;
+
+    console.log("roomData:", roomData);// 测试后端输出
+
+    detailRoomId.value = room.id;
+
+    // 1. 先生成 rows × cols 的虚拟座位（全部灰色）
+    const seats: SeatState[] = [];
+    for (let r = 0; r < roomData.rows; r++) {
+      for (let c = 0; c < roomData.cols; c++) {
+        seats.push({
+          id: null,
+          row: r,
+          col: c,
+          open: false,   // 默认灰色
+          booked: false  // 默认未预约
+        });
+      }
+    }
+    // 2. 用真实 seats 覆盖虚拟座位（变成绿色）
+    roomData.seats.forEach((realSeat: Seat) => {
+      const index = seats.findIndex(
+        s => s.row === realSeat.row && s.col === realSeat.col
+      );
+      if (index !== -1) {
+        seats[index]!.id = realSeat.id;
+        seats[index]!.open = true;
+      }
+    });
+    // 3. 标记预约状态（红色）
+    roomData.seats.forEach((realSeat: Seat) => {
+      const seat = seats.find(s => s.row === realSeat.row && s.col === realSeat.col);
+      if (!seat) return;
+      if (realSeat.bookings?.some(
+        b => b.state === "已预约" || b.state === "已签到"
+      )) {
+        seat.booked = true;
+      }
+    });
+
+    detailRoomSeats.value = seats;
   } catch {
     toast.error("获取房间详情失败");
   }
 }
+
+// 渲染房间座位函数
+function getSeatColor(seat: SeatState) {
+  if (!seat.open) return "text-gray-400";  // 虚拟座位（未创建）
+  if (seat.booked) return "text-red-500";  // 已预约 / 已签到
+  return "text-green-500";                 // 已创建且未预约
+}
+
 
 // 修改房间
 const editRoom = ref<RoomEdit | null>(null);
@@ -213,7 +263,8 @@ function toSeatStateArray(room: Room): SeatState[] {
         row: i,
         col: j,
         id: match?.id ?? null,
-        open: !!match
+        open: !!match,
+        booked: false
       });
     }
   }
@@ -241,8 +292,7 @@ function toggleSeat(index: number) {
 const isSavingSeats = ref(false); // 保存按钮加载状态
 async function saveSeats() {
   try {
-
-    isSavingSeats.value = true; // 开始加载动画
+    isSavingSeats.value = true;
 
     // 创建座位
     const createTasks = currentRoomSeats.value
@@ -255,6 +305,7 @@ async function saveSeats() {
         });
         seat.id = res.data.id;
       });
+
     // 删除座位
     const deleteTasks = currentRoomSeats.value
       .filter(seat => !seat.open && seat.id)
@@ -262,14 +313,32 @@ async function saveSeats() {
         seat.id = null;
       }));
 
+    // 等待所有创建/删除完成
     await Promise.all([...createTasks, ...deleteTasks]);
 
     toast.success("座位设置已保存");
+
+    // 重新加载当前房间的座位（更新 currentRoomSeats）
     await loadSeats(currentRoomId.value!);
+
+    // 更新 rooms 列表里的 seats 数量 
+    const room = rooms.value.find(r => r.id === currentRoomId.value);
+    if (room) {
+      room.seats = currentRoomSeats.value
+        .filter(s => s.open && s.id)
+        .map(s => ({
+          id: s.id!,
+          row: s.row,
+          col: s.col,
+          roomId: currentRoomId.value!,
+          room: null,
+          bookings: []
+        }));
+    }
   } catch {
     toast.error("保存座位设置失败");
   } finally {
-    isSavingSeats.value = false; // 结束加载动画
+    isSavingSeats.value = false;
   }
 }
 </script>
@@ -283,7 +352,7 @@ async function saveSeats() {
 
     <div class="overflow-x-auto overflow-y-auto max-h-[75vh] border border-gray-300 rounded-lg relative">
       <table class="w-full  border-separate border-spacing-0">
-        <thead>
+        <thead class="sticky top-0 z-50 bg-gray-100">
           <tr class="bg-gray-100">
             <th class="border p-2">房间名称</th>
             <th class="border p-2">开放时间</th>
@@ -369,6 +438,50 @@ async function saveSeats() {
                 </transition>
               </td>
             </tr>
+
+            <!-- 房间详情展开行 -->
+            <tr>
+              <td colspan="6" class="p-0 border">
+                <transition name="slide-fade">
+                  <div 
+                    v-show="room.id === detailRoomId" 
+                    class="slide-fade-transition p-4 bg-muted"
+                  >
+                    <h3 class="text-lg font-bold mb-2">房间详情：{{ room.name }}</h3>
+                
+                    <p class="mb-2 text-sm text-muted-foreground">
+                      座位布局（{{ room.rows }} x {{ room.cols }}）
+                    </p>
+                  
+                    <!-- 座位网格 -->
+                    <div class="max-h-96 overflow-y-auto border rounded p-2 mt-2">
+                      <div :class="cn('grid gap-1')"
+                            :style="{ 'grid-template-columns': `repeat(${room.cols},1fr)` }">
+                        <div v-for="(seat, i) in detailRoomSeats" :key="i">
+                          <Armchair
+                            class="size-12 transition-colors ease-in-out"
+                            :class="getSeatColor(seat)"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  
+                    <!-- 图例说明 -->
+                    <div class="mt-4 flex gap-x-6 text-sm text-muted-foreground">
+                      <div class="flex items-center gap-x-2">
+                        <Armchair class="size-6 text-gray-400" /> 未开放
+                      </div>
+                      <div class="flex items-center gap-x-2">
+                        <Armchair class="size-6 text-green-500" /> 已开放
+                      </div>
+                      <div class="flex items-center gap-x-2">
+                        <Armchair class="size-6 text-red-500" /> 已预约 / 已签到
+                      </div>
+                    </div>
+                  </div>
+                </transition>
+              </td>
+            </tr>
           </template>
         </tbody>
       </table>
@@ -400,42 +513,6 @@ async function saveSeats() {
     </div>
 
     <!-- 房间管理 -->
-    <!-- 查看房间详情 -->
-    <transition name="slide-fade">
-      <div v-if="selectedRoom" class="mt-6 p-4 border rounded bg-muted slide-fade-transition">
-        <h3 class="text-lg font-bold mb-2">房间详情：{{ selectedRoom.name }}</h3>
-        <p class="mb-2 text-sm text-muted-foreground">
-          座位布局（{{ selectedRoom.rows }} x {{ selectedRoom.cols }}）
-        </p>
-      
-        <!-- 座位网格，带最大高度和滚动条 -->
-        <div class="max-h-96 overflow-y-auto border rounded p-2 mt-2">
-          <div :class="cn('grid gap-1')"
-                :style="{ 'grid-template-columns': `repeat(${selectedRoom.cols},1fr)` }">
-            <div v-for="(seat, i) in selectedRoomSeats" :key="i">
-              <Armchair
-                class="size-12 transition-colors ease-in-out"
-                :class="seat.open ? 'text-green-500' : 'text-gray-400'"
-              />
-            </div>
-          </div>
-        </div>
-      
-        <!-- 图例说明 -->
-        <div class="mt-4 flex gap-x-6 text-sm text-muted-foreground">
-          <div class="flex items-center gap-x-2">
-            <Armchair class="size-6 text-gray-400" /> 未开放
-          </div>
-          <div class="flex items-center gap-x-2">
-            <Armchair class="size-6 text-green-500" /> 已开放
-          </div>
-          <!-- 未来预约状态 -->
-          <div class="flex items-center gap-x-2">
-            <Armchair class="size-6 text-red-500" /> 已预约
-          </div>
-        </div>
-      </div>
-    </transition>
 
     <!-- 添加房间弹窗 -->
     <Dialog v-model:open="isAddDialogOpen">
@@ -515,7 +592,7 @@ async function saveSeats() {
     <Dialog v-model:open="isEditDialogOpen">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>修改房间</DialogTitle>
+          <DialogTitle>编辑房间信息</DialogTitle>
         </DialogHeader>
         <div v-if="editRoom" class="flex flex-col gap-y-3">
           <!-- 房间名称 -->

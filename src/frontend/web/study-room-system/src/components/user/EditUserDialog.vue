@@ -45,40 +45,61 @@ watch(() => props.user, (u) => {
     }
 })
 
-const isEditingUser = ref(false); //加载动画状态
+// 保存确认弹窗
+const isConfirmDialogOpen = ref(false)
 
-// 提交逻辑：更新用户信息和角色
-const onEditSubmit = EditForm.handleSubmit(async (values) => {
-    try {
-        const payload = {
-            id: values.id,
-            displayName: values.displayName?.trim() || props.user!.displayName,  
-            campusId: values.campusId,
-            phone: values.phone,
-            email: values.email,
-            role: values.role
-        };
-        await userRequest.updateUser(payload);
-        await userRequest.updateUserRole({ id: values.id, role: values.role });
-        toast.success('用户信息已更新')
-        emit('update:show', false) // 关闭弹窗
-        emit('success')            // 通知父组件刷新列表
-    } catch {
-        toast.error('更新失败')
-    } finally {
-        isEditingUser.value = false; // 结束加载
+// 保存加载动画
+const isSaving = ref(false)
+
+// 打开确认弹窗
+function openConfirmDialog() {
+  console.log("打开弹窗")
+  isConfirmDialogOpen.value = true
+}
+
+// 真正执行保存
+async function confirmSave() {
+  isSaving.value = true
+
+  try {
+    const values = EditForm.values as UserEditInput
+
+    const payload = {
+      id: values.id,
+      displayName: values.displayName?.trim() || props.user!.displayName,
+      campusId: values.campusId,
+      phone: values.phone,
+      email: values.email,
+      role: values.role
     }
-})
+
+    await userRequest.updateUser(payload)
+    await userRequest.updateUserRole({ id: values.id, role: values.role })
+
+    toast.success("用户信息已更新")
+
+    // 关闭两个弹窗
+    isConfirmDialogOpen.value = false
+    emit("update:show", false)
+
+    // 通知父组件刷新
+    emit("success")
+  } catch {
+    toast.error("更新失败")
+  } finally {
+    isSaving.value = false
+  }
+}
 </script>
 
 <template>
   <Dialog :open="props.show" @update:open="emit('update:show', $event)">
     <DialogContent v-if="props.user">
-      <DialogHeader>编辑用户信息</DialogHeader>
+      <DialogHeader>
+        <DialogTitle>编辑用户信息</DialogTitle>
+      </DialogHeader>
 
-      <!-- 表单绑定 EditForm -->
-      <form :form="EditForm" class="flex flex-col gap-y-4" @submit="onEditSubmit">
-        
+      <div class="flex flex-col gap-y-4">
         <FormField name="role" v-slot="{ componentField }">
           <FormItem>
             <FormLabel>角色</FormLabel>
@@ -132,16 +153,33 @@ const onEditSubmit = EditForm.handleSubmit(async (values) => {
           </FormItem>
         </FormField>
 
-        <DialogFooter class="flex justify-end gap-x-2 mt-4">
-          <Button class="hover:brightness-90" variant="secondary" @click="emit('update:show', false)">取消</Button>
-          <Button class="bg-primary hover:brightness-90 text-white flex items-center gap-x-2" 
-            :disabled="isEditingUser"
-            @click="onEditSubmit">
-            <Loader2 v-if="isEditingUser" class="size-4 animate-spin mr-2" />
-            {{ isEditingUser ? '保存中...' : '保存' }}
-          </Button>
+        <!-- 底部按钮：只有保存 -->
+        <DialogFooter>
+          <Button type="button" class="hover:brightness-110" @click="openConfirmDialog">保存</Button>
         </DialogFooter>
-      </form>
+      </div>
+    </DialogContent>
+  </Dialog>
+
+    <!-- 确认保存弹窗 -->
+  <Dialog v-model:open="isConfirmDialogOpen">
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>确认保存</DialogTitle>
+      </DialogHeader>
+
+      <p class="text-sm text-muted-foreground">是否确认保存对该用户的修改？</p>
+
+      <DialogFooter class="flex justify-end gap-x-2 mt-4">
+        <Button class="hover:brightness-90" variant="secondary" @click="isConfirmDialogOpen = false">取消</Button>
+
+        <Button class="bg-primary hover:brightness-90 text-white flex items-center gap-x-2"
+                :disabled="isSaving"
+                @click="confirmSave">
+          <Loader2 v-if="isSaving" class="size-4 animate-spin" />
+          {{ isSaving ? "保存中..." : "确认保存" }}
+        </Button>
+      </DialogFooter>
     </DialogContent>
   </Dialog>
 </template>
