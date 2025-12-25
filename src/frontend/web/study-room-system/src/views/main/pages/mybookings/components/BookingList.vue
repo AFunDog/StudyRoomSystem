@@ -71,7 +71,7 @@ function formatRange(start?: string | null, end?: string | null) {
       v-else
       class="flex flex-col min-w-0 gap-y-2 max-w-full flex-nowrap overflow-y-auto h-full rounded-md"
     >
-      <div v-for="b in bookings" :key="b.id">
+      <div v-for="(b, idx) in bookings" :key="b.id">
         <Card
           class="py-2 transition-colors cursor-pointer"
           :class="bookingCardClass(b.state)"
@@ -79,6 +79,9 @@ function formatRange(start?: string | null, end?: string | null) {
         >
           <CardHeader>
             <div class="flex flex-row gap-x-2 items-center">
+              <div class="text-base text-slate-600 font-semibold">
+                {{ idx + 1 }}.
+              </div>
               <div class="text-lg">
                 {{ b.seat?.room?.name || "未知房间" }}
               </div>

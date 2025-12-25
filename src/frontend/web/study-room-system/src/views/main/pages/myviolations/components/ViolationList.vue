@@ -70,7 +70,7 @@ function hasBooking(v: Violation) {
       v-else
       class="flex flex-col min-w-0 gap-y-2 max-w-full flex-nowrap overflow-y-auto h-full rounded-md"
     >
-      <div v-for="v in violations" :key="v.id">
+      <div v-for="(v, idx) in violations" :key="v.id">
         <Card
           class="py-2 px-2 bg-background/70 transition-colors"
           :class="cardClass(v.type)"
@@ -78,12 +78,15 @@ function hasBooking(v: Violation) {
         >
           <CardHeader>
             <div class="flex flex-row gap-x-2 items-center">
+              <div class="text-base text-slate-600 font-semibold">
+                {{ idx + 1 }}.
+              </div>
               <div class="text-base font-semibold">
                 {{ localizeViolationType(v.type) }}
               </div>
-              <span :class="badgeClass(v.type)">
+              <!-- <span :class="badgeClass(v.type)">
                 {{ v.type }}
-              </span>
+              </span> -->
               <div class="ml-auto text-xs text-muted-foreground">
                 记录时间：{{ formatCreate(v.createTime) }}
               </div>

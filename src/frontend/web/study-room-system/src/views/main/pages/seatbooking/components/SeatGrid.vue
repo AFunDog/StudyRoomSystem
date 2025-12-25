@@ -33,6 +33,9 @@ const seats = ref<(Seat | null)[]>([])
 // 预留的状态：free / busy / disabled
 const seatStatusMap = ref<Record<string, 'free' | 'busy' | 'disabled'>>({})
 
+// 加载遮罩
+const loadingSeats = ref(false)
+
 // 弹窗
 const dialogOpen = ref(false)
 const selectedSeat = ref<Seat | null>(null)
@@ -101,6 +104,8 @@ async function refreshSeatStatus(
     return
   }
 
+  loadingSeats.value = true
+
   try {
     const res = await roomRequest.getRoomWithTime({
       id: room.id,
@@ -137,6 +142,8 @@ async function refreshSeatStatus(
     })
     seatStatusMap.value = status
     toast.error('获取座位状态失败，将暂时按全部可用处理')
+  } finally {
+    loadingSeats.value = false
   }
 }
 
@@ -256,9 +263,15 @@ async function confirmBooking() {
 
     <!-- 座位网格 -->
     <div class="min-h-0">
-      
       <ViewBox>
         <div class="relative w-full h-full flex items-center justify-center">
+          <div
+            v-if="loadingSeats"
+            class="absolute inset-0 z-10 flex items-center justify-center bg-white/60 backdrop-blur-sm rounded-lg"
+          >
+            <span class="text-sm text-gray-700">正在加载座位状态...</span>
+          </div>
+
           <div
             :class="cn('grid border-gray-500 border-4 rounded-md bg-muted')"
             :style="{

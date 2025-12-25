@@ -240,8 +240,8 @@ onMounted(() => {
 
         <div v-if="detailBooking" class="rounded-md border p-3 space-y-1 text-sm bg-accent/40">
           <div class="font-medium">预约信息</div>
-          <div>房间：{{ formatRoomName(detailBooking.seat) }}</div>
-          <div>座位：{{ formatSeatNumber(detailBooking.seat) }}</div>
+          <div>房间号：{{ formatRoomName(detailBooking.seat) }}</div>
+          <div>座位号：{{ formatSeatNumber(detailBooking.seat) }}</div>
           <div>时间：{{ dayjs(detailBooking.startTime).format("YYYY/MM/DD HH:mm") }} - {{ dayjs(detailBooking.endTime).format("HH:mm") }}</div>
         </div>
       </div>

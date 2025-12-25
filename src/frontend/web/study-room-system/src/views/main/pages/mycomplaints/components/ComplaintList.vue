@@ -118,19 +118,23 @@ function cardClass(state: ComplaintState) {
         class="flex flex-col min-w-0 gap-y-2 max-w-full flex-nowrap overflow-y-auto flex-1 rounded-md"
       >
         <div
-          v-for="c in sortedComplaints"
+          v-for="(c, idx) in sortedComplaints"
           :key="c.id"
           class="rounded-lg p-3 bg-background cursor-pointer hover:bg-accent/60 transition-colors"
           :class="cardClass(c.state)"
           @click="emit('select', c)"
         >
           <div class="flex items-start gap-2">
-            <div class="text-base font-medium">{{ seatDisplay(c) }}</div>
-            <div class="flex-1" />
-            <span :class="stateBadgeClass(c.state)">{{ localizeComplaintState(c.state) }}</span>
+            <div class="text-base text-slate-600 font-semibold min-w-[1.5rem]">
+              {{ idx + 1 }}.
+            </div>
+            <div class="text-base font-medium flex-1">
+              {{ c.type || "无" }}
+            </div>
+            <span class="ml-auto" :class="stateBadgeClass(c.state)">{{ localizeComplaintState(c.state) }}</span>
           </div>
           <div class="mt-1 text-sm text-muted-foreground">
-            标题：{{ c.type || "无" }}
+            位置：{{ seatDisplay(c) }}
           </div>
           <div class="mt-2 text-xs text-muted-foreground flex flex-wrap gap-3">
             <span>创建：{{ dayjs(c.createTime).format("YYYY/MM/DD HH:mm") }}</span>
@@ -139,7 +143,7 @@ function cardClass(state: ComplaintState) {
           </div>
           <div class="mt-2 flex items-center text-xs text-primary gap-1">
             <Pencil class="w-3 h-3" />
-            点击修改
+            点击修改或查看详情
           </div>
         </div>
       </div>
