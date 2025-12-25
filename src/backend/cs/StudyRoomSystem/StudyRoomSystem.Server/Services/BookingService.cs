@@ -116,6 +116,8 @@ internal sealed class BookingService(AppDbContext appDbContext, IUserService use
         if (booking.State is not BookingStateEnum.已预约)
             throw new BadHttpRequestException("必须已预约的才能取消预约");
 
+        await using var transaction = await AppDbContext.Database.BeginTransactionAsync();
+        
         if (booking.StartTime - DateTime.UtcNow < TimeSpan.FromHours(3))
             if (!isForce)
                 throw new BadHttpRequestException("距离预约起始时间小于3小时，若强制取消预约将会记录为违规");
@@ -137,11 +139,13 @@ internal sealed class BookingService(AppDbContext appDbContext, IUserService use
 
         booking.State = BookingStateEnum.已取消;
 
+        await UserService.UpdateUser(user with { Credits = user.Credits - 10 });
         var track = AppDbContext.Bookings.Update(booking);
         var res = await AppDbContext.SaveChangesAsync();
         if (res == 0)
             throw new ConflictException("取消预约失败");
 
+        await transaction.CommitAsync();
         return track.Entity;
     }
 
