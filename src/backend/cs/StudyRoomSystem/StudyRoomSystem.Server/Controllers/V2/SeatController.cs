@@ -5,17 +5,18 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StudyRoomSystem.Core.Helpers;
 using StudyRoomSystem.Core.Structs.Api.V2;
+using StudyRoomSystem.Server.Contacts;
 using StudyRoomSystem.Server.Database;
 
 namespace StudyRoomSystem.Server.Controllers.V2;
 
-
 [ApiController]
 [Route("api/v{version:apiVersion}/seat")]
 [ApiVersion("2.0")]
-public class SeatController(AppDbContext appDbContext) : ControllerBase
+public class SeatController(AppDbContext appDbContext, IRoomService roomService) : ControllerBase
 {
     private AppDbContext AppDbContext { get; } = appDbContext;
+    private IRoomService RoomService { get; } = roomService;
 
     [HttpGet("{id:guid}")]
     [AllowAnonymous]
@@ -31,26 +32,17 @@ public class SeatController(AppDbContext appDbContext) : ControllerBase
     public async Task<IActionResult> Get(
         Guid id,
         [FromQuery] [Description("查询可用时间段的起点时间")] DateTime? start = null,
-        [FromQuery] [Description("查询可用时间段的结束时间")]DateTime? end = null)
+        [FromQuery] [Description("查询可用时间段的结束时间")] DateTime? end = null)
     {
-        var seat = await AppDbContext
-            .Seats.AsNoTracking()
-            .Include(x => x.Room)
-            // .Include(x => x.Bookings)
-            .SingleOrDefaultAsync(x => x.Id == id);
-        if (seat is null)
-            return NotFound();
-
-
-        var response = new GetSeatResponseOk()
-        {
-            Seat = seat,
-        };
+        var seat = await RoomService.GetSeatById(id);
+        
+        
+        var response = new GetSeatResponseOk() { Seat = seat, };
 
         if (start is not null && end is not null)
         {
             if (start.Value.Kind != DateTimeKind.Utc || end.Value.Kind != DateTimeKind.Utc)
-                return BadRequest(new ProblemDetails() { Title = "时间必须是Utc时间" });
+                throw new BadHttpRequestException("时间必须是UTC时间");
 
             response.OpenTimes = (await AppDbContext
                     .Bookings.AsNoTracking()
@@ -61,6 +53,7 @@ public class SeatController(AppDbContext appDbContext) : ControllerBase
                 .ToOpenTimes(start.Value, end.Value)
                 .ToArray();
         }
+
         return Ok(response);
     }
 }
