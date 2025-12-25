@@ -83,7 +83,7 @@ const menus = [
         <BookingsView v-else-if="currentMenu === 'bookings'" />
         <ComplaintsView v-else-if="currentMenu === 'complaints'" />
         <ViolationsView v-else-if="currentMenu === 'violations'" /> 
-        <!-- <FilesView v-else-if="currentMenu === 'files'" /> -->
+        <FilesView v-else-if="currentMenu === 'files'" /> 
 
       </main>
     </div>
