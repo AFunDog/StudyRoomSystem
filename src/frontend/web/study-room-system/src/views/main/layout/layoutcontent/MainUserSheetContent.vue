@@ -13,6 +13,7 @@ import { toast } from "vue-sonner";
 
 import type { User } from "@/lib/types/User";
 import { userRequest } from "@/lib/api/userRequest";
+import { fileRequest } from "@/lib/api/fileRequest";
 import { logout } from "@/lib/utils";
 import { useRouter } from "vue-router";
 import { onMounted, ref } from "vue";
@@ -97,39 +98,38 @@ function handleFileChange(event: Event) {
     return;
   }
 
-  const reader = new FileReader();
-  reader.onload = async () => {
-    const result = reader.result as string;
-    avatarPreview.value = result;
-    await uploadAvatar(result);
+  uploadAvatarFile(file).finally(() => {
     input.value = "";
-  };
-  reader.onerror = () => {
-    toast.error("读取图片失败");
-    input.value = "";
-  };
-  reader.readAsDataURL(file);
+  });
 }
 
-async function uploadAvatar(dataUrl: string) {
+async function uploadAvatarFile(file: File) {
   if (!user.value) return;
   uploadingAvatar.value = true;
   try {
+    // 先上传文件
+    const url = await fileRequest.upload(file);
+    if (!url) {
+      toast.error("上传头像失败：未返回地址");
+      return;
+    }
+
+    // 传入头像 URL
     const payload = {
       id: user.value.id,
       displayName: user.value.displayName,
       campusId: user.value.campusId,
       phone: user.value.phone,
       email: user.value.email,
-      avatar: dataUrl,
+      avatar: url,
     };
     const res = await userRequest.updateUser(payload);
     const updated = res.data as User;
-    updated.avatar = updated.avatar || dataUrl;
+    updated.avatar = updated.avatar || url;
     user.value = updated;
-    avatarPreview.value = updated.avatar ?? dataUrl;
+    avatarPreview.value = updated.avatar ?? url;
     localStorage.setItem("user", JSON.stringify(updated));
-    localStorage.setItem(avatarCacheKey, updated.avatar ?? dataUrl);
+    localStorage.setItem(avatarCacheKey, updated.avatar ?? url);
     toast.success("头像已更新");
   } catch (err) {
     console.error("上传头像失败", err);
