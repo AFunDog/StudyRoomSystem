@@ -3,9 +3,9 @@ import { createRouter, createWebHistory } from 'vue-router'
 // 导入页面组件
 import LoginView from '@/views/login/LoginView.vue'
 import MainView from '@/views/main/layout/MainView.vue'
+import UserHomeView from '@/views/main/pages/home/UserHomeView.vue'
 import RegisterView from '@/views/register/RegisterView.vue'
 import AdminLoginView from '@/views/admin/login/AdminLoginView.vue'
-import SettingView from '@/views/setting/SettingView.vue'
 import MyUserView from '@/views/main/pages/usercenter/UserCenterView.vue'
 import SeatBookingView from '@/views/main/pages/seatbooking/SeatBookingView.vue'
 import MyBookingsView from '@/views/main/pages/mybookings/MyBookingsView.vue'
@@ -18,14 +18,14 @@ const router = createRouter({
     {
       path: '/',
       component: MainView, // 首页框架静态引入
-      name: 'main',
+      redirect: '/userhome',
       children: [
-        { path: '/seatbooking', component: SeatBookingView },
-        { path: '/mybookings', component: MyBookingsView },
-        { path: '/mycomplaints', component: MyComplaintsView },
-        { path: '/myviolations', component: MyViolationsView },
-        { path: '/usercenter', component: MyUserView },
-
+        { path: 'userhome', component: UserHomeView },
+        { path: 'seatbooking', component: SeatBookingView },
+        { path: 'mybookings', component: MyBookingsView },
+        { path: 'mycomplaints', component: MyComplaintsView },
+        { path: 'myviolations', component: MyViolationsView },
+        { path: 'usercenter', component: MyUserView },
       ]
     },
     // 静态引入

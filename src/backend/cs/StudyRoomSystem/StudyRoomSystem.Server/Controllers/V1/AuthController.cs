@@ -65,6 +65,7 @@ public class AuthController(
             );
         }
 
+        // 写入用户信息
         var claims = new List<Claim>()
         {
             new Claim(ClaimExtendTypes.Id, user.Id.ToString()),
@@ -123,7 +124,7 @@ public class AuthController(
     [EndpointDescription("此接口用于检查登录Token是否失效或者不处于登录状态")]
     public async Task<IActionResult> Check()
     {
-        var user = await UserService.GetUserById(this.GetLoginUserId());
+        _ = await UserService.GetUserById(this.GetLoginUserId());
         return Ok();
     }
 }

@@ -61,8 +61,6 @@ internal sealed class RoomService(AppDbContext appDbContext) : IRoomService
 
     public async Task<Room> DeleteSeat(Guid seatId)
     {
-        // TODO 需不需要检查是否有未结束的预约
-
         var seat = await GetSeatById(seatId);
 
         AppDbContext.Seats.Remove(seat);

@@ -197,6 +197,7 @@ internal sealed class BookingService(AppDbContext appDbContext, IUserService use
         if (res == 0)
             throw new ConflictException("签退失败");
 
+        await transaction.CommitAsync();
         return track.Entity;
     }
 
