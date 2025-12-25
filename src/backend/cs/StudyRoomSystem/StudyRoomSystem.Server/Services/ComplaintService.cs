@@ -78,10 +78,6 @@ internal sealed class ComplaintService(
 
     public async Task<Complaint> Update(Complaint complaint)
     {
-        // var old = await GetById(complaint.Id);
-        // if (old.State is not ComplaintStateEnum.已发起)
-        //     throw new BadHttpRequestException("投诉状态不是已发起状态");
-
         var track = AppDbContext.Complaints.Update(complaint);
         var res = await AppDbContext.SaveChangesAsync();
         if (res == 0)
