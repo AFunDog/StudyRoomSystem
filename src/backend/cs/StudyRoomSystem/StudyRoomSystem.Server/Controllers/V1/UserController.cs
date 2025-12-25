@@ -79,6 +79,7 @@ public class UserController(AppDbContext appDbContext, IUserService userService)
         [MaxLength(64)]
         [EmailAddress]
         public string? Email { get; set; }
+        public string? Avatar { get; set; }
     }
 
     // TODO
@@ -100,6 +101,8 @@ public class UserController(AppDbContext appDbContext, IUserService userService)
         targetUser.CampusId = request.CampusId ?? targetUser.CampusId;
         targetUser.Phone = request.Phone ?? targetUser.Phone;
         targetUser.Email = request.Email ?? targetUser.Email;
+
+        if (!string.IsNullOrWhiteSpace(request.Avatar)) targetUser.Avatar = request.Avatar;
 
         return Ok(await UserService.UpdateUser(targetUser));
     }
