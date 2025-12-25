@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import dayjs from 'dayjs'
+import utc from 'dayjs/plugin/utc'
 import { toast } from 'vue-sonner'
 
 import {
@@ -22,6 +23,8 @@ import {
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import type { Room } from '@/lib/types/Room'
+
+dayjs.extend(utc)
 
 const props = defineProps<{
   modelValue?: { start: string; end: string } | null
@@ -73,7 +76,6 @@ const minMaxTime = computed<{
   const endRounded = Math.floor(endMinutes / 30) * 30
 
   if (endRounded <= startRounded) {
-    // 配置太奇怪：不给限制，交给后端兜底
     return null
   }
 
@@ -221,8 +223,9 @@ function applyTimeRange() {
     }
   }
 
-  const startIso = start.toDate().toISOString()
-  const endIso = end.toDate().toISOString()
+  // 后端要求 UTC：统一转为 UTC ISO 字符串
+  const startIso = dayjs(start).utc().toISOString()
+  const endIso = dayjs(end).utc().toISOString()
 
   emit('update:modelValue', { start: startIso, end: endIso })
   toast.success('预约时间已设置')

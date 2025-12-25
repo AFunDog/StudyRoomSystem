@@ -5,6 +5,7 @@ import type { Seat } from '@/lib/types/Seat'
 import { Armchair } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import dayjs from 'dayjs'
+import utc from 'dayjs/plugin/utc'
 
 import ViewBox from '@/components/ui/view-box/ViewBox.vue'
 import { cn, http } from '@/lib/utils'
@@ -24,6 +25,8 @@ const props = defineProps<{
   room: Room
   timeRange: { start: string; end: string } | null
 }>()
+
+dayjs.extend(utc)
 
 const seats = ref<(Seat | null)[]>([])
 
@@ -101,9 +104,10 @@ async function refreshSeatStatus(
   try {
     const res = await roomRequest.getRoomWithTime({
       id: room.id,
-      start: range.start,
-      end: range.end,
-    })
+      start: dayjs(range.start).utc().toISOString(),
+      end: dayjs(range.end).utc().toISOString(),
+    });
+
 
     const data = res.data as {
       room?: Room
@@ -208,9 +212,11 @@ async function confirmBooking() {
   try {
     const res = await bookingRequest.createBooking({
       seatId: seat.id,
-      startTime: range.start,
-      endTime: range.end,
-    })
+      // 后端要求 UTC 时间：使用 dayjs.utc() 再转 ISO
+      startTime: dayjs(range.start).utc().toISOString(),
+      endTime: dayjs(range.end).utc().toISOString(),
+    });
+
 
     if (res) {
       toast.success('预约成功')
