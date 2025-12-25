@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StudyRoomSystem.Core.Structs.Api.V2;
 using StudyRoomSystem.Core.Structs.Entity;
-using StudyRoomSystem.Server.Contacts;
 using StudyRoomSystem.Server.Database;
 
 namespace StudyRoomSystem.Server.Controllers.V2;
@@ -13,10 +12,9 @@ namespace StudyRoomSystem.Server.Controllers.V2;
 [ApiController]
 [Route("api/v{version:apiVersion}/room")]
 [ApiVersion("2.0")]
-public class RoomController(AppDbContext appDbContext, IRoomService roomService) : ControllerBase
+public class RoomController(AppDbContext appDbContext) : ControllerBase
 {
     private AppDbContext AppDbContext { get; } = appDbContext;
-    private IRoomService RoomService { get; } = roomService;
 
 
     [HttpGet("{id:guid}")]
@@ -36,9 +34,18 @@ public class RoomController(AppDbContext appDbContext, IRoomService roomService)
         [FromQuery] [Description("查询可用时间段的起点时间")] DateTime? start = null,
         [FromQuery] [Description("查询可用时间段的结束时间")] DateTime? end = null)
     {
-        var room = await RoomService.GetRoomById(id);
+        var room = await AppDbContext
+            .Rooms.Include(r => r.Seats)
+            .ThenInclude(s => s.Bookings)
+            .AsNoTracking()
+            .SingleOrDefaultAsync(x => x.Id == id);
+        if (room is null)
+            return NotFound();
 
-        var response = new GetRoomResponseOk() { Room = room, };
+        var response = new GetRoomResponseOk()
+        {
+            Room = room,
+        };
 
         if (start is not null && end is not null)
         {
@@ -65,7 +72,7 @@ public class RoomController(AppDbContext appDbContext, IRoomService roomService)
         {
             seat.Bookings = [];
         }
-
+        
         return Ok(response);
     }
 }
