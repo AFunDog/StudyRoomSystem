@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.StaticFiles;
 using StudyRoomSystem.Core.Structs.Api;
 using StudyRoomSystem.Core.Structs.Api.V1;
 using StudyRoomSystem.Core.Structs.Exceptions;
+using StudyRoomSystem.Server.Contacts;
 using StudyRoomSystem.Server.Helpers;
 
 namespace StudyRoomSystem.Server.Controllers.V1;
@@ -14,8 +15,10 @@ namespace StudyRoomSystem.Server.Controllers.V1;
 [ApiController]
 [Route("api/v{version:apiVersion}/file")]
 [ApiVersion("1.0")]
-public class FileController : ControllerBase
+public class FileController(IFileService fileService) : ControllerBase
 {
+    private IFileService FileService { get; } = fileService;
+    
     // TODO 之后要限制上传文件的类型和大小
     [HttpPost]
     [Authorize]
@@ -25,17 +28,8 @@ public class FileController : ControllerBase
     [EndpointDescription("使用该接口上传文件")]
     public async Task<IActionResult> Upload(IFormFile file)
     {
-        if (file.Length == 0)
-            return BadRequest(new ProblemDetails() { Title = "文件流为空" });
-
-        var fileId = Ulid.NewUlid().ToGuid();
-        var fileExt = Path.GetExtension(file.FileName);
-        var fileName = $"{fileId}{fileExt}";
+        var fileName = await FileService.Save(file);
         var filePath = $"{HttpContext.Request.Path}/{fileName}";
-        if (Directory.Exists("files") is false)
-            Directory.CreateDirectory("files");
-        await using var fs = new FileStream($"files/{fileName}", FileMode.Create, FileAccess.Write);
-        await file.CopyToAsync(fs);
 
         return Ok(new UploadFileResponseOk() { Url = filePath });
     }
@@ -89,11 +83,12 @@ public class FileController : ControllerBase
             throw new BadHttpRequestException("请求文件格式不正确");
 
         // var filePath = $"{Environment.CurrentDirectory}/files/{file}";
-        var filePath = Path.Combine(Environment.CurrentDirectory, "files", file);
-        if (System.IO.File.Exists(filePath) is false)
-            throw new NotFoundException("文件不存在");
-
-        System.IO.File.Delete(filePath);
+        // var filePath = Path.Combine(Environment.CurrentDirectory, "files", file);
+        // if (System.IO.File.Exists(filePath) is false)
+        //     throw new NotFoundException("文件不存在");
+        //
+        // System.IO.File.Delete(filePath);
+        await FileService.Delete(file);
 
         return Ok();
     }
