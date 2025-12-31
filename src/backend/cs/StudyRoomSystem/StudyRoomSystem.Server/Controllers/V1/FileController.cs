@@ -59,6 +59,7 @@ public class FileController(IFileService fileService) : ControllerBase
 
     [HttpGet("list")]
     [Authorize(AuthorizationHelper.Policy.Admin)]
+    [ProducesResponseType<ApiPageResult<string>>(StatusCodes.Status200OK)]
     [EndpointSummary("管理员获取文件列表")]
     public async Task<IActionResult> GetList(
         [FromQuery] [Range(1, int.MaxValue)] int page = 1,

@@ -20,7 +20,8 @@ public static class ServiceExtension
             .AddTransient<IBookingService, BookingService>()
             .AddTransient<IRoomService, RoomService>()
             .AddTransient<IBlacklistService, BlacklistService>()
-            .AddTransient<IUserService, UserService>();
+            .AddTransient<IUserService, UserService>()
+            .AddTransient<IFileService, FileService>();
         return serviceCollection;
     }
 }
